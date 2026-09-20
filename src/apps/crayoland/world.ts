@@ -17,7 +17,8 @@
  * formula below is the one from Picture.cxx, reproduced rather than
  * re-derived so every tree leans exactly as it did.
  *
- * Sounds: one sample per line.
+ * Sounds: a `directory` line naming the folder of the sample files (relative
+ * to the data folder), then one sample per line.
  *   loop FILE pos=x,y,z                             positional loop (a stream)
  *   random FILE pos= length=s prob=p maxampl= minampl=   plays at random when the user is near
  *   trigger FILE pos= radius=r length=              plays once when the user enters the circle
@@ -205,13 +206,23 @@ export interface SampleDef {
   area?: [number, number, number, number];
 }
 
-export function parseSounds(text: string): SampleDef[] {
+export interface SoundsFile {
+  /** Folder of the sample files, relative to the data folder ("audio" by default). */
+  directory: string;
+  samples: SampleDef[];
+}
+
+export function parseSounds(text: string): SoundsFile {
   const out: SampleDef[] = [];
+  let directory = "audio";
   for (const raw of text.split(/\r?\n/)) {
     const tokens = raw.trim().split(/\s+/).filter(Boolean);
     if (!tokens.length || tokens[0].startsWith("#")) continue;
     const type = tokens[0].toLowerCase();
-    if (type === "dir" || type === "directory") continue;
+    if (type === "dir" || type === "directory") {
+      if (tokens[1]) directory = tokens[1].replace(/\/+$/, "");
+      continue;
+    }
     if (!["background", "loop", "random", "trigger", "footfall"].includes(type) || !tokens[1]) {
       console.warn(`[crayoland] Sounds: cannot parse "${raw}"`);
       continue;
@@ -233,5 +244,5 @@ export function parseSounds(text: string): SampleDef[] {
       area: areaN && areaN.length === 4 ? [areaN[0], areaN[1], areaN[2], areaN[3]] : undefined,
     });
   }
-  return out;
+  return { directory, samples: out };
 }

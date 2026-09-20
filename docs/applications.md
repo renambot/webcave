@@ -41,7 +41,7 @@ http://localhost:5173/simulator.html?config=cave-3m&app=crayoland&audio=1
 npm run manager -- --app crayoland
 ```
 
-Crayoland is the 1995 CAVE demo by Dave Pape at EVL, ported from its C++ source (about 2,200 lines against CAVElib, OpenGL and the Bergen sound server). The original data files load unchanged from `public/crayoland/`: `World` lists 245 static pictures (trees, mountains, clouds, the lake, the house), 313 grabbable pictures (flowers and rocks), a hive of 64 bees with 29 flowers to visit, 6 butterflies and a cloud of flies; `Sounds` places crickets, frogs, ducks, birds, a stream and footstep sounds. Units are feet; the scene sits in a group scaled to meters, so the CAVE floor is the meadow and the 3 m CAVE is roughly the original 10 ft cube.
+Crayoland is the 1995 CAVE demo by Dave Pape at EVL, ported from its C++ source (about 2,200 lines against CAVElib, OpenGL and the Bergen sound server). The original data files load from `public/crayoland/` with only the sound and mask file names updated to the converted MP3 and PNG files: `World` lists 245 static pictures (trees, mountains, clouds, the lake, the house), 313 grabbable pictures (flowers and rocks), a hive of 64 bees with 29 flowers to visit, 6 butterflies and a cloud of flies; `Sounds` places crickets, frogs, ducks, birds, a stream and footstep sounds. Units are feet; the scene sits in a group scaled to meters, so the CAVE floor is the meadow and the 3 m CAVE is roughly the original 10 ft cube.
 
 **What was ported and how.**
 

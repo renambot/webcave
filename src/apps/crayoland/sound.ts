@@ -1,7 +1,9 @@
 /**
  * Crayoland's soundscape, on the one window that has AppContext.audio.
  *
- * A port of audio.cxx from the "bergen" sound server to Web Audio:
+ * A port of audio.cxx from the "bergen" sound server to Web Audio. Sample
+ * files are whatever the Sounds file names (MP3 here, converted from the
+ * original AIFF), fetched from its `directory` under the data folder.
  *   loop      always playing, gain from the user's distance (the stream)
  *   random    when silent, starts with `probability` per update; gain by distance
  *   trigger   starts once when the user enters its circle, re-arms on leaving
@@ -17,7 +19,7 @@
  * press and everything waits until then.
  */
 import type { Vec3 } from "../../core/config";
-import type { SampleDef } from "./world";
+import type { SampleDef, SoundsFile } from "./world";
 
 const MAX_AUDIBLE_DISTSQ = 1600;
 const BEE_MAX_AUDIBLE_DISTSQ = 400;
@@ -56,6 +58,7 @@ export class Soundscape {
   private bees: { gain: GainNode; source: AudioBufferSourceNode } | null = null;
   private beeAmpl = 0;
   private hitBuffer: AudioBuffer | null = null;
+  private dir: string;
   private loaded = false;
   private loading = false;
   private gestureEvents = ["pointerdown", "keydown", "touchend"] as const;
@@ -63,21 +66,21 @@ export class Soundscape {
   status = "audio: click the page to start";
 
   /**
-   * @param base       URL of the folder with audio/*.mp3 and the mask images
-   * @param defs       parsed Sounds file
+   * @param base       URL of the data folder (the Sounds file's `directory` and the mask images are relative to it)
+   * @param sounds     parsed Sounds file
    * @param beeSound   the hive's loop and hit sample file names, if any
    */
-  constructor(private base: string, defs: SampleDef[], private beeSound: { loop?: string; hit?: string }) {
-    this.samples = defs.map((def) => ({ def, buffer: null, gain: null, source: null, endTime: 0, latched: false, ampl: 0, last: [1e9, 0, 1e9] }));
+  constructor(private base: string, sounds: SoundsFile, private beeSound: { loop?: string; hit?: string }) {
+    this.dir = sounds.directory;
+    this.samples = sounds.samples.map((def) => ({ def, buffer: null, gain: null, source: null, endTime: 0, latched: false, ampl: 0, last: [1e9, 0, 1e9] }));
     // Keep listening until the context really runs: a browser may refuse the
     // first gesture (a modifier key, a synthetic event, a popup without
     // activation) and only honour a later one.
     for (const ev of this.gestureEvents) window.addEventListener(ev, this.onGesture);
   }
 
-  /** The original sound files were AIFF; they ship here as MP3 under audio/. */
   private url(file: string) {
-    return `${this.base}audio/${file.replace(/\.(aiff|aif|wav)$/i, "")}.mp3`;
+    return `${this.base}${this.dir}/${file}`;
   }
 
   private load(file: string): Promise<AudioBuffer | null> {
@@ -95,7 +98,7 @@ export class Soundscape {
   private async loadMask(s: Sample) {
     if (!s.def.map) return;
     const img = new Image();
-    img.src = `${this.base}${s.def.map.replace(/\.bw$/i, ".png")}`;
+    img.src = `${this.base}${s.def.map}`;
     await img.decode().catch(() => {});
     if (!img.naturalWidth) return;
     const c = document.createElement("canvas");
@@ -245,7 +248,9 @@ export class Soundscape {
             const ix = Math.floor(((user[0] - x0) * s.mask.w) / (x1 - x0));
             const iz = Math.floor(((user[2] - z0) * s.mask.h) / (z1 - z0));
             if (ix < 0 || ix >= s.mask.w || iz < 0 || iz >= s.mask.h) break;
-            if (!s.mask.data[ix + iz * s.mask.w]) break;
+            // The original read SGI images, whose first row is the bottom of the
+            // picture; the PNG masks keep that picture, so row 0 (top) is z1.
+            if (!s.mask.data[ix + (s.mask.h - 1 - iz) * s.mask.w]) break;
           }
           const foot: Vec3 = [user[0], 0, user[2]];
           if (distSq(foot, s.last) > d.radius * d.radius) {

@@ -11,8 +11,10 @@
  * a stream and the hive's hum follows the user.
  *
  * Port notes (what changed from the C++ and why):
- *   - The World and Sounds files load unchanged from public/crayoland/.
- *     Units stay in feet; the scene sits in a group scaled by 0.3048.
+ *   - The World and Sounds files load from public/crayoland/ as they were,
+ *     except that sample names say .mp3 (converted from AIFF) and the
+ *     footfall masks .png. Units stay in feet; the scene sits in a group
+ *     scaled by 0.3048.
  *   - Static pictures sharing a texture are merged into one mesh; grabbable
  *     ones are instances of one quad per texture, so 313 flowers and rocks
  *     are five draw calls.
@@ -41,7 +43,7 @@ import type { Vec3 } from "../../core/config";
 import { caveToWorld, caveToWorldQuat } from "../../core/navigation";
 import { hash } from "../../core/random";
 import { inputOf, type ActionState } from "../../input/actions";
-import { parseSounds, parseWorld, pictureAxes, type BeesDef, type PictureDef, type SampleDef } from "./world";
+import { parseSounds, parseWorld, pictureAxes, type BeesDef, type PictureDef, type SoundsFile } from "./world";
 import { BeeSim, ButterflySim, SIM_HZ, angleDelta } from "./creatures";
 import { Soundscape } from "./sound";
 
@@ -155,7 +157,7 @@ export function createCrayolandApp(spec: AppSpec, ctx: AppContext): CaveApp {
 
   let sound: Soundscape | null = null;
   /** Parsed Sounds file and the hive's sample names, kept so audio can be switched on later. */
-  let soundDefs: { samples: SampleDef[]; bees: { loop?: string; hit?: string } } | null = null;
+  let soundDefs: { sounds: SoundsFile; bees: { loop?: string; hit?: string } } | null = null;
   const mat4 = new THREE.Matrix4();
   const mat4b = new THREE.Matrix4();
   const v3 = new THREE.Vector3();
@@ -176,7 +178,7 @@ export function createCrayolandApp(spec: AppSpec, ctx: AppContext): CaveApp {
     navigation: { flySpeed: 30 * FT, turnSpeed: Math.PI / 2 },
     setAudio(enabled) {
       if (enabled && !sound && soundDefs) {
-        sound = new Soundscape(base, soundDefs.samples, soundDefs.bees);
+        sound = new Soundscape(base, soundDefs.sounds, soundDefs.bees);
         void sound.enable(); // we are inside a click: the browser lets the context start now
       } else if (!enabled && sound) {
         sound.dispose();
@@ -318,8 +320,8 @@ export function createCrayolandApp(spec: AppSpec, ctx: AppContext): CaveApp {
     // on later; the soundscape itself exists only where this window is the speaker.
     const st = await fetch(`${base}${soundsFile}`).then((r) => (r.ok ? r.text() : ""));
     const bees0 = world.bees[0];
-    soundDefs = { samples: parseSounds(st), bees: { loop: bees0?.sound, hit: bees0?.hitsound } };
-    if (ctx.audio) sound = new Soundscape(base, soundDefs.samples, soundDefs.bees);
+    soundDefs = { sounds: parseSounds(st), bees: { loop: bees0?.sound, hit: bees0?.hitsound } };
+    if (ctx.audio) sound = new Soundscape(base, soundDefs.sounds, soundDefs.bees);
 
     const nPict = world.pictures.filter((p) => p.kind === "pict").length;
     const bees = world.bees.reduce((a, b) => a + b.num, 0);

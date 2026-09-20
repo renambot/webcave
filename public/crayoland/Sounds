@@ -1,26 +1,26 @@
-directory /usr/CAVE/audio_demos/scs/pape
-random cricket.aiff length=3.5 pos=13.3,0,-18.8 prob=.003  maxampl=.15
-random cricket.aiff length=3.5 pos=-12.5,0,-14.1 prob=.003  maxampl=.15
-random frog.aiff length=9 pos=-62.5,0,27.3 prob=.01  maxampl=.18
-random frog2.aiff length=3 pos=-68.8,0,33.6 prob=.01  maxampl=.18
-trigger frog.aiff length=9 pos=-68.4,0,38.3 prob=.01  radius=5  maxampl=.18
-trigger frog2.aiff length=3 pos=-57.8,0,25.0 prob=.01  radius=5  maxampl=.18
-random duck2.aiff pos=-44,0,30  length=5  prob=.004  maxampl=.25
-trigger duck2.aiff pos=-50,0,35  radius=5  length=1  maxampl=.25
-loop stream.aiff pos=-80,0,37
-loop stream.aiff pos=-93.4,18.7
-loop fly.aiff pos=-63.3,4,32.4 ampl=.08
-footfall splash.aiff length=.9 radius=2 map=map.lake.bw area=-100,-100,100,100  amplitude=.15
-footfall footstep.aiff length=.5 radius=2 map=map.floor.bw area=-100,-100,100,100  amplitude=.03
-random chough.aiff pos=18.4,0,-39.8 length=34 prob=.001 maxampl=.1 minampl=.05
-random chirp.aiff pos=51.6,0,-93.0 length=7 prob=.001 maxampl=.12 minampl=.05
-random golden.whistler.aiff pos=71.1,0,-76.2 length=70 prob=.001 maxampl=.1 minampl=.05
-random magpie.aiff pos=85.5,0,-67.6 length=28 prob=.001 maxampl=.1 minampl=.05
-random raven.aiff pos=-0.4,0,-95.3 length=45 prob=.001 maxampl=.13 minampl=.05
-random red_wattle_bird.aiff pos=33.2,0,-28.1 length=11 prob=.001 maxampl=.1 minampl=.05
-random rosella.eastern.aiff pos=-3.9,0,-89.1 length=36 prob=.001 maxampl=.1 minampl=.05
-random spinebill.aiff pos=34.4,0,-92.6 length=40 prob=.001 maxampl=.1 minampl=.05
-random whip_bird.aiff pos=-82.0,0,0.0 length=11 prob=.001 maxampl=.1 minampl=.05
-random whipperwhill.aiff pos=41.8,0,-28.9 length=20 prob=.001 maxampl=.1 minampl=.05
-random magpie_group.aiff pos=16.8,0,-59.4 length=30 prob=.001 maxampl=.1 minampl=.05
-random chirp.aiff pos=60.5,0,-46.9 length=7 prob=.001 maxampl=.12 minampl=.05
+directory audio
+random cricket.mp3 length=3.5 pos=13.3,0,-18.8 prob=.003  maxampl=.15
+random cricket.mp3 length=3.5 pos=-12.5,0,-14.1 prob=.003  maxampl=.15
+random frog.mp3 length=9 pos=-62.5,0,27.3 prob=.01  maxampl=.18
+random frog2.mp3 length=3 pos=-68.8,0,33.6 prob=.01  maxampl=.18
+trigger frog.mp3 length=9 pos=-68.4,0,38.3 prob=.01  radius=5  maxampl=.18
+trigger frog2.mp3 length=3 pos=-57.8,0,25.0 prob=.01  radius=5  maxampl=.18
+random duck2.mp3 pos=-44,0,30  length=5  prob=.004  maxampl=.25
+trigger duck2.mp3 pos=-50,0,35  radius=5  length=1  maxampl=.25
+loop stream.mp3 pos=-80,0,37
+loop stream.mp3 pos=-93.4,18.7
+loop fly.mp3 pos=-63.3,4,32.4 ampl=.08
+footfall splash.mp3 length=.9 radius=2 map=map.lake.png area=-100,-100,100,100  amplitude=.15
+footfall footstep.mp3 length=.5 radius=2 map=map.floor.png area=-100,-100,100,100  amplitude=.03
+random chough.mp3 pos=18.4,0,-39.8 length=34 prob=.001 maxampl=.1 minampl=.05
+random chirp.mp3 pos=51.6,0,-93.0 length=7 prob=.001 maxampl=.12 minampl=.05
+random golden.whistler.mp3 pos=71.1,0,-76.2 length=70 prob=.001 maxampl=.1 minampl=.05
+random magpie.mp3 pos=85.5,0,-67.6 length=28 prob=.001 maxampl=.1 minampl=.05
+random raven.mp3 pos=-0.4,0,-95.3 length=45 prob=.001 maxampl=.13 minampl=.05
+random red_wattle_bird.mp3 pos=33.2,0,-28.1 length=11 prob=.001 maxampl=.1 minampl=.05
+random rosella.eastern.mp3 pos=-3.9,0,-89.1 length=36 prob=.001 maxampl=.1 minampl=.05
+random spinebill.mp3 pos=34.4,0,-92.6 length=40 prob=.001 maxampl=.1 minampl=.05
+random whip_bird.mp3 pos=-82.0,0,0.0 length=11 prob=.001 maxampl=.1 minampl=.05
+random whipperwhill.mp3 pos=41.8,0,-28.9 length=20 prob=.001 maxampl=.1 minampl=.05
+random magpie_group.mp3 pos=16.8,0,-59.4 length=30 prob=.001 maxampl=.1 minampl=.05
+random chirp.mp3 pos=60.5,0,-46.9 length=7 prob=.001 maxampl=.12 minampl=.05
