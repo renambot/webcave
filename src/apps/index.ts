@@ -64,6 +64,7 @@ export function createApp(spec: AppSpec, ctx: AppContext = { audio: false, debug
  *   mx=X my=Y mz=Z                gltf position, meters, CAVE frame
  *   style=URL center=LNG,LAT zoom= pitch= bearing=   MapLibre apps: camera and style
  *   data=URL opacity=                                 density: GeoJSON and fill opacity
+ *   data=URL clusterRadius=                           map2d: earthquake GeoJSON and cluster radius
  *   vdb=URL grid= density= steps= maxDim= color= lightDir=x,y,z   vdb volume (size, spin, mx my mz shared with gltf)
  *   points=URL maxPoints= pointSize= colorAttribute=  points cloud (size, spin, mx my mz shared)
  * (debug=1 and audio=1 are not spec overrides: the pages pass them as AppContext.)
@@ -100,12 +101,12 @@ export function appSpecFromParams(params: URLSearchParams, base: AppSpec): AppSp
     spec.options = o;
   }
   // Map options land in spec.options so the core stays app-agnostic.
-  const mapKeys = ["style", "center", "zoom", "pitch", "bearing", "buildings", "autoRotate", "data", "opacity"];
+  const mapKeys = ["style", "center", "zoom", "pitch", "bearing", "buildings", "autoRotate", "data", "opacity", "clusterRadius"];
   if (mapKeys.some((k) => params.has(k))) {
     const o: Record<string, unknown> = { ...(spec.options ?? {}) };
     if (params.has("style")) o.style = params.get("style");
     if (params.has("center")) o.center = params.get("center")!.split(",").map(Number);
-    for (const k of ["zoom", "pitch", "bearing", "autoRotate", "opacity"]) if (params.has(k)) o[k] = Number(params.get(k));
+    for (const k of ["zoom", "pitch", "bearing", "autoRotate", "opacity", "clusterRadius"]) if (params.has(k)) o[k] = Number(params.get(k));
     if (params.has("data")) o.data = params.get("data");
     if (params.has("buildings")) o.buildings = params.get("buildings") !== "0" && params.get("buildings") !== "false";
     spec.options = o;

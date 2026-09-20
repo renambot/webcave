@@ -101,6 +101,8 @@ export interface WallMapDefinition {
    * local input. May throw; the error lands in the app status.
    */
   setup?(map: MapLibreMap, opts: WallMapOptions): void;
+  /** Whether the map repeats the world sideways at low zoom (MapLibre default true). A world-scale app spanning a wide wall wants false. */
+  renderWorldCopies?: boolean;
 }
 
 /** OpenFreeMap: free vector tiles (OpenMapTiles schema), no API key. */
@@ -259,6 +261,7 @@ class MapView implements FlatView {
       keyboard: false, // WebCAVE owns the keyboard
       attributionControl: false, // no attribution button/popup on the tiles
       pixelRatio: 1,
+      renderWorldCopies: def.renderWorldCopies ?? true,
       canvasContextAttributes: { antialias: true, preserveDrawingBuffer: true },
     });
 

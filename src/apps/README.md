@@ -15,6 +15,7 @@ src/apps/
   points/         OpenVDB PointDataGrid point cloud (scene app; pointsReader.ts decodes the multi-pass buffers)
   map/            MapLibre map across a wall       (flat app; wallmap.ts = shared MapLibre machinery)
   density/        2D choropleth on MapLibre        (flat app, built on map/wallmap.ts)
+  map2d/          clustered earthquakes, donut markers (flat app, built on map/wallmap.ts)
   crayoland/      Dave Pape's Crayoland, ported    (scene app; world.ts parses the original files,
                                                     creatures.ts deterministic bees and butterflies,
                                                     sound.ts Web Audio soundscape)
@@ -136,7 +137,8 @@ sub-rectangles per tile, the shared camera, interaction from controllers.
 An app on top of it is a `WallMapDefinition`: default `style`, `center`,
 `zoom`, `pitch`, `bearing`, `autoRotate`, and a `setup(map, opts)` that adds
 sources and layers when the style has loaded (read your own options from
-`opts.raw`). See `density/index.ts`, thirty lines including the layer.
+`opts.raw`). See `density/index.ts`, thirty lines including the layer, and
+`map2d/index.ts` for clustering, HTML markers and `renderWorldCopies: false`.
 
 ## Input
 

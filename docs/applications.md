@@ -1,6 +1,6 @@
 # Applications
 
-An application owns a three.js scene and advances it from the cluster's simulation time. WebCAVE handles cameras, stereo and screens. Seven are included, in `src/apps/`:
+An application owns a three.js scene and advances it from the cluster's simulation time. WebCAVE handles cameras, stereo and screens. Eight are included, in `src/apps/`:
 
 | Name | What it shows | Options |
 |---|---|---|
@@ -10,6 +10,7 @@ An application owns a three.js scene and advances it from the cluster's simulati
 | `vdb` | OpenVDB volume (smoke, clouds) ray-marched in the CAVE; the file is fetched and decoded in the browser | `vdb` URL, `grid`, `size`, `spin`, position, `density` (multiplier), `steps`, `color`, `maxDim`, `lightDir` |
 | `points` | OpenVDB PointDataGrid (particles) as a point cloud, decoded in the browser; colours from `Cd` when present | `points` URL, `grid`, `size`, `spin`, position, `maxPoints`, `pointSize`, `colorAttribute`, `color` |
 | `density` | 2D choropleth of population density from a GeoJSON (MapLibre's "visualize population density" example, Rwanda provinces); same wall and camera machinery as `map` | the `map` camera options plus `data` (GeoJSON URL with `population` and `sq-km` per feature), `opacity` |
+| `map2d` | Clustered earthquakes with SVG donut-chart clusters (MapLibre's "display HTML clusters with custom properties" example), the world spanning the wall once; same wall and camera machinery as `map` | the `map` camera options plus `data` (GeoJSON URL of points with a numeric `mag`), `clusterRadius` (pixels, 80) |
 | `crayoland` | Dave Pape's Crayoland (EVL, 1995): a crayon-drawn meadow with bees, butterflies, flies, and flowers and rocks to grab and throw with the wand; birds, frogs, a stream and the hive's hum on the audio node | `model` (folder URL with `World`, `Sounds`, `tex/`, `audio/`; default `/crayoland/`), options `world`, `sounds` (file names); with the simulator's debug button or `?debug=1`: pick spheres, wand point, touched object highlighted |
 
 The application is part of the cluster config, so every Node runs the same one. Set it on the Manager:
@@ -20,7 +21,7 @@ npm run manager -- --app gltf --model /models/DamagedHelmet.glb --size 0.8 --spi
 
 For development, URL parameters override it on the simulator or a Node: `?app=gltf&model=/models/DamagedHelmet.glb&size=0.8&spin=0.3&mx=0&my=1.5&mz=-1.05`. Files under `public/` are served at the root, so drop a `.glb` in `public/models/` and reference it as `/models/name.glb`. The bundled Damaged Helmet is a Khronos sample, CC BY 4.0 (see `public/models/README.md`).
 
-There are two kinds of application. **Scene apps** (shapes, gltf, vdb, points, crayoland) own a three.js scene that WebCAVE renders from each screen's off-axis camera, with stereo and navigation. **Flat apps** (map, density) are 2D: they render themselves into a container per screen and receive the screen's rectangle in the overall wall image, so adjacent screens join into one picture. Stereo does not apply to flat apps.
+There are two kinds of application. **Scene apps** (shapes, gltf, vdb, points, crayoland) own a three.js scene that WebCAVE renders from each screen's off-axis camera, with stereo and navigation. **Flat apps** (map, density, map2d) are 2D: they render themselves into a container per screen and receive the screen's rectangle in the overall wall image, so adjacent screens join into one picture. Stereo does not apply to flat apps.
 
 ## Adding an application
 
@@ -150,11 +151,14 @@ PointDataGrids store particles rather than voxel values, in a layout of their ow
 ```
 http://localhost:5173/simulator.html?config=wall-3x1&app=map
 http://localhost:5173/simulator.html?config=wall-3x1&app=density
+http://localhost:5173/simulator.html?config=wall-3x1&app=map2d
 npm run manager -- --config wall-2x2            # wall-2x2.json already selects the map
 npm run manager -- --config wall-3x1 --app density
 ```
 
-Both are thin definitions on a shared module, `src/apps/map/wallmap.ts`: a default camera and style plus a `setup(map)` hook that adds sources and layers once the style has loaded. A new MapLibre-based app is a folder with those two things.
+All three are thin definitions on a shared module, `src/apps/map/wallmap.ts`: a default camera and style plus a `setup(map)` hook that adds sources and layers once the style has loaded. A new MapLibre-based app is a folder with those two things.
+
+`map2d` shows two more things a MapLibre app may need. It uses MapLibre's own clustering with `clusterProperties` that count earthquakes per magnitude band, and draws each cluster as an HTML marker, an SVG donut with the five counts and the total in the middle; markers are DOM elements inside the map container, which the wall machinery extends and clips like the canvas, so a donut on a bezel is drawn by both neighbouring screens at the same place. It also sets `renderWorldCopies: false` on its definition and a default zoom of 3.5, so the world spans a 5760-pixel wall exactly once instead of repeating; set `zoom` in the config for other wall widths (the world is 512 × 2^zoom pixels wide). Clustering depends on the zoom, so the simulator's small tiles, which render at a lower zoom, group the quakes differently from the full-size wall.
 
 Every node runs its own MapLibre instance with the same camera. To show exactly its part of the wall, a tile shifts MapLibre's center point with asymmetric padding, which MapLibre turns into a proper off-center perspective, and scales its vertical field of view so its camera distance matches the wall's. MapLibre clamps the center point to the canvas, so tiles far from the wall center get a canvas that extends to the center and is clipped to the tile: the outer tiles of a 3x1 render 1.5 times their pixels, a 2x2 wall nothing extra. Because MapLibre's zoom is a pixel scale, a canvas drawn smaller than the display's native size (a simulator tile, a windowed node) uses zoom plus log2 of the scale, so it shows the same extent as the wall. A side effect: small simulator tiles render at a lower zoom level, and zoom-dependent styling such as the 3D buildings (from zoom 15) may not appear there even though the fullscreen wall shows it; zoom in on the controller to see it. Neighbouring tiles unproject to identical coordinates at their shared edge, bezels included.
 
