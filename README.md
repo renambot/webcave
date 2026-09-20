@@ -48,7 +48,7 @@ http://<host>:5173/node.html?node=front&manager=ws://<manager-host>:8765
 - [Configuration files](docs/configuration.md): describing an installation in JSON
 - [Input devices](docs/input.md): keyboard, mouse, gamepads, input on nodes
 - [Tracking](docs/tracking.md): the tracking bridge for DTrack, NatNet and VRPN, calibration, wand buttons
-- [Applications](docs/applications.md): the bundled apps, their options, and how to write one
+- [Applications](docs/applications.md): the bundled apps and their options, a step-by-step guide to adding one, and notes on Crayoland, the OpenVDB and the MapLibre apps
 - [Development notes](docs/development.md): technology, repository layout, frame protocol, testing tools
 - [Specification](docs/SPECIFICATION.md): design document, research notes and roadmap
 

@@ -22,17 +22,63 @@ For development, URL parameters override it on the simulator or a Node: `?app=gl
 
 There are two kinds of application. **Scene apps** (shapes, gltf, vdb, points, crayoland) own a three.js scene that WebCAVE renders from each screen's off-axis camera, with stereo and navigation. **Flat apps** (map, density) are 2D: they render themselves into a container per screen and receive the screen's rectangle in the overall wall image, so adjacent screens join into one picture. Stereo does not apply to flat apps.
 
-## Writing an application
+## Adding an application
 
-Create a folder `src/apps/<name>/` whose `index.ts` default-exports an app definition. Folders are discovered automatically; nothing to register. See `src/apps/README.md` for both contracts and templates, and `src/apps/shapes/index.ts` for a commented tutorial.
+An application is a folder under `src/apps/` whose `index.ts` default-exports an app definition. The registry discovers folders at build time, so there is nothing to register, and the folder name is the app's name in configs and URLs.
+
+**1. Create the folder and the minimal app.** A scene app owns a three.js scene and moves things as a function of the cluster time:
+
+```ts
+// src/apps/orbit/index.ts
+import * as THREE from "three";
+import type { AppContext, AppDefinition, AppSpec, CaveApp } from "../types";
+
+function create(spec: AppSpec, ctx: AppContext): CaveApp {
+  const scene = new THREE.Scene();
+  scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+  const ball = new THREE.Mesh(new THREE.SphereGeometry(0.2), new THREE.MeshStandardMaterial({ color: 0xff8844 }));
+  scene.add(ball);
+  const radius = Number(spec.options?.radius ?? 1); // an option from the config or URL
+
+  return {
+    name: "orbit",
+    scene,
+    ready: Promise.resolve(),
+    status: "ready",
+    update(time, state) {
+      // Everything from `time`: the same time gives the same scene on every node.
+      ball.position.set(Math.cos(time) * radius, 1.5, Math.sin(time) * radius - 1);
+    },
+  };
+}
+
+export default { name: "orbit", description: "A ball orbiting in the CAVE", create } satisfies AppDefinition;
+```
+
+The CAVE frame is meters, Y up, floor at y = 0, viewer near the origin looking toward −z; the 3 m CAVE's front wall is at z = −1.5. Anything you put there appears in the room.
+
+**2. Run it.** `npm run dev`, then <http://localhost:5173/simulator.html?config=cave-3m&app=orbit>. The simulator shows it on every tile and in the overview. On a cluster, `npm run manager -- --app orbit`, or put `"app": { "name": "orbit" }` in the config file.
+
+**3. Add options.** Read them from `spec.options` as above; set them in the config (`"app": { "name": "orbit", "options": { "radius": 2 } }`). To make them settable from the URL for development, add a line in `appSpecFromParams` in `src/apps/index.ts`.
+
+**4. Load assets.** Put files under `public/` and fetch them by absolute path (`/models/thing.glb`), so every node gets the same URL. Set `ready` to the loading promise and update `status` while loading; rendering starts immediately, so show a placeholder. The glTF app is the template for this.
+
+**5. React to input.** Two ways. On every node, read the replicated action state in `update`: `inputOf(state).buttons.primary`. Or implement `onInput(actions, dt, state, send)`, which runs on the controller only, and publish the result as shared state with `send({ myKey: value })`; the Manager replicates it and every node reads `state.appState.myKey` in `update`. The shapes app toggles a shared clock with button A this way; Crayoland publishes grabs, throws and creature reactions. Declare `navigation: { flySpeed, turnSpeed, planar }` to tune the standard bindings, or `ownsNavigation: true` (flat apps) to take the sticks over.
+
+**6. Use the head and wand** when the world should react to where the user is: `state.head` and `state.wand` are poses in the CAVE frame; `caveToWorld(state.navigation, pose.position)` from `src/core/navigation.ts` gives world coordinates.
+
+**7. Sound and debug drawing.** `ctx.audio` says this window is the speaker: create your `AudioContext` after the first click or key press and drive gains from the head position in `update`. `ctx.debug` asks for debug drawing. Implement `setAudio` and `setDebug` so the simulator's buttons switch them live. Crayoland's `sound.ts` and its debug spheres are complete examples.
+
+**8. Flat (2D) apps.** For maps, documents and dashboards, export `kind: "flat"` and a `createView(container, screen, layout, opts)` that draws exactly the screen's rectangle of the shared picture (`layout.rects[screen.id]`), reading its state from `state.appState` and reporting changes with `opts.send` when `opts.interactive`. A MapLibre app is thirty lines on top of `map/wallmap.ts`; the density app shows it.
 
 Rules that keep the cluster in step:
 
 - Every pose is a function of the frame `time` the Manager sends. No `Date.now()`, no accumulated deltas. Randomness comes from the seeded, stateless helpers in `src/core/random.ts`, or from a simulation stepped at a fixed rate from time zero, which a late-joining node fast-forwards.
 - Anything a controller changes goes through the shared app state (`send(patch)` in `onInput`), which the Manager replicates in every frame. Toggle clocks with the helpers in `src/apps/types.ts` so the animation never jumps.
-- The head, the wand and the navigation are in the frame state; convert them to world coordinates with the helpers in `src/core/navigation.ts`.
-- An app receives an `AppContext` telling it whether this window is the sound output and whether debug drawing is wanted, with optional `setAudio` and `setDebug` hooks for the simulator's toggles; a scene app may declare `navigation` hints (speed, turn rate, planar) for the standard bindings.
+- Never read the keyboard, mouse or gamepads yourself, and never touch cameras or the renderer; WebCAVE owns them.
 - Assets load asynchronously per node; expose `ready` and a `status` string so the HUD can show progress.
+
+`src/apps/README.md` has the same material next to the code with both contracts in full, and `src/apps/shapes/index.ts` is a commented tutorial.
 
 ## Crayoland
 
