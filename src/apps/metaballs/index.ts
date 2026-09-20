@@ -52,7 +52,8 @@ export function createMetaballsApp(spec: AppSpec, _ctx: AppContext): WebGpuApp {
   const statsSource: StatsSource = {
     fps: () => Number(stats.fps.latest) || 0,
     // The tracker's rolling average never fills (its index update has a precedence slip), so show the latest sample, as its own UI did.
-    entries: () => [...(stats.entries as Map<string, { latest: number }>)].map(([k, e]) => [k, e.latest] as [string, number]).filter(([, v]) => v > 0),
+    // Every entry, whatever its value: a pass short enough to round to 0 µs must not make its row flicker.
+    entries: () => [...(stats.entries as Map<string, { latest: number }>)].map(([k, e]) => [k, e.latest] as [string, number]),
     rendering: () => renders > 0,
   };
 
