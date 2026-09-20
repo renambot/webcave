@@ -24,7 +24,8 @@
  *   stereo=MODE  override the configured output mode (scene apps)
  *   input=1      take keyboard, mouse and gamepad input on this window (development;
  *                the config's `input: true` on the node is the proper switch)
- *   audio=1      this window plays the application's sound (config: `audio: true` on the node)
+ *   audio=1      this window plays the application's sound (config: `audio: true` on the node,
+ *                which applies to the window of the node's first screen only)
  *   debug=1      ask the application for its debug drawing
  *   app= model= size= spin= mx= my= mz= style= center= zoom= ...   override the application, for development
  *
@@ -195,7 +196,9 @@ function connect() {
         sendToManager = send;
         const me = cfg.nodes.find((n) => n.id === nodeId);
         inputEnabled = inputEnabled || !!me?.input;
-        audioEnabled = audioEnabled || !!me?.audio;
+        // A multi-screen node opens one window per screen; only the first
+        // screen's window takes the sound, so the room hears it once.
+        audioEnabled = audioEnabled || (!!me?.audio && screen.id === (me.screens[0] ?? screen.id));
         teardown();
         setup(cfg, screen);
         break;

@@ -1,6 +1,6 @@
 # Running WebCAVE
 
-Requires Node.js 20 or newer.
+Requires Node.js 20 or newer. This page explains each piece; [deployment.md](deployment.md) walks through complete setups, from a laptop to a cluster.
 
 ```sh
 npm install

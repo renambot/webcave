@@ -29,7 +29,7 @@ Units are meters and degrees in a Y-up, right-handed frame with the physical flo
 
 ## Nodes
 
-A node is a computer running one browser window per screen it lists. `"input": true` lets that node's keyboard, mouse and gamepads steer the cluster (see [input.md](input.md)); `"audio": true` makes it the sound output for applications that have sound (the machine wired to the speakers; exactly one node should have it). Both are off by default.
+A node is a computer running one browser window per screen it lists. `"input": true` lets that node's keyboard, mouse and gamepads steer the cluster (see [input.md](input.md)); `"audio": true` makes it the sound output for applications that have sound (the machine wired to the speakers; exactly one node should have it, and on a multi-screen node only the window of the first listed screen plays). Both are off by default.
 
 ```json
 { "id": "pc", "screens": ["front", "left", "right", "floor"], "input": true, "audio": true }
