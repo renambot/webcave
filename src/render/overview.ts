@@ -73,6 +73,8 @@ export class OverviewRenderer {
     this.cfg = cfg;
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
     this.renderer.setPixelRatio(Math.min(2, window.devicePixelRatio));
+    this.renderer.shadowMap.enabled = true; // wall textures and the world pass show the app's shadows too
+    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.scene.background = this.background;
     this.camera = new THREE.PerspectiveCamera(50, 1, 0.1, 500);
     this.worldCamera.matrixAutoUpdate = false;

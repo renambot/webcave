@@ -48,6 +48,10 @@ export class ViewportRenderer {
     // Pixel-exact stereo modes (row/column interleave) need one canvas pixel
     // per device pixel, so never let the browser upscale for us.
     this.renderer.setPixelRatio(1);
+    // Shadow maps are on so apps can opt in per light and mesh (castShadow /
+    // receiveShadow); they cost nothing until a light casts.
+    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.camera.matrixAutoUpdate = true;
     this.rig.rotation.order = "YXZ"; // yaw about world up, then pitch
     this.rig.add(this.camera);

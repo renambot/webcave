@@ -18,6 +18,9 @@
  *   - things beyond the walls are seen "through the windows"
  *   - distant, static objects (pillars) give the eye a parallax reference so
  *     head movement reads as depth
+ *
+ * Shadows: the renderers have shadow maps enabled; an app opts in by setting
+ * castShadow on a light and on meshes, and receiveShadow on what they fall on.
  */
 import * as THREE from "three";
 import { clockTime, toggleClockPatch, type AppDefinition, type CaveApp } from "../types";
@@ -43,7 +46,19 @@ export function createShapesApp(): CaveApp {
   scene.add(new THREE.HemisphereLight(0x8899ff, 0x334422, 1.2)); // sky / ground tint
   const sun = new THREE.DirectionalLight(0xffffff, 2.2);
   sun.position.set(4, 8, 3);
+  // The sun casts the shadows. Its shadow camera is orthographic: size it to
+  // the region where shapes live (about ±8 m around the viewer) so the map's
+  // resolution is spent there and not on the far pillars.
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(2048, 2048);
+  sun.shadow.camera.left = sun.shadow.camera.bottom = -8;
+  sun.shadow.camera.right = sun.shadow.camera.top = 8;
+  sun.shadow.camera.near = 1;
+  sun.shadow.camera.far = 30;
+  sun.shadow.bias = -0.0005;
+  sun.shadow.normalBias = 0.02;
   scene.add(sun);
+  scene.add(sun.target); // the light aims at its target, at the origin
   const back = new THREE.DirectionalLight(0x99bbff, 0.8); // cool rim light from behind
   back.position.set(-6, 5, -8);
   scene.add(back);
@@ -62,6 +77,7 @@ export function createShapesApp(): CaveApp {
     new THREE.MeshStandardMaterial({ color: 0x1a2742, roughness: 0.9, metalness: 0.0 }),
   );
   ground.rotation.x = -Math.PI / 2; // PlaneGeometry faces +z; lay it flat
+  ground.receiveShadow = true;
   scene.add(ground);
 
   // ---- Reference pillars ----------------------------------------------------
@@ -74,6 +90,7 @@ export function createShapesApp(): CaveApp {
     const r = 10 + (i % 3) * 3;
     const p = new THREE.Mesh(pillarGeo, pillarMat);
     p.position.set(Math.cos(a) * r, 2, Math.sin(a) * r);
+    p.castShadow = true;
     scene.add(p);
   }
 
@@ -89,6 +106,7 @@ export function createShapesApp(): CaveApp {
   const add = (geo: THREE.BufferGeometry, color: number, pos: [number, number, number], spin: [number, number, number], bob = 0.2) => {
     const mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color, roughness: 0.35, metalness: 0.3 }));
     mesh.position.set(...pos);
+    mesh.castShadow = true;
     carousel.add(mesh);
     shapes.push({ mesh, base: mesh.position.clone(), spin: new THREE.Vector3(...spin), bob });
   };
@@ -116,6 +134,7 @@ export function createShapesApp(): CaveApp {
       smallGeo,
       new THREE.MeshStandardMaterial({ color: new THREE.Color().setHSL(hue, 0.7, 0.6), emissive: new THREE.Color().setHSL(hue, 0.7, 0.2) }),
     );
+    m.castShadow = true;
     carousel.add(m);
     orbiters.push(m);
   }
