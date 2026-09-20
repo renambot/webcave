@@ -149,8 +149,11 @@ const definition: WallMapDefinition = {
       updateMarkers();
     });
     // The wall machinery moves the camera every frame it changes; markers follow.
+    // `idle` covers a node whose camera never moves: it fires once every tile
+    // is loaded and clustered, after which querySourceFeatures is complete.
     map.on("move", updateMarkers);
     map.on("moveend", updateMarkers);
+    map.on("idle", updateMarkers);
   },
 };
 
