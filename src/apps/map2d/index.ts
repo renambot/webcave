@@ -23,7 +23,10 @@
  */
 import { Marker, type Map as MapLibreMap } from "maplibre-gl";
 import type { AppDefinition, AppSpec } from "../types";
-import { OPENFREEMAP_BRIGHT, createWallMapApp, type WallMapDefinition } from "../map/wallmap";
+import { createWallMapApp, type WallMapDefinition } from "../map/wallmap";
+
+/** The example's own basemap: MapLibre's demo tiles, coloured countries on a blue ocean. */
+const DEMOTILES = "https://demotiles.maplibre.org/style.json";
 
 const EARTHQUAKES = "https://maplibre.org/maplibre-gl-js/docs/assets/earthquakes.geojson";
 
@@ -72,7 +75,7 @@ const definition: WallMapDefinition = {
   // Zoom 3.5 spans the world once across a 5760-pixel wall (world width is 512 * 2^zoom pixels);
   // set zoom in the config for other wall widths. One world only, so a donut is never drawn twice.
   defaults: {
-    style: OPENFREEMAP_BRIGHT,
+    style: DEMOTILES,
     center: [0, 20],
     zoom: 3.5,
     pitch: 0,
@@ -117,7 +120,7 @@ const definition: WallMapDefinition = {
       filter: ["!=", "cluster", true],
       layout: {
         "text-field": ["number-format", ["get", "mag"], { "min-fraction-digits": 1, "max-fraction-digits": 1 }],
-        "text-font": ["Noto Sans Bold"], // the OpenFreeMap style's glyphs
+        "text-font": ["Open Sans Semibold"], // the demo tiles' glyphs (the example's font)
         "text-size": 10,
       },
       paint: { "text-color": ["case", ["<", ["get", "mag"], 3], "black", "white"] },
