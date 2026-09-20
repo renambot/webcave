@@ -62,9 +62,11 @@ A JSON file in `configs/trackers/`, validated with zod; `"$schema": "./schema.js
 
 ```sh
 npm run manager
-npx tsx scripts/fake-tracker.ts dtrack        # or natnet, or vrpn
+npx tsx scripts/fake-tracker.ts dtrack        # or natnet, or vrpn; an optional port follows (dtrack 5001)
 npm run tracker -- --config dtrack             # natnet needs "multicast": "" and "server": "127.0.0.1" for the fake
 ```
+
+Stop the fake with Ctrl-C. The `vrpn` config works with the fake as it is; for `natnet`, edit the config as noted or pass a copy with `--config path/to/file.json`.
 
 Open the simulator as a controller (`?manager=ws://localhost:8765`) and watch the head and the wand stick move in the overview. The bridge was verified this way for all three protocols, including the axis and unit conversion from DTrack's Z-up millimeters, NatNet's asset-name resolution and VRPN's button and analog messages.
 
