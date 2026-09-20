@@ -6,10 +6,18 @@ An installation is a JSON file in `configs/`. The Manager loads it by name (`--c
 |---|---|
 | `cave-3m.json` | 3 m CAVE, four screens, one computer per screen |
 | `cave-3m-1pc.json` | The same CAVE from one computer with four displays |
+| `cave.json` | A 5.3 × 3 m room: front, left and right walls, floor and ceiling, one computer per screen |
 | `wall-3x1.json` | Three 16:9 tiles side by side |
 | `wall-2x2.json` | Four 16:9 tiles with 2 cm bezels, runs the map app by default |
 | `example-measured.json` | Template using measured corners and a per-screen stereo override |
 | `schema.json` | Generated JSON Schema; regenerate with `npm run schema` after changing the types |
+
+The simulator's overview draws each configuration as the room it describes, with the head (orange cone), the wand (blue stick) and the frusta from the head through every screen. In "scene in space" mode the application shows through the screens:
+
+| | |
+|---|---|
+| ![wall-3x1: three 16:9 tiles side by side](images/config-wall-3x1.jpg) `wall-3x1.json` | ![wall-2x2: four 16:9 tiles with bezels](images/config-wall-2x2.jpg) `wall-2x2.json` |
+| ![cave-3m: a 3 m cube with front, left, right and floor](images/config-cave-3m.jpg) `cave-3m.json` | ![cave: a 5.3 m wide room with floor and ceiling](images/config-cave.jpg) `cave.json` |
 
 ## Screens
 
