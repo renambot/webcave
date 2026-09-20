@@ -63,7 +63,7 @@ The CAVE frame is meters, Y up, floor at y = 0, viewer near the origin looking t
 
 **4. Load assets.** Put files under `public/` and fetch them by absolute path (`/models/thing.glb`), so every node gets the same URL. Set `ready` to the loading promise and update `status` while loading; rendering starts immediately, so show a placeholder. The glTF app is the template for this.
 
-**5. React to input.** Two ways. On every node, read the replicated action state in `update`: `inputOf(state).buttons.primary`. Or implement `onInput(actions, dt, state, send)`, which runs on the controller only, and publish the result as shared state with `send({ myKey: value })`; the Manager replicates it and every node reads `state.appState.myKey` in `update`. The shapes app toggles a shared clock with button A this way; Crayoland publishes grabs, throws and creature reactions. Declare `navigation: { flySpeed, turnSpeed, planar }` to tune the standard bindings, or `ownsNavigation: true` (flat apps) to take the sticks over.
+**5. React to input.** Two ways. On every node, read the replicated action state in `update`: `inputOf(state).buttons.primary`. Or implement `onInput(actions, dt, state, send)`, which runs on the controller only, and publish the result as shared state with `send({ myKey: value })`; the Manager replicates it and every node reads `state.appState.myKey` in `update`. The shapes app toggles a shared clock with button A this way; Crayoland publishes grabs, throws and creature reactions. See "How a change reaches every node" below. Declare `navigation: { flySpeed, turnSpeed, planar }` to tune the standard bindings, or `ownsNavigation: true` (flat apps) to take the sticks over.
 
 **6. Use the head and wand** when the world should react to where the user is: `state.head` and `state.wand` are poses in the CAVE frame; `caveToWorld(state.navigation, pose.position)` from `src/core/navigation.ts` gives world coordinates.
 
@@ -79,6 +79,30 @@ Rules that keep the cluster in step:
 - Assets load asynchronously per node; expose `ready` and a `status` string so the HUD can show progress.
 
 `src/apps/README.md` has the same material next to the code with both contracts in full, and `src/apps/shapes/index.ts` is a commented tutorial.
+
+## How a change reaches every node
+
+An application never changes an object on the node where an event happened. Every node draws a function of the frame the Manager broadcast, so a change has to travel through the Manager to reach all screens for the same frame. The path:
+
+1. **The event happens on a controller**: the simulator, a node with `input: true`, or the tracking bridge. The controller runs the same app instance as the render nodes, and its `onInput(actions, dt, state, send)` hook sees the buttons, the wand and the frame.
+2. **The hook publishes a record** with `send(patch)`. That becomes a `setAppState` message, and the Manager shallow-merges the patch, key by key, into the shared `appState`.
+3. **Every node receives the new state** in the next frame message, since the whole `appState` travels in every frame.
+4. **Each node applies it in `update(time, state)`**, setting the color, texture or position from `state.appState`. The node that raised the event does exactly the same; it does not apply the change locally first.
+
+The change reaches all nodes within one frame, and they apply it for the same frame number, inside the barrier.
+
+**Publish state, not commands.** Say "the cube is red", not "turn the cube red". A node that joins late or reconnects gets the full `appState` in its first frame and rebuilds the same picture; a command would have been missed. For a change that unfolds over time, store the starting conditions and the cluster time it began, and let `update` compute the rest from `time`:
+
+- Crayoland publishes a thrown flower as position, velocity and release time; every node evaluates the parabola from `time`.
+- Its grab is an offset in wand coordinates, so the held object follows the wand from the frame's own wand pose.
+- Toggling an animation uses the shared clock helpers in `src/apps/types.ts`, which store the elapsed time and the moment of the toggle so nothing jumps.
+
+**Keep two things in mind.**
+
+- The patch is a shallow merge at the top level. Sending `{ flowers: {...} }` replaces the whole `flowers` value, so send the complete sub-object, or use one key per object.
+- The whole `appState` is resent every frame, so keep it compact: ids and rounded numbers rather than meshes or large arrays. Textures and models are never in the state; a node loads them from `public/` by URL, and the state only names which one is current.
+
+The shapes app is the smallest example: `onInput` sends a clock toggle when button A is pressed, and `update` reads the clock to rotate the carousel on every node, about ten lines in all.
 
 ## Crayoland
 
