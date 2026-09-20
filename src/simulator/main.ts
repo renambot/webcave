@@ -25,7 +25,7 @@
  *
  * URL parameters: config=NAME|url, manager=ws://..., app=/model=/size=/spin=/mx my mz,
  * stereo=, anaglyph=, overview=none|walls|world, yaw= pitch= x= y= z=, help=1, autohead=1,
- * audio=1 (this page plays the application's sound).
+ * audio=1 (this page plays the application's sound), debug=1 (the application's debug drawing).
  */
 import * as THREE from "three";
 import { type ClusterConfig, type StereoMode, type AnaglyphScheme, resolveStereo } from "../core/config";
@@ -173,7 +173,8 @@ function createApp(cfg: ClusterConfig, link: ControlLink, hooks: AppHooks): App 
   // A "scene" app is rendered by one ViewportRenderer per tile; a "flat" app
   // (the map) creates one FlatView per tile inside a plain div.
   const audioParam = params.get("audio") === "1";
-  const demo = createCaveApp(appSpecFromParams(params, cfg.app), { audio: audioParam });
+  const debugParam = params.get("debug") === "1";
+  const demo = createCaveApp(appSpecFromParams(params, cfg.app), { audio: audioParam, debug: debugParam });
   const flat = isFlatApp(demo) ? demo : null;
   const sceneApp = isFlatApp(demo) ? null : demo;
   const layout3 = wallLayout(cfg);
@@ -225,7 +226,7 @@ function createApp(cfg: ClusterConfig, link: ControlLink, hooks: AppHooks): App 
   const overview = new OverviewRenderer(cfg, overviewCanvas);
 
   // Debug handle for scripts/screenshot.mjs --eval and the browser console.
-  (window as unknown as { webcave: unknown }).webcave = { cfg, app: demo, tiles, flatViews, lastState: () => lastState };
+  (window as unknown as { webcave: unknown }).webcave = { cfg, app: demo, tiles, flatViews, lastState: () => lastState, input: () => input };
 
   /**
    * The node side of the protocol, for all tiles at once. Same shape as
@@ -301,12 +302,13 @@ function createApp(cfg: ClusterConfig, link: ControlLink, hooks: AppHooks): App 
   const btnSwap = $<HTMLButtonElement>("#btn-swap");
   const btnAutoHead = $<HTMLButtonElement>("#btn-autohead");
   const btnAudio = $<HTMLButtonElement>("#btn-audio");
+  const btnDebug = $<HTMLButtonElement>("#btn-debug");
   const syncSel = $<HTMLSelectElement>("#sync");
   const configSel = $<HTMLSelectElement>("#config");
   const overviewModeSel = $<HTMLSelectElement>("#overview-mode");
 
   // Toggle buttons (panoweb style): .active plus aria-pressed.
-  const toggles = { swap: false, autoHead: false, audio: audioParam };
+  const toggles = { swap: false, autoHead: false, audio: audioParam, debug: debugParam };
   const setToggle = (btn: HTMLButtonElement, on: boolean) => {
     btn.classList.toggle("active", on);
     btn.setAttribute("aria-pressed", String(on));
@@ -392,19 +394,25 @@ function createApp(cfg: ClusterConfig, link: ControlLink, hooks: AppHooks): App 
   btnAutoHead.addEventListener("click", () => setAutoHead(!toggles.autoHead));
   // Audio: apps with setAudio switch at runtime (this click is the gesture the
   // browser wants); others reload with the parameter, since audio is decided at creation.
-  setToggle(btnAudio, toggles.audio);
-  btnAudio.addEventListener("click", () => {
-    toggles.audio = !toggles.audio;
-    setToggle(btnAudio, toggles.audio);
-    if (demo.setAudio) {
-      demo.setAudio(toggles.audio);
-    } else {
-      const p = new URLSearchParams(location.search);
-      if (toggles.audio) p.set("audio", "1");
-      else p.delete("audio");
-      location.search = p.toString();
-    }
-  });
+  // Both toggles work the same way: an app with the hook switches live; otherwise
+  // the page reloads with the parameter, since the context is fixed at creation.
+  const bindContextToggle = (btn: HTMLButtonElement, key: "audio" | "debug", hook: ((on: boolean) => void) | undefined) => {
+    setToggle(btn, toggles[key]);
+    btn.addEventListener("click", () => {
+      toggles[key] = !toggles[key];
+      setToggle(btn, toggles[key]);
+      if (hook) {
+        hook(toggles[key]);
+      } else {
+        const p = new URLSearchParams(location.search);
+        if (toggles[key]) p.set(key, "1");
+        else p.delete(key);
+        location.search = p.toString();
+      }
+    });
+  };
+  bindContextToggle(btnAudio, "audio", demo.setAudio?.bind(demo));
+  bindContextToggle(btnDebug, "debug", demo.setDebug?.bind(demo));
   if (params.get("autohead") === "1") setAutoHead(true); // simulated head sway is off by default
   $("#btn-reset").addEventListener("click", () => resetAll());
 
@@ -445,6 +453,7 @@ function createApp(cfg: ClusterConfig, link: ControlLink, hooks: AppHooks): App 
     getApp: () => demo,
     onReset: () => resetAll(),
     forcedProfile: params.get("gamepad"),
+    defaultWand: cfg.defaultWand,
   });
   const keys = input.keys;
   input.bindKeyboard((e) => {
@@ -485,46 +494,30 @@ function createApp(cfg: ClusterConfig, link: ControlLink, hooks: AppHooks): App 
     head.position = [...cfg.defaultHead.position] as [number, number, number];
     head.yaw = head.pitch = head.roll = 0;
     if (!toggles.autoHead) sendHead();
-    wand.position = [...cfg.defaultWand.position] as [number, number, number];
-    wand.yaw = wand.pitch = 0;
-    sendWand();
+    input.resetWand();
   }
 
-  // Simulated wand: a hand hanging off the head. The Manager derives the pose
-  // from the head and this offset (head yaw frame) every frame; Shift + W/S A/D
-  // Q/E move the offset (1 m/s), Shift + Alt + W/S A/D pitch and yaw it
-  // (60°/s). Sent as a relative setWand; a tracker sends absolute poses instead.
-  // Its buttons are the ordinary input actions (Enter / gamepad A = primary).
-  // Keys are matched by physical code (keyw...) so modifiers do not change
-  // them, and Ctrl is avoided: Ctrl+W closes the tab on Windows and Linux.
-  const wand = { position: [...cfg.defaultWand.position] as [number, number, number], yaw: 0, pitch: 0 };
-  function sendWand() {
-    headEuler.set(wand.pitch, wand.yaw, 0);
-    headQuat.setFromEuler(headEuler);
-    link.send({ type: "setWand", wand: { position: [...wand.position], orientation: [headQuat.x, headQuat.y, headQuat.z, headQuat.w] }, relative: true });
-  }
+  // Simulated wand: the InputController owns the hand offset (d-pad, reset);
+  // the simulator adds keys on top: Shift + W/S A/D Q/E move it (1 m/s),
+  // Shift + Alt + W/S A/D pitch and yaw it (60°/s). Keys are matched by
+  // physical code (keyw...) so modifiers do not change them, and Ctrl is
+  // avoided: Ctrl+W closes the tab on Windows and Linux.
   const K = { w: "keyw", s: "keys", a: "keya", d: "keyd", q: "keyq", e: "keye" };
   function stepWand(dt: number): boolean {
     if (!keys.has("shift")) return false;
-    let changed = false;
+    const axis = (neg: string, pos: string) => (keys.has(pos) ? 1 : 0) - (keys.has(neg) ? 1 : 0);
     if (keys.has("alt")) {
       const r = ((60 * Math.PI) / 180) * dt;
-      if (keys.has(K.w)) (wand.pitch += r), (changed = true);
-      if (keys.has(K.s)) (wand.pitch -= r), (changed = true);
-      if (keys.has(K.a)) (wand.yaw += r), (changed = true);
-      if (keys.has(K.d)) (wand.yaw -= r), (changed = true);
-      wand.pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, wand.pitch));
+      const dyaw = axis(K.d, K.a) * r;
+      const dpitch = axis(K.s, K.w) * r;
+      if (dyaw || dpitch) input.rotateWand(dyaw, dpitch);
     } else {
       const v = 1.0 * dt;
-      const p = wand.position;
-      if (keys.has(K.w)) (p[2] -= v), (changed = true);
-      if (keys.has(K.s)) (p[2] += v), (changed = true);
-      if (keys.has(K.a)) (p[0] -= v), (changed = true);
-      if (keys.has(K.d)) (p[0] += v), (changed = true);
-      if (keys.has(K.q)) (p[1] -= v), (changed = true);
-      if (keys.has(K.e)) (p[1] += v), (changed = true);
+      const dx = axis(K.a, K.d) * v;
+      const dy = axis(K.q, K.e) * v;
+      const dz = axis(K.w, K.s) * v;
+      if (dx || dy || dz) input.moveWand(dx, dy, dz);
     }
-    if (changed) sendWand();
     return true; // Shift held: the head keys stay out of it
   }
   // Head: W/S A/D Q/E move (1 m/s); Alt + the same rotate (60°/s).
@@ -604,7 +597,7 @@ function createApp(cfg: ClusterConfig, link: ControlLink, hooks: AppHooks): App 
     ro.fps.textContent = fps.toFixed(0);
     ro.head.textContent = `${f2(h[0])} ${f2(h[1])} ${f2(h[2])}`;
     ro.headrot.textContent = `${deg(head.yaw)}° ${deg(head.pitch)}° ${deg(head.roll)}°`;
-    const wp = lastState.wand?.position ?? wand.position;
+    const wp = lastState.wand.position;
     ro.wand.textContent = `${f2(wp[0])} ${f2(wp[1])} ${f2(wp[2])}`;
     ro.nav.textContent = `${f1(nv.position[0])} ${f1(nv.position[1])} ${f1(nv.position[2])}`;
     ro.navrot.textContent = `${deg(nv.yaw)}° ${deg(nv.pitch)}°`;

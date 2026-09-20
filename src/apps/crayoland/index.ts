@@ -86,6 +86,8 @@ export function createCrayolandApp(spec: AppSpec, ctx: AppContext): CaveApp {
   const base = (spec.url ?? "/crayoland/").replace(/\/?$/, "/");
   const worldFile = String(spec.options?.world ?? "World");
   const soundsFile = String(spec.options?.sounds ?? "Sounds");
+  /** Debug drawing: pick spheres of the grabbable objects, the wand point, the touched object highlighted. */
+  let debug = ctx.debug || spec.options?.debug === true;
 
   const scene = new THREE.Scene();
   scene.background = SKY;
@@ -155,6 +157,46 @@ export function createCrayolandApp(spec: AppSpec, ctx: AppContext): CaveApp {
   let handOpen: THREE.Object3D | null = null;
   let handClosed: THREE.Object3D | null = null;
 
+  // ---- Debug drawing (option debug): pick spheres and the wand point -------------
+  // One wireframe sphere per grabbable object, placed at its quad center with its
+  // pick radius; the touched one turns yellow. A small cyan sphere marks the exact
+  // wand point the pick test uses, with a line along the wand's direction.
+  let pickSpheres: THREE.InstancedMesh | null = null;
+  const wandMarker = new THREE.Group();
+  wandMarker.add(new THREE.Mesh(new THREE.SphereGeometry(0.1, 16, 12), new THREE.MeshBasicMaterial({ color: 0x22d3ee })));
+  wandMarker.add(
+    new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, -1)]), new THREE.LineBasicMaterial({ color: 0x22d3ee })),
+  );
+  const COLOR_IDLE = new THREE.Color(0xffffff);
+  const COLOR_HIT = new THREE.Color(0xffe600);
+  const COLOR_HELD = new THREE.Color(0xff4d1f);
+  /** Add the debug drawing to the scene (idempotent; called at build and from setDebug). */
+  function showDebug() {
+    if (!wandMarker.parent) root.add(wandMarker);
+    if (!pickSpheres && objects.length) {
+      pickSpheres = new THREE.InstancedMesh(
+        new THREE.SphereGeometry(1, 12, 8),
+        new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, transparent: true, opacity: 0.35 }),
+        objects.length,
+      );
+      pickSpheres.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+      pickSpheres.frustumCulled = false;
+      for (let i = 0; i < objects.length; i++) pickSpheres.setColorAt(i, COLOR_IDLE);
+      root.add(pickSpheres);
+    }
+  }
+  function hideDebug() {
+    wandMarker.removeFromParent();
+    if (pickSpheres) {
+      pickSpheres.removeFromParent();
+      pickSpheres.geometry.dispose();
+      (pickSpheres.material as THREE.Material).dispose();
+      pickSpheres.dispose();
+      pickSpheres = null;
+    }
+    app.status = app.status.replace(/ · debug:.*$/, "");
+  }
+
   let sound: Soundscape | null = null;
   /** Parsed Sounds file and the hive's sample names, kept so audio can be switched on later. */
   let soundDefs: { sounds: SoundsFile; bees: { loop?: string; hit?: string } } | null = null;
@@ -176,6 +218,11 @@ export function createCrayolandApp(spec: AppSpec, ctx: AppContext): CaveApp {
     // the triggers fly up and down and the bumpers look up and down, like the
     // original's third-button flight.
     navigation: { flySpeed: 30 * FT, turnSpeed: Math.PI / 2 },
+    setDebug(enabled) {
+      debug = enabled;
+      if (enabled) showDebug();
+      else hideDebug();
+    },
     setAudio(enabled) {
       if (enabled && !sound && soundDefs) {
         sound = new Soundscape(base, soundDefs.sounds, soundDefs.bees);
@@ -183,7 +230,7 @@ export function createCrayolandApp(spec: AppSpec, ctx: AppContext): CaveApp {
       } else if (!enabled && sound) {
         sound.dispose();
         sound = null;
-        app.status = app.status.replace(/ · audio:.*$/, "");
+        app.status = app.status.replace(/ · audio:[^·]*/, "");
       }
     },
     dispose() {
@@ -264,6 +311,8 @@ export function createCrayolandApp(spec: AppSpec, ctx: AppContext): CaveApp {
       mesh.instanceMatrix.needsUpdate = true;
     }
 
+    if (debug) showDebug();
+
     // Bees: a quad in the y-z plane facing along -z (the drawing's head is at u = 0).
     world.bees.forEach((def, s) => {
       const [xs, ys] = def.size;
@@ -332,9 +381,29 @@ export function createCrayolandApp(spec: AppSpec, ctx: AppContext): CaveApp {
     console.error(e);
   });
 
+  /**
+   * PictureObject::WandTouching for all objects: the one whose pick sphere
+   * (quad center, half-diagonal radius) contains the wand point, nearest
+   * first, or -1. Uses the objects' matrices as drawn this frame.
+   */
+  const center = new THREE.Vector3();
+  function findTouched(wandPos: Vec3): { id: number; nearest: number; gap: number } {
+    let best = -1, bestD = Infinity, nearest = -1, nearestGap = Infinity;
+    const w = v3b.set(...wandPos);
+    for (let i = 0; i < objects.length; i++) {
+      const o = objects[i];
+      center.set(0, 0.5, 0).applyMatrix4(o.world); // quad center
+      const d = center.distanceTo(w);
+      if (d < o.radius && d < bestD) (best = i), (bestD = d);
+      if (d - o.radius < nearestGap) (nearestGap = d - o.radius), (nearest = i);
+    }
+    return { id: best, nearest, gap: nearestGap };
+  }
+
   // ---- Per frame -------------------------------------------------------------------
   let lastSoundTime = -1;
   let lastAngrySince = -1;
+  let debugTouched = -1;
 
   function update(time: number, state?: FrameState) {
     const nav = state?.navigation ?? IDENTITY_NAV;
@@ -374,6 +443,35 @@ export function createCrayolandApp(spec: AppSpec, ctx: AppContext): CaveApp {
       dirty.add(o.mesh);
     }
     for (const m of dirty) m.instanceMatrix.needsUpdate = true;
+
+    if (debug) {
+      wandMarker.position.set(...wand.p);
+      wandMarker.quaternion.copy(wand.q);
+      const touch = findTouched(wand.p);
+      if (pickSpheres) {
+        for (let i = 0; i < objects.length; i++) {
+          center.set(0, 0.5, 0).applyMatrix4(objects[i].world);
+          mat4b.makeScale(objects[i].radius, objects[i].radius, objects[i].radius).setPosition(center);
+          pickSpheres.setMatrixAt(i, mat4b);
+        }
+        if (debugTouched >= 0) pickSpheres.setColorAt(debugTouched, COLOR_IDLE);
+        const mark = grab ? grab.id : touch.id;
+        if (mark >= 0) pickSpheres.setColorAt(mark, grab ? COLOR_HELD : COLOR_HIT);
+        pickSpheres.instanceMatrix.needsUpdate = true;
+        if (pickSpheres.instanceColor) pickSpheres.instanceColor.needsUpdate = true;
+        debugTouched = mark;
+      }
+      const n = touch.nearest >= 0 ? objects[touch.nearest] : null;
+      const where = `wand ${wand.p.map((v) => v.toFixed(1)).join(" ")} ft`;
+      const info = grab
+        ? `holding #${grab.id} ${objects[grab.id]?.def.texture ?? ""} (move the hand, release to drop or throw)`
+        : touch.id >= 0
+          ? `touching #${touch.id} ${objects[touch.id].def.texture} (hold Enter / A / X to grab)`
+          : n
+            ? `nearest #${touch.nearest} ${n.def.texture} ${touch.gap.toFixed(1)} ft away`
+            : "no objects";
+      app.status = app.status.replace(/ · debug:.*$/, "") + ` · debug: ${where} · ${info}`;
+    }
 
     // Bees: the simulation, plus the swarm around the user when angry.
     let angryW = 0;
@@ -457,7 +555,7 @@ export function createCrayolandApp(spec: AppSpec, ctx: AppContext): CaveApp {
       }
       const sw = swarms[0];
       sound.update(time, head, { positions: sw?.drawn ?? [], count: sw?.drawnCount ?? 0, angry: angryW > 0.5 });
-      app.status = app.status.replace(/ · audio:.*$/, "") + ` · ${sound.status}`;
+      app.status = app.status.replace(/ · audio:[^·]*/, "") + ` · ${sound.status}`;
     }
   }
 
@@ -484,14 +582,7 @@ export function createCrayolandApp(spec: AppSpec, ctx: AppContext): CaveApp {
     // Grab button: primary (A, Enter) or tertiary (X); either one holds.
     const primary = actions.buttons.primary || actions.buttons.tertiary;
     if (primary && !prevPrimary && !grab) {
-      // Nearest object whose picking sphere (center of the quad) contains the wand.
-      let best = -1, bestD = Infinity;
-      for (let i = 0; i < objects.length; i++) {
-        const o = objects[i];
-        v3.set(0, 0.5, 0).applyMatrix4(o.world); // quad center
-        const d = v3.distanceToSquared(v3b.set(...wand.p));
-        if (d < o.radius * o.radius && d < bestD) (best = i), (bestD = d);
-      }
+      const best = findTouched(wand.p).id;
       if (best >= 0) {
         const local = mat4b.copy(wandM).invert().multiply(objects[best].world);
         send({ crayGrab: { id: best, local: local.toArray().map(r3) } });

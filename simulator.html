@@ -254,6 +254,7 @@
         </select>
         <span class="spacer"></span>
         <button id="btn-audio" title="Play the application's sound in this window (one window per cluster should)" aria-pressed="false">♪ audio</button>
+        <button id="btn-debug" title="Ask the application for its debug drawing (Crayoland: pick spheres, wand point, touched object)" aria-pressed="false">⌗ debug</button>
         <button id="btn-autohead" title="Simulated head motion; off to drive the head with the keyboard" aria-pressed="false">↻ auto head</button>
         <select id="overview-mode" title="Overview content" aria-label="Overview content">
           <option value="none">overview · geometry</option>
@@ -291,9 +292,10 @@
           <tr><td>Right stick</td><td>Look: yaw and pitch (map: rotate and pitch)</td></tr>
           <tr><td>Triggers RT / LT</td><td>Fly up / down (map: zoom in / out)</td></tr>
           <tr><td>Bumpers RB / LB</td><td>Look up / down</td></tr>
+          <tr><td>D-pad</td><td>Move the hand: left / right, and up / down to reach for things</td></tr>
           <tr><td>Y / Triangle</td><td>Pause / resume rotation</td></tr>
           <tr><td>Back / Select</td><td>Reset navigation and head</td></tr>
-          <tr><td>A B X, d-pad</td><td>Passed to the application as primary, secondary, tertiary, dpad (bumpers also as prev, next). Shapes: A toggles auto-rotate; Crayoland: A or X grabs</td></tr>
+          <tr><td>A B X</td><td>Passed to the application as primary, secondary, tertiary (bumpers and d-pad also as prev, next, dpad). Shapes: A toggles auto-rotate; Crayoland: hold A or X to grab, the object stays in the hand until released</td></tr>
         </table>
         <p class="note">Connected pads and their profile show in the footer. Force a profile with <code>?gamepad=standard|xbox-linux|playstation-legacy</code>.</p>
         <h3>Mouse on a tile <span class="sub">— 3D apps; moves the navigation like the keys</span></h3>
@@ -317,7 +319,8 @@
         <table>
           <tr><td><kbd>Shift</kbd> + <kbd>W</kbd> <kbd>S</kbd> / <kbd>A</kbd> <kbd>D</kbd> / <kbd>Q</kbd> <kbd>E</kbd></td><td>Move the hand forward / back, left / right, down / up, relative to the head</td></tr>
           <tr><td><kbd>Shift</kbd> + <kbd>Alt</kbd> + <kbd>W</kbd> <kbd>S</kbd> / <kbd>A</kbd> <kbd>D</kbd></td><td>Pitch / yaw the wand</td></tr>
-          <tr><td><kbd>Enter</kbd> · gamepad <kbd>A</kbd> or <kbd>X</kbd></td><td>Wand button: grab in Crayoland</td></tr>
+          <tr><td>D-pad</td><td>Move the hand left / right and up / down</td></tr>
+          <tr><td><kbd>Enter</kbd> · gamepad <kbd>A</kbd> or <kbd>X</kbd></td><td>Wand button: hold to grab in Crayoland, move the hand or walk, release to drop or throw</td></tr>
         </table>
         <p class="note">Without a tracker the wand is a hand hanging off the head: half a meter ahead, below the eyes, turning with the head's yaw but not its pitch. The keys move that offset. A tracker bridge will replace it with the measured pose.</p>
         <h3>Map application <span class="sub">— flat apps take the mouse in each tile</span></h3>
@@ -338,8 +341,9 @@
           <tr><td><kbd>H</kbd> or <kbd>?</kbd></td><td>Toggle this help</td></tr>
           <tr><td><kbd>Esc</kbd></td><td>Close this help</td></tr>
           <tr><td><em>audio</em> button</td><td>This window plays the application's sound (or <code>?audio=1</code>)</td></tr>
+          <tr><td><em>debug</em> button</td><td>The application's debug drawing (or <code>?debug=1</code>); Crayoland shows pick spheres and the wand point</td></tr>
         </table>
-        <p class="note">URL parameters: <code>config=NAME (a file in configs/)</code> · <code>manager=ws://host:8765</code> (controller mode) · <code>app=shapes|gltf</code>, <code>model=URL</code>, <code>size</code>, <code>spin</code>, <code>mx my mz</code> · <code>stereo=</code>, <code>anaglyph=dubois|bw</code> · <code>overview=none|walls|world</code> · <code>audio=1</code> · initial navigation <code>yaw</code>, <code>pitch</code> (degrees), <code>x</code>, <code>y</code>, <code>z</code> (meters) · <code>help=1</code>.</p>
+        <p class="note">URL parameters: <code>config=NAME (a file in configs/)</code> · <code>manager=ws://host:8765</code> (controller mode) · <code>app=shapes|gltf</code>, <code>model=URL</code>, <code>size</code>, <code>spin</code>, <code>mx my mz</code> · <code>stereo=</code>, <code>anaglyph=dubois|bw</code> · <code>overview=none|walls|world</code> · <code>audio=1</code> · <code>debug=1</code> · initial navigation <code>yaw</code>, <code>pitch</code> (degrees), <code>x</code>, <code>y</code>, <code>z</code> (meters) · <code>help=1</code>.</p>
       </div>
     </div>
 

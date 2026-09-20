@@ -57,6 +57,12 @@ export interface AppContext {
    * click or key press and resume the context then.
    */
   audio: boolean;
+  /**
+   * Debug drawing requested (the simulator's debug button, ?debug=1). What it
+   * shows is the app's business: pick volumes, markers, extra status text.
+   * Off by default; nodes on a wall never need it.
+   */
+  debug: boolean;
 }
 
 /**
@@ -106,6 +112,8 @@ export interface CaveApp {
    * page with ?audio=1 instead.
    */
   setAudio?(enabled: boolean): void;
+  /** Optional: switch debug drawing on or off at runtime (the simulator's debug button). */
+  setDebug?(enabled: boolean): void;
   /** Optional: release GPU resources when the app is replaced. */
   dispose?(): void;
 }
@@ -150,6 +158,8 @@ export interface FlatApp {
   readonly ownsNavigation?: boolean;
   /** Optional: switch this window's sound on or off at runtime (see CaveApp.setAudio). */
   setAudio?(enabled: boolean): void;
+  /** Optional: switch debug drawing on or off at runtime (see CaveApp.setDebug). */
+  setDebug?(enabled: boolean): void;
   dispose?(): void;
 }
 

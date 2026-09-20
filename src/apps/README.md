@@ -41,6 +41,7 @@ import type { AppContext, AppDefinition, AppSpec, CaveApp } from "../types";
 
 function create(spec: AppSpec, ctx: AppContext): CaveApp {
   // ctx.audio: this window is the cluster's speaker (config `audio: true` on the node, or ?audio=1)
+  // ctx.debug: debug drawing wanted (the simulator's debug button, or ?debug=1)
   const scene = new THREE.Scene();
   // build the scene; the physical floor is y = 0, the viewer stands near the origin,
   // the front wall of the 3 m CAVE is at z = -1.5
@@ -57,6 +58,8 @@ function create(spec: AppSpec, ctx: AppContext): CaveApp {
     },
     // optional: how the standard navigation moves through this world
     navigation: { flySpeed: 2, turnSpeed: 1.2, planar: false },
+    // optional: live switches for the simulator's audio and debug buttons
+    setAudio(on) {}, setDebug(on) {},
     dispose() {},               // optional
   };
 }

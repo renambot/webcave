@@ -13,14 +13,20 @@
  *   4. calls the app's onInput hook, if any, with a `send` that patches the
  *      shared app state
  *
+ * Hand: without a tracker the wand is a hand hanging off the head (see
+ * core/pose.ts). The controller owns that offset: the d-pad moves the hand
+ * sideways and up / down, moveWand() / rotateWand() let a page add keys
+ * (the simulator's Shift + W S A D Q E), and the offset is sent as a
+ * relative "setWand". The reset action puts it back.
+ *
  * Mouse: bindMouse(el) adds drag-to-look, right-drag-to-pan, wheel-to-fly
  * and double-click-to-reset on a canvas, sending navigation increments.
  * Keyboard: bindKeyboard(filter) listens on the window; a tap shorter than a
  * frame still counts for one frame (see `taps`).
  */
 import type { AnyApp } from "../apps/types";
-import type { ClientMessage, FrameState } from "../core/protocol";
-import { keyboardActions, mergeActions, pressed, sameActions, type ActionState } from "./actions";
+import type { ClientMessage, FrameState, Pose } from "../core/protocol";
+import { emptyActions, keyboardActions, mergeActions, pressed, sameActions, type ActionState } from "./actions";
 import { pollGamepads, type GamepadInfo } from "./gamepad";
 import { toggleSpinPatch } from "../apps/types";
 
@@ -34,8 +40,12 @@ export interface InputControllerOptions {
   onReset: () => void;
   /** Force a gamepad profile by name (?gamepad=). */
   forcedProfile?: string | null;
+  /** The config's hand offset from the head, the wand's rest position (see ClusterConfig.defaultWand). */
+  defaultWand?: Pose;
   flySpeed?: number; // m/s at full deflection
   turnSpeed?: number; // rad/s at full deflection
+  /** m/s the d-pad and the wand keys move the hand (default 1). */
+  handSpeed?: number;
 }
 
 export class InputController {
@@ -45,12 +55,54 @@ export class InputController {
   readonly taps = new Set<string>();
   /** Gamepads seen in the last poll, for HUDs. */
   pads: GamepadInfo[] = [];
+  /** Merged action state of the last step(), for pages that bind extra actions (the simulator moves the hand with the d-pad). */
+  actions: ActionState = emptyActions();
   private prev: ActionState | null = null;
   private lastSent: ActionState | null = null;
-  private opts: Required<Pick<InputControllerOptions, "flySpeed" | "turnSpeed">> & InputControllerOptions;
+  private opts: Required<Pick<InputControllerOptions, "flySpeed" | "turnSpeed" | "handSpeed">> & InputControllerOptions;
+  /** Hand offset from the head (head yaw frame): position in meters, yaw and pitch in radians. */
+  private wand = { position: [0.15, -0.45, -0.5] as [number, number, number], yaw: 0, pitch: 0 };
 
   constructor(opts: InputControllerOptions) {
-    this.opts = { flySpeed: 2.0, turnSpeed: 1.2, ...opts };
+    this.opts = { flySpeed: 2.0, turnSpeed: 1.2, handSpeed: 1.0, ...opts };
+    this.resetWand(false);
+  }
+
+  // ---- The hand -------------------------------------------------------------
+
+  /** Move the hand by (dx, dy, dz) meters in the head's yaw frame (x right, y up, z back). */
+  moveWand(dx: number, dy: number, dz: number) {
+    const p = this.wand.position;
+    p[0] += dx;
+    p[1] += dy;
+    p[2] += dz;
+    this.sendWand();
+  }
+
+  /** Turn the wand by yaw and pitch increments (radians); pitch is clamped to ±90°. */
+  rotateWand(dyaw: number, dpitch: number) {
+    this.wand.yaw += dyaw;
+    this.wand.pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.wand.pitch + dpitch));
+    this.sendWand();
+  }
+
+  /** Put the hand back at the config's rest offset. */
+  resetWand(send = true) {
+    const d = this.opts.defaultWand;
+    this.wand.position = d ? ([...d.position] as [number, number, number]) : [0.15, -0.45, -0.5];
+    this.wand.yaw = this.wand.pitch = 0;
+    if (send) this.sendWand();
+  }
+
+  private sendWand() {
+    // Ry(yaw) * Rx(pitch) as a quaternion (x, y, z, w).
+    const cy = Math.cos(this.wand.yaw / 2), sy = Math.sin(this.wand.yaw / 2);
+    const cp = Math.cos(this.wand.pitch / 2), sp = Math.sin(this.wand.pitch / 2);
+    this.send({
+      type: "setWand",
+      wand: { position: [...this.wand.position], orientation: [cy * sp, sy * cp, -sy * sp, cy * cp] },
+      relative: true,
+    });
   }
 
   private get send() {
@@ -69,6 +121,7 @@ export class InputController {
   /** Per-frame: sample, bind, replicate, hand to the app. */
   step(dt: number) {
     const actions = this.sample();
+    this.actions = actions;
     const edges = pressed(this.prev, actions);
     const app = this.opts.getApp();
     const state = this.opts.getState();
@@ -89,8 +142,14 @@ export class InputController {
       const move: [number, number, number] = [mx * flySpeed * dt, hints?.planar ? 0 : actions.fly * flySpeed * dt, -my * flySpeed * dt];
       if (yaw || pitch || move[0] || move[1] || move[2]) this.send({ type: "navigate", move, yaw, pitch });
     }
-    if (edges.has("reset")) this.opts.onReset();
+    if (edges.has("reset")) {
+      this.opts.onReset();
+      this.resetWand();
+    }
     if (edges.has("spin")) this.send({ type: "setAppState", patch: toggleSpinPatch(state) });
+    // D-pad: the hand sideways (x) and up / down (y), so a pad alone can reach for things.
+    const [hx, hy] = actions.dpad;
+    if (hx || hy) this.moveWand(hx * this.opts.handSpeed * dt, hy * this.opts.handSpeed * dt, 0);
 
     // Report to the Manager only on change; it keeps the last state per client.
     if (!sameActions(this.lastSent, actions)) {

@@ -45,7 +45,7 @@ export const APP_NAMES = Object.keys(APPS).sort();
  * (or the first app found) and says so in the app's status, so a typo shows
  * up on the wall instead of a black screen.
  */
-export function createApp(spec: AppSpec, ctx: AppContext = { audio: false }): AnyApp {
+export function createApp(spec: AppSpec, ctx: AppContext = { audio: false, debug: false }): AnyApp {
   const def = APPS[spec.name];
   if (def) return def.create(spec, ctx);
   const fallback = APPS.shapes ?? Object.values(APPS)[0];
@@ -66,6 +66,7 @@ export function createApp(spec: AppSpec, ctx: AppContext = { audio: false }): An
  *   data=URL opacity=                                 density: GeoJSON and fill opacity
  *   vdb=URL grid= density= steps= maxDim= color= lightDir=x,y,z   vdb volume (size, spin, mx my mz shared with gltf)
  *   points=URL maxPoints= pointSize= colorAttribute=  points cloud (size, spin, mx my mz shared)
+ * (debug=1 and audio=1 are not spec overrides: the pages pass them as AppContext.)
  * Returns the base unchanged when none are present. Add your own app's
  * parameters here if you want them settable from the URL.
  */

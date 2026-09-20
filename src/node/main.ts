@@ -25,6 +25,7 @@
  *   input=1      take keyboard, mouse and gamepad input on this window (development;
  *                the config's `input: true` on the node is the proper switch)
  *   audio=1      this window plays the application's sound (config: `audio: true` on the node)
+ *   debug=1      ask the application for its debug drawing
  *   app= model= size= spin= mx= my= mz= style= center= zoom= ...   override the application, for development
  *
  * A computer with several displays runs one window per display, all with the
@@ -131,7 +132,7 @@ function teardown() {
 /** Build the renderer or flat view for the current config and screen. */
 function setup(c: ClusterConfig, s: ScreenConfig) {
   const spec = appSpecFromParams(params, c.app);
-  app = createApp(spec, { audio: audioEnabled });
+  app = createApp(spec, { audio: audioEnabled, debug: params.get("debug") === "1" });
   if (isFlatApp(app)) {
     canvas.style.display = "none";
     if (!flatContainer) {
@@ -161,6 +162,7 @@ function setup(c: ClusterConfig, s: ScreenConfig) {
       getApp: () => app,
       onReset: () => sendToManager?.({ type: "setNavigation", navigation: { position: [0, 0, 0], yaw: 0, pitch: 0 } }),
       forcedProfile: params.get("gamepad"),
+      defaultWand: c.defaultWand,
     });
     input.bindKeyboard();
     document.body.style.cursor = "auto";
@@ -224,7 +226,7 @@ function connect() {
         if (now - lastHud > 500) {
           const me = msg.nodes.find((n) => n.nodeId === clientId);
           const mode = viewport ? viewport.stereo.mode : "flat";
-          const inputInfo = (input ? `\ninput on${input.pads.length ? " · 🎮 " + input.pads.map((g) => g.profile).join(", ") : ""} · keys, mouse drag / wheel, gamepad` : "") + (audioEnabled ? "\naudio on" : "");
+          const inputInfo = (input ? `\ninput on${input.pads.length ? " · 🎮 " + input.pads.map((g) => g.profile).join(", ") : ""} · keys, mouse drag / wheel, gamepad (d-pad moves the hand)` : "") + (audioEnabled ? "\naudio on" : "");
           hud.textContent =
             `${clientId}  ${mode}  frames ${frames}  late ${me?.lateFrames ?? 0}  render ${me?.renderMs.toFixed(1) ?? "-"} ms` +
             `\n${app?.name ?? ""}: ${app?.status ?? ""}` +
