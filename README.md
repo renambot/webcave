@@ -249,4 +249,4 @@ index.html, simulator.html, node.html
 
 ## License
 
-To be decided.
+BSD 3-Clause, see [LICENSE](LICENSE). Third-party assets keep their own terms: the Damaged Helmet model is CC BY 4.0 (see `public/models/README.md`), map tiles come from OpenFreeMap with OpenStreetMap data (attribution required), and the sample volumes in `public/volumes/` are local files not included in the repository.
