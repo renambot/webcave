@@ -19,6 +19,8 @@ src/apps/
   dotdensity/     Toronto dot-density map on deck.gl with a control panel (flat app; panel.ts is the sidebar)
   aquarium/       WebGL Aquarium as a raw WebGL app (raw app; the adapted program is public/aquarium/aquarium-core.js)
   metaballs/      WebGPU Metaballs (webgpu app; vendor/ is the original project, renderer.ts feeds it the CAVE's views)
+  hackernews/     Hacker News front page on a curved wall (scene app; data.ts fetches the API, cards.ts rasterizes
+                                                    the cards through HTML-in-canvas or Canvas 2D, panel.ts the sidebar)
   crayoland/      Dave Pape's Crayoland, ported    (scene app; world.ts parses the original files,
                                                     creatures.ts deterministic bees and butterflies,
                                                     sound.ts Web Audio soundscape)
