@@ -1,6 +1,6 @@
 # WebCAVE Specification
 
-Design document and research notes for WebCAVE, a browser-based cluster rendering framework for CAVEs, tiled display walls, domes and hybrid-reality environments. For a short overview and how to run the prototype, see [README.md](README.md).
+Design document and research notes for WebCAVE, a browser-based cluster rendering framework for CAVEs, tiled display walls, domes and hybrid-reality environments. For a short overview and how to run the prototype, see [README.md](../README.md).
 
 ## Original ideas
 
@@ -252,7 +252,7 @@ interface TrackerSample {
 
 ## Prototype (v0)
 
-A first working slice lives in this repo: TypeScript, Vite, three.js on WebGL2 (WebGPU is the next step). Run instructions are in [README.md](README.md).
+A first working slice lives in this repo: TypeScript, Vite, three.js on WebGL2 (WebGPU is the next step). Run instructions are in [running.md](running.md).
 
 What is implemented:
 
