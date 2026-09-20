@@ -1,0 +1,566 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Configuration name shown in UIs"
+    },
+    "description": {
+      "type": "string"
+    },
+    "fps": {
+      "default": 60,
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "sync": {
+      "default": "barrier",
+      "description": "Frame synchronization tier",
+      "type": "string",
+      "enum": [
+        "loose",
+        "barrier"
+      ]
+    },
+    "barrierTimeoutMs": {
+      "default": 50,
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "near": {
+      "default": 0.05,
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "far": {
+      "default": 200,
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "defaultHead": {
+      "default": {
+        "position": [
+          0,
+          1.6,
+          0
+        ],
+        "orientation": [
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "description": "Head pose when nothing is tracking",
+      "type": "object",
+      "properties": {
+        "position": {
+          "type": "array",
+          "items": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "additionalItems": false,
+          "minItems": 3,
+          "maxItems": 3,
+          "description": "x, y, z in meters"
+        },
+        "orientation": {
+          "default": [
+            0,
+            0,
+            0,
+            1
+          ],
+          "type": "array",
+          "items": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "additionalItems": false,
+          "minItems": 4,
+          "maxItems": 4,
+          "description": "quaternion x, y, z, w"
+        }
+      },
+      "required": [
+        "position"
+      ]
+    },
+    "stereo": {
+      "default": {},
+      "description": "Cluster-wide stereo defaults",
+      "type": "object",
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": [
+            "mono",
+            "side-by-side",
+            "side-by-side-half",
+            "top-bottom",
+            "top-bottom-half",
+            "row-interleaved",
+            "column-interleaved",
+            "checkerboard",
+            "anaglyph",
+            "frame-sequential"
+          ],
+          "description": "Output packing mode"
+        },
+        "eyeSeparation": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Interpupillary distance in meters"
+        },
+        "swapEyes": {
+          "type": "boolean"
+        },
+        "firstEye": {
+          "type": "string",
+          "enum": [
+            "left",
+            "right"
+          ],
+          "description": "Interleaved modes: eye on row/column/pixel 0"
+        },
+        "phaseX": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "phaseY": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "anaglyph": {
+          "type": "string",
+          "enum": [
+            "dubois",
+            "bw"
+          ],
+          "description": "Red-cyan anaglyph method"
+        },
+        "monoEye": {
+          "type": "string",
+          "enum": [
+            "center",
+            "left",
+            "right"
+          ],
+          "description": "Eye used when mode is mono"
+        }
+      }
+    },
+    "app": {
+      "default": {
+        "name": "shapes"
+      },
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Application folder name under src/apps"
+        },
+        "url": {
+          "description": "Asset URL (gltf)",
+          "type": "string"
+        },
+        "size": {
+          "description": "Fitted size in meters (gltf)",
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "position": {
+          "description": "Model center in the CAVE frame (gltf)",
+          "type": "array",
+          "items": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "additionalItems": false,
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "spin": {
+          "description": "Yaw speed in rad/s (gltf)",
+          "type": "number"
+        },
+        "options": {
+          "description": "Free-form per-app options, e.g. map style, center, zoom",
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {}
+        }
+      },
+      "required": [
+        "name"
+      ]
+    },
+    "screens": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Unique screen id, referenced by nodes"
+              },
+              "widthPx": {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991,
+                "description": "Native pixel width"
+              },
+              "heightPx": {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991,
+                "description": "Native pixel height"
+              },
+              "stereo": {
+                "description": "Per-screen stereo overrides",
+                "type": "object",
+                "properties": {
+                  "mode": {
+                    "type": "string",
+                    "enum": [
+                      "mono",
+                      "side-by-side",
+                      "side-by-side-half",
+                      "top-bottom",
+                      "top-bottom-half",
+                      "row-interleaved",
+                      "column-interleaved",
+                      "checkerboard",
+                      "anaglyph",
+                      "frame-sequential"
+                    ],
+                    "description": "Output packing mode"
+                  },
+                  "eyeSeparation": {
+                    "type": "number",
+                    "exclusiveMinimum": 0,
+                    "description": "Interpupillary distance in meters"
+                  },
+                  "swapEyes": {
+                    "type": "boolean"
+                  },
+                  "firstEye": {
+                    "type": "string",
+                    "enum": [
+                      "left",
+                      "right"
+                    ],
+                    "description": "Interleaved modes: eye on row/column/pixel 0"
+                  },
+                  "phaseX": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  "phaseY": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  "anaglyph": {
+                    "type": "string",
+                    "enum": [
+                      "dubois",
+                      "bw"
+                    ],
+                    "description": "Red-cyan anaglyph method"
+                  },
+                  "monoEye": {
+                    "type": "string",
+                    "enum": [
+                      "center",
+                      "left",
+                      "right"
+                    ],
+                    "description": "Eye used when mode is mono"
+                  }
+                }
+              },
+              "pa": {
+                "type": "array",
+                "items": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "additionalItems": false,
+                "minItems": 3,
+                "maxItems": 3,
+                "description": "Lower-left corner"
+              },
+              "pb": {
+                "type": "array",
+                "items": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "additionalItems": false,
+                "minItems": 3,
+                "maxItems": 3,
+                "description": "Lower-right corner"
+              },
+              "pc": {
+                "type": "array",
+                "items": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "additionalItems": false,
+                "minItems": 3,
+                "maxItems": 3,
+                "description": "Upper-left corner"
+              }
+            },
+            "required": [
+              "id",
+              "widthPx",
+              "heightPx",
+              "pa",
+              "pb",
+              "pc"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Unique screen id, referenced by nodes"
+              },
+              "widthPx": {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991,
+                "description": "Native pixel width"
+              },
+              "heightPx": {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991,
+                "description": "Native pixel height"
+              },
+              "stereo": {
+                "description": "Per-screen stereo overrides",
+                "type": "object",
+                "properties": {
+                  "mode": {
+                    "type": "string",
+                    "enum": [
+                      "mono",
+                      "side-by-side",
+                      "side-by-side-half",
+                      "top-bottom",
+                      "top-bottom-half",
+                      "row-interleaved",
+                      "column-interleaved",
+                      "checkerboard",
+                      "anaglyph",
+                      "frame-sequential"
+                    ],
+                    "description": "Output packing mode"
+                  },
+                  "eyeSeparation": {
+                    "type": "number",
+                    "exclusiveMinimum": 0,
+                    "description": "Interpupillary distance in meters"
+                  },
+                  "swapEyes": {
+                    "type": "boolean"
+                  },
+                  "firstEye": {
+                    "type": "string",
+                    "enum": [
+                      "left",
+                      "right"
+                    ],
+                    "description": "Interleaved modes: eye on row/column/pixel 0"
+                  },
+                  "phaseX": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  "phaseY": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  "anaglyph": {
+                    "type": "string",
+                    "enum": [
+                      "dubois",
+                      "bw"
+                    ],
+                    "description": "Red-cyan anaglyph method"
+                  },
+                  "monoEye": {
+                    "type": "string",
+                    "enum": [
+                      "center",
+                      "left",
+                      "right"
+                    ],
+                    "description": "Eye used when mode is mono"
+                  }
+                }
+              },
+              "center": {
+                "type": "array",
+                "items": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "additionalItems": false,
+                "minItems": 3,
+                "maxItems": 3,
+                "description": "Center of the screen"
+              },
+              "width": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "description": "Physical width in meters"
+              },
+              "height": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "description": "Physical height in meters"
+              },
+              "yaw": {
+                "default": 0,
+                "description": "Rotation about +y, degrees; 90 faces +x (a left wall)",
+                "type": "number"
+              },
+              "pitch": {
+                "default": 0,
+                "description": "Tilt about the screen's x axis, degrees; -90 for a floor",
+                "type": "number"
+              },
+              "roll": {
+                "default": 0,
+                "description": "Rotation about the screen normal, degrees",
+                "type": "number"
+              }
+            },
+            "required": [
+              "id",
+              "widthPx",
+              "heightPx",
+              "center",
+              "width",
+              "height"
+            ]
+          }
+        ]
+      }
+    },
+    "nodes": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Node id; a computer, or a display when one per node"
+          },
+          "screens": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Screen ids this node renders, one window each"
+          },
+          "input": {
+            "description": "Let this node's windows take keyboard, mouse and gamepad input and steer the cluster (default false)",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "screens"
+        ]
+      }
+    }
+  },
+  "required": [
+    "name",
+    "screens",
+    "nodes"
+  ],
+  "title": "WebCAVE cluster configuration",
+  "description": "Physical screens, nodes, stereo output and application for a WebCAVE cluster. Units: meters, degrees."
+}

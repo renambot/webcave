@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>WebCAVE</title>
+    <meta name="theme-color" content="#0d1013" />
+    <style>
+      :root {
+        --bg: #0d1013; --panel: #14181d; --panel-edge: #1f262d; --ink: #dfe5ea; --muted: #79848d; --amber: #ffb300;
+        --mono: "SF Mono", "Cascadia Code", "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+        --sans: -apple-system, "Segoe UI", system-ui, sans-serif;
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.55 var(--sans); min-height: 100vh; display: grid; place-items: start center; padding: 40px 20px; }
+      main { max-width: 720px; width: 100%; }
+      header { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; }
+      header h1 { font: 600 14px var(--mono); letter-spacing: 0.22em; text-transform: uppercase; color: var(--amber); margin: 0; }
+      header h1 span { color: var(--muted); }
+      section { background: var(--panel); border: 1px solid var(--panel-edge); border-radius: 6px; padding: 16px 20px; margin-bottom: 14px; }
+      h2 { font: 600 11px var(--mono); letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin: 0 0 10px; }
+      ul { margin: 0; padding-left: 18px; }
+      li { margin: 5px 0; }
+      a { color: var(--amber); text-decoration: none; }
+      a:hover { text-decoration: underline; }
+      code { font: 12px var(--mono); background: #1b2128; border: 1px solid #2a333c; padding: 1px 5px; border-radius: 3px; }
+      p { margin: 8px 0 0; color: var(--ink); }
+      p.muted { color: var(--muted); font-size: 13px; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true">
+          <rect width="26" height="26" rx="5" fill="#1b2128"/>
+          <path d="M5 8.5 L13 4.5 L21 8.5 L21 17.5 L13 21.5 L5 17.5 Z" fill="none" stroke="#ffb300" stroke-width="1.4"/>
+          <path d="M5 8.5 L13 12.5 L21 8.5 M13 12.5 L13 21.5" fill="none" stroke="#ffb300" stroke-width="1.1" opacity="0.7"/>
+          <circle cx="13" cy="13.5" r="1.6" fill="#ffb300"/>
+        </svg>
+        <h1>webcave <span>· browser-based cluster rendering for CAVEs and display walls</span></h1>
+      </header>
+
+      <section>
+        <h2>Simulator — no server needed</h2>
+        <ul>
+          <li><a href="/simulator.html?config=cave-3m">CAVE, 4 screens, shapes</a></li>
+          <li><a href="/simulator.html?config=wall-3x1">Tiled wall, 3×1, shapes</a></li>
+          <li><a href="/simulator.html?config=cave-3m&app=gltf">CAVE, glTF model (Damaged Helmet)</a></li>
+          <li><a href="/simulator.html?config=cave-3m&app=gltf&overview=world">CAVE, glTF model, scene in the overview</a></li>
+          <li><a href="/simulator.html?config=cave-3m&app=vdb&overview=world">CAVE, OpenVDB smoke volume (29 MB, decoded in the browser)</a></li>
+          <li><a href="/simulator.html?config=cave-3m&app=points&overview=world">CAVE, OpenVDB particle point cloud (157 MB, 9.5 M points)</a></li>
+          <li><a href="/simulator.html?config=wall-3x1&app=map">Wall 3×1, MapLibre map with 3D buildings (drag a tile to move all)</a></li>
+          <li><a href="/simulator.html?config=wall-2x2">Wall 2×2, map (config default)</a></li>
+          <li><a href="/simulator.html?config=wall-3x1&app=density">Wall 3×1, 2D population density choropleth</a></li>
+        </ul>
+        <p class="muted">Applications: <code>app=shapes</code>, <code>app=gltf</code> with <code>model=URL</code>, <code>size</code>, <code>spin</code>, <code>mx my mz</code>, <code>app=vdb</code> with <code>vdb=URL</code>, <code>density</code>, <code>steps</code>, <code>app=points</code> with <code>points=URL</code>, <code>maxPoints</code>, or <code>app=map</code> / <code>app=density</code> with <code>style</code>, <code>center=lng,lat</code>, <code>zoom</code>, <code>pitch</code>, <code>bearing</code> (density: <code>data</code>, <code>opacity</code>). Press <code>H</code> in the simulator for all keys.</p>
+      </section>
+
+      <section>
+        <h2>Cluster mode</h2>
+        <p>Start the manager with <code>npm run manager</code>, then open one node page per display:</p>
+        <ul>
+          <li><a href="/node.html?node=front">node front</a></li>
+          <li><a href="/node.html?node=left">node left</a></li>
+          <li><a href="/node.html?node=right">node right</a></li>
+          <li><a href="/node.html?node=floor">node floor</a></li>
+          <li><a href="/simulator.html?manager=ws://localhost:8765">simulator as controller of the running manager</a></li>
+          <li><a href="/launcher.html">node launcher: one computer, several displays</a> (start the manager with <code>--config cave-3m-1pc</code>)</li>
+        </ul>
+        <p class="muted">Node parameters: <code>node</code>, <code>manager=ws://host:8765</code>, <code>stereo=anaglyph</code> (override). Click a node to go fullscreen, press <code>h</code> to hide the HUD.</p>
+      </section>
+    </main>
+  </body>
+</html>

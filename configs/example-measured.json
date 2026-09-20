@@ -1,0 +1,21 @@
+{
+  "$schema": "./schema.json",
+  "name": "example-measured",
+  "description": "Template for a measured installation: screens given by three corners each (lower-left pa, lower-right pb, upper-left pc), in meters, in a Y-up frame with the viewer near the origin. Copy, rename, fill in your corners.",
+  "fps": 60,
+  "sync": "barrier",
+  "barrierTimeoutMs": 50,
+  "near": 0.05,
+  "far": 200,
+  "defaultHead": { "position": [0, 1.6, 0], "orientation": [0, 0, 0, 1] },
+  "stereo": { "mode": "mono", "eyeSeparation": 0.065 },
+  "app": { "name": "shapes" },
+  "screens": [
+    { "id": "front", "pa": [-1.5, 0, -1.5], "pb": [1.5, 0, -1.5], "pc": [-1.5, 3, -1.5], "widthPx": 1920, "heightPx": 1920 },
+    { "id": "left",  "pa": [-1.5, 0, 1.5],  "pb": [-1.5, 0, -1.5], "pc": [-1.5, 3, 1.5], "widthPx": 1920, "heightPx": 1920,
+      "stereo": { "mode": "row-interleaved", "firstEye": "right" } }
+  ],
+  "nodes": [
+    { "id": "pc1", "screens": ["front", "left"] }
+  ]
+}

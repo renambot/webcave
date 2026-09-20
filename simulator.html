@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>WebCAVE — simulator</title>
+    <meta name="theme-color" content="#0d1013" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='1.5' y='1.5' width='13' height='13' rx='1.5' fill='none' stroke='%23ffb300' stroke-width='1.6'/%3E%3Ccircle cx='8' cy='8' r='2' fill='%23ffb300'/%3E%3C/svg%3E" />
+    <style>
+      :root {
+        --bg: #0d1013;
+        --panel: #14181d;
+        --panel-edge: #1f262d;
+        --ink: #dfe5ea;
+        --muted: #79848d;
+        --amber: #ffb300;
+        --amber-dim: rgba(255, 179, 0, 0.35);
+        --green: #3ddc84;
+        --red: #ff6b5c;
+        --mono: "SF Mono", "Cascadia Code", "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+        --sans: -apple-system, "Segoe UI", system-ui, sans-serif;
+      }
+      * { box-sizing: border-box; margin: 0; }
+      [hidden] { display: none !important; }
+      html, body { height: 100%; overscroll-behavior: none; }
+      body {
+        background: var(--bg);
+        color: var(--ink);
+        font-family: var(--sans);
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+        inset: 0;
+        height: 100dvh;
+        padding: 12px clamp(12px, 2vw, 28px);
+        gap: 10px;
+        overflow: hidden;
+      }
+
+      /* ------- header ------- */
+      header { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; flex-shrink: 0; }
+      #logo { width: 26px; height: 26px; border-radius: 5px; }
+      header h1 {
+        font-family: var(--mono);
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--amber);
+      }
+      header h1 span { color: var(--muted); }
+      #app-info { font-family: var(--mono); font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
+      .header-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+      #link-status { font-family: var(--mono); font-size: 11px; color: var(--amber); letter-spacing: 0.05em; }
+      #link-status.remote { color: var(--green); }
+
+      /* ------- stage: tiles + overview ------- */
+      #stage {
+        flex: 1;
+        min-height: 160px;
+        display: grid;
+        grid-template-columns: 1fr minmax(420px, 36vw);
+        gap: 10px;
+      }
+      #grid {
+        display: grid;
+        gap: 8px;
+        min-height: 0;
+      }
+      .tile {
+        position: relative;
+        background: #000;
+        border: 1px solid var(--panel-edge);
+        border-radius: 6px;
+        display: flex; align-items: center; justify-content: center;
+        overflow: hidden; min-height: 0;
+      }
+      .tile canvas { display: block; }
+      .tile .flat { position: relative; overflow: hidden; }
+      .tile .label {
+        position: absolute; left: 10px; top: 8px;
+        font-family: var(--mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
+        color: var(--amber); text-shadow: 0 1px 2px #000;
+      }
+      #overview-wrap {
+        position: relative; min-height: 0;
+        background: #000;
+        border: 1px solid var(--panel-edge);
+        border-radius: 6px;
+        overflow: hidden;
+      }
+      #overview { display: block; cursor: grab; }
+      #overview:active { cursor: grabbing; }
+      #overview-wrap .label {
+        position: absolute; left: 10px; top: 8px; pointer-events: none;
+        font-family: var(--mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted);
+      }
+
+      /* ------- console ------- */
+      #console {
+        background: var(--panel);
+        border: 1px solid var(--panel-edge);
+        border-radius: 6px;
+        padding: 12px 18px 12px;
+        display: flex; flex-direction: column; gap: 10px;
+        flex-shrink: 0;
+      }
+      #readout { display: flex; align-items: baseline; gap: 28px; flex-wrap: wrap; font-family: var(--mono); }
+      .readout-cell { display: flex; flex-direction: column; gap: 2px; }
+      .readout-cell .label { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+      .readout-cell .value { font-size: 18px; color: var(--ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
+      .readout-cell .value .dim { color: var(--muted); }
+      .readout-cell .value.warn { color: var(--amber); }
+
+      .controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+      .controls .spacer { margin-left: auto; }
+      button, select, input[type="number"] {
+        font-family: var(--mono);
+        font-size: 13px;
+        color: var(--ink);
+        background: #1b2128;
+        border: 1px solid #2a333c;
+        border-radius: 4px;
+        padding: 6px 11px;
+      }
+      button { cursor: pointer; min-width: 40px; }
+      button:hover:not(:disabled) { border-color: var(--amber); color: var(--amber); }
+      button.active { border-color: var(--amber); color: var(--amber); background: rgba(255, 179, 0, 0.08); }
+      button:disabled, select:disabled, input:disabled { opacity: 0.4; cursor: default; }
+      button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--amber); outline-offset: 1px; }
+      .field { display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; }
+      .field .unit { text-transform: none; }
+      #ipd { width: 70px; }
+      #mode { min-width: 180px; }
+
+      footer {
+        display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; flex-shrink: 0;
+        font-family: var(--mono); font-size: 11px; color: var(--muted);
+      }
+      footer .warn { color: var(--amber); }
+      footer .ok { color: var(--green); }
+      #stats { white-space: pre-wrap; }
+
+      /* ------- help modal ------- */
+      .modal {
+        position: fixed; inset: 0; z-index: 10;
+        display: grid; place-items: center;
+        background: rgba(5, 6, 8, 0.72);
+        backdrop-filter: blur(4px);
+        padding: 16px;
+      }
+      .modal-card {
+        position: relative;
+        width: min(680px, 92vw);
+        max-height: 85dvh; overflow-y: auto;
+        background: var(--panel);
+        border: 1px solid var(--panel-edge);
+        border-radius: 8px;
+        padding: 22px 26px 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+      }
+      .modal-card h2 {
+        font-family: var(--mono); font-size: 13px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase;
+        color: var(--amber); margin: 0 36px 12px 0;
+      }
+      .modal-card h3 {
+        font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase;
+        color: var(--muted); margin: 16px 0 8px;
+      }
+      .modal-card h3 .sub { text-transform: none; letter-spacing: 0; font-weight: normal; }
+      .modal-card table { border-collapse: collapse; width: 100%; font-size: 14px; }
+      .modal-card td { padding: 3px 8px 3px 0; vertical-align: top; }
+      .modal-card td:first-child { white-space: nowrap; width: 44%; color: var(--ink); }
+      .modal-card kbd {
+        display: inline-block; min-width: 20px; text-align: center; padding: 1px 6px;
+        border: 1px solid #2a333c; border-bottom-width: 2px; border-radius: 4px; background: #1b2128;
+        font: 12px var(--mono);
+      }
+      .modal-card .note { color: var(--muted); margin: 8px 0 0; font-size: 12px; line-height: 1.5; }
+      .modal-card code { font-family: var(--mono); background: #1b2128; padding: 1px 4px; border-radius: 3px; font-size: 12px; }
+      .modal-close { position: absolute; top: 12px; right: 12px; }
+      button.small { min-width: 0; padding: 4px 9px; font-size: 12px; }
+
+      @media (max-width: 900px) {
+        #stage { grid-template-columns: 1fr; grid-template-rows: 1fr 240px; }
+        header h1 span { display: none; }
+        #app-info { display: none; }
+        footer span:last-child { display: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <svg id="logo" viewBox="0 0 26 26" aria-hidden="true">
+        <rect width="26" height="26" rx="5" fill="#1b2128"/>
+        <path d="M5 8.5 L13 4.5 L21 8.5 L21 17.5 L13 21.5 L5 17.5 Z" fill="none" stroke="#ffb300" stroke-width="1.4"/>
+        <path d="M5 8.5 L13 12.5 L21 8.5 M13 12.5 L13 21.5" fill="none" stroke="#ffb300" stroke-width="1.1" opacity="0.7"/>
+        <circle cx="13" cy="13.5" r="1.6" fill="#ffb300"/>
+      </svg>
+      <h1>webcave <span>· simulator</span></h1>
+      <div id="app-info">—</div>
+      <span class="header-right">
+        <span id="link-status">● connecting</span>
+        <button id="help-btn" class="small" title="Keyboard help (H)" aria-label="Keyboard help">? help</button>
+      </span>
+    </header>
+
+    <div id="stage">
+      <main id="grid"></main>
+      <div id="overview-wrap">
+        <canvas id="overview"></canvas>
+        <span class="label">overview</span>
+      </div>
+    </div>
+
+    <div id="console">
+      <div id="readout">
+        <div class="readout-cell"><span class="label">Frame</span><span class="value" id="ro-frame">—</span></div>
+        <div class="readout-cell"><span class="label">Frame rate</span><span class="value" id="ro-fps">—</span></div>
+        <div class="readout-cell"><span class="label">Head x y z</span><span class="value" id="ro-head">—</span></div>
+        <div class="readout-cell"><span class="label">Head yaw pitch roll</span><span class="value" id="ro-headrot">—</span></div>
+        <div class="readout-cell"><span class="label">Nav x y z</span><span class="value" id="ro-nav">—</span></div>
+        <div class="readout-cell"><span class="label">Nav yaw pitch</span><span class="value" id="ro-navrot">—</span></div>
+        <div class="readout-cell"><span class="label">Late frames</span><span class="value" id="ro-late">—</span></div>
+      </div>
+
+      <div class="controls">
+        <select id="config" title="Display configuration (configs/*.json)" aria-label="Display configuration"></select>
+        <select id="mode" title="Stereo output mode" aria-label="Stereo output mode">
+          <option value="mono">mono</option>
+          <option value="anaglyph">anaglyph</option>
+          <option value="side-by-side">left-right (full width)</option>
+          <option value="side-by-side-half">left-right (half width)</option>
+          <option value="top-bottom">top-bottom (full height)</option>
+          <option value="top-bottom-half">top-bottom (half height)</option>
+          <option value="row-interleaved">interlaced rows</option>
+          <option value="column-interleaved">interlaced columns</option>
+          <option value="checkerboard">checkerboard</option>
+          <option value="frame-sequential">frame sequential (exp.)</option>
+        </select>
+        <select id="anaglyph" title="Anaglyph colour matrices" aria-label="Anaglyph variant">
+          <option value="dubois">Dubois red-cyan</option>
+          <option value="bw">red-cyan B/W</option>
+        </select>
+        <button id="btn-swap" title="Swap left/right eye" aria-pressed="false">⇄ swap</button>
+        <label class="field">eye sep
+          <input id="ipd" type="number" min="40" max="80" step="1" value="65" title="Eye separation in millimetres" />
+          <span class="unit">mm</span>
+        </label>
+        <select id="sync" title="Frame synchronization tier" aria-label="Sync tier">
+          <option value="barrier">sync · barrier</option>
+          <option value="loose">sync · loose</option>
+        </select>
+        <span class="spacer"></span>
+        <button id="btn-autohead" class="active" title="Simulated head motion; off to drive the head with the keyboard" aria-pressed="true">↻ auto head</button>
+        <select id="overview-mode" title="Overview content" aria-label="Overview content">
+          <option value="none">overview · geometry</option>
+          <option value="walls" selected>overview · wall textures</option>
+          <option value="world">overview · scene in space</option>
+        </select>
+        <button id="view-head" title="Move the overview camera to the eye">view from head</button>
+        <button id="btn-reset" title="Reset navigation and head (R)">reset</button>
+      </div>
+    </div>
+
+    <footer>
+      <span id="stats">—</span>
+      <span>Arrows look · I K J L U O fly · W S A D Q E head · Shift rotate head · Space spin · R reset · H help</span>
+    </footer>
+
+    <div id="help" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="help-title">
+      <div class="modal-card">
+        <button id="help-close" class="small modal-close" title="Close (Esc)" aria-label="Close">✕</button>
+        <h2 id="help-title">Keyboard and mouse</h2>
+        <h3>Navigation <span class="sub">— moves the whole CAVE through the virtual world</span></h3>
+        <table>
+          <tr><td><kbd>←</kbd> <kbd>→</kbd></td><td>Turn left / right (yaw)</td></tr>
+          <tr><td><kbd>↑</kbd> <kbd>↓</kbd></td><td>Look up / down (pitch)</td></tr>
+          <tr><td><kbd>I</kbd> <kbd>K</kbd></td><td>Fly forward / back, along the current heading</td></tr>
+          <tr><td><kbd>J</kbd> <kbd>L</kbd></td><td>Strafe left / right</td></tr>
+          <tr><td><kbd>U</kbd> <kbd>O</kbd></td><td>Down / up</td></tr>
+          <tr><td><kbd>R</kbd></td><td>Reset navigation to the origin and the head to its default position and orientation</td></tr>
+          <tr><td><kbd>Space</kbd></td><td>Pause / resume the application's rotation (model, volume, points, map auto-rotate), for every screen</td></tr>
+          <tr><td><kbd>Enter</kbd> / <kbd>Backspace</kbd></td><td>Application buttons primary / secondary (gamepad A / B). Shapes: A toggles auto-rotate</td></tr>
+        </table>
+        <h3>Gamepad <span class="sub">— any pad the browser sees; standard layout, profiles for others</span></h3>
+        <table>
+          <tr><td>Left stick</td><td>Move: strafe and forward / back (map: pan)</td></tr>
+          <tr><td>Right stick</td><td>Look: yaw and pitch (map: rotate and pitch)</td></tr>
+          <tr><td>Triggers RT / LT</td><td>Up / down (map: zoom in / out)</td></tr>
+          <tr><td>Y / Triangle</td><td>Pause / resume rotation</td></tr>
+          <tr><td>Back / Select</td><td>Reset navigation and head</td></tr>
+          <tr><td>A B X, bumpers, d-pad</td><td>Passed to the application as primary, secondary, tertiary, prev, next, dpad. Shapes: A toggles auto-rotate</td></tr>
+        </table>
+        <p class="note">Connected pads and their profile show in the footer. Force a profile with <code>?gamepad=standard|xbox-linux|playstation-legacy</code>.</p>
+        <h3>Mouse on a tile <span class="sub">— 3D apps; moves the navigation like the keys</span></h3>
+        <table>
+          <tr><td>Drag</td><td>Look: yaw and pitch</td></tr>
+          <tr><td>Right drag (or middle)</td><td>Pan: strafe and up / down</td></tr>
+          <tr><td>Wheel</td><td>Fly forward / back</td></tr>
+          <tr><td>Double-click</td><td>Reset navigation and head</td></tr>
+        </table>
+        <h3>Head <span class="sub">— the tracked viewer inside the CAVE, only with auto head off</span></h3>
+        <table>
+          <tr><td><kbd>W</kbd> <kbd>S</kbd></td><td>Move forward / back</td></tr>
+          <tr><td><kbd>A</kbd> <kbd>D</kbd></td><td>Move left / right</td></tr>
+          <tr><td><kbd>Q</kbd> <kbd>E</kbd></td><td>Move down / up</td></tr>
+          <tr><td><kbd>Shift</kbd> or <kbd>Alt</kbd> + <kbd>W</kbd> <kbd>S</kbd></td><td>Pitch head up / down</td></tr>
+          <tr><td><kbd>Shift</kbd> or <kbd>Alt</kbd> + <kbd>A</kbd> <kbd>D</kbd></td><td>Yaw head left / right</td></tr>
+          <tr><td><kbd>Shift</kbd> or <kbd>Alt</kbd> + <kbd>Q</kbd> <kbd>E</kbd></td><td>Roll head left / right</td></tr>
+        </table>
+        <p class="note">Head position sets each screen's off-axis frustum. Head rotation turns the cone in the overview and swings the stereo eye pair; it does not rotate the walls' images.</p>
+        <h3>Map application <span class="sub">— flat apps take the mouse in each tile</span></h3>
+        <table>
+          <tr><td>Drag</td><td>Pan</td></tr>
+          <tr><td>Wheel · double-click</td><td>Zoom</td></tr>
+          <tr><td>Right drag or <kbd>Ctrl</kbd> + drag</td><td>Rotate and pitch</td></tr>
+        </table>
+        <p class="note">The camera is sent to the manager and comes back to every tile and node, so all screens follow. The map is still until someone moves it (or <code>autoRotate</code> is set).</p>
+        <h3>Overview panel</h3>
+        <table>
+          <tr><td>Drag · wheel · right drag</td><td>Orbit · zoom · pan</td></tr>
+          <tr><td><em>view from head</em></td><td>Put the overview camera at the eye</td></tr>
+          <tr><td><em>overview</em> selector</td><td>Geometry only, wall textures (mono), or the scene in space</td></tr>
+        </table>
+        <h3>General</h3>
+        <table>
+          <tr><td><kbd>H</kbd> or <kbd>?</kbd></td><td>Toggle this help</td></tr>
+          <tr><td><kbd>Esc</kbd></td><td>Close this help</td></tr>
+        </table>
+        <p class="note">URL parameters: <code>config=NAME (a file in configs/)</code> · <code>manager=ws://host:8765</code> (controller mode) · <code>app=shapes|gltf</code>, <code>model=URL</code>, <code>size</code>, <code>spin</code>, <code>mx my mz</code> · <code>stereo=</code>, <code>anaglyph=dubois|bw</code> · <code>overview=none|walls|world</code> · initial navigation <code>yaw</code>, <code>pitch</code> (degrees), <code>x</code>, <code>y</code>, <code>z</code> (meters) · <code>help=1</code>.</p>
+      </div>
+    </div>
+
+    <script type="module" src="/src/simulator/main.ts"></script>
+  </body>
+</html>

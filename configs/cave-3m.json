@@ -1,0 +1,21 @@
+{
+  "$schema": "./schema.json",
+  "name": "cave-3m",
+  "description": "A 3 m CAVE: front, left and right walls plus the floor, one computer per screen. Viewer stands at the origin, floor at y = 0.",
+  "fps": 60,
+  "sync": "barrier",
+  "defaultHead": { "position": [0, 1.6, 0] },
+  "app": { "name": "shapes" },
+  "screens": [
+    { "id": "front", "center": [0, 1.5, -1.5], "width": 3, "height": 3, "yaw": 0,   "widthPx": 1920, "heightPx": 1920 },
+    { "id": "left",  "center": [-1.5, 1.5, 0], "width": 3, "height": 3, "yaw": 90,  "widthPx": 1920, "heightPx": 1920 },
+    { "id": "right", "center": [1.5, 1.5, 0],  "width": 3, "height": 3, "yaw": -90, "widthPx": 1920, "heightPx": 1920 },
+    { "id": "floor", "center": [0, 0, 0],      "width": 3, "height": 3, "pitch": -90, "widthPx": 1920, "heightPx": 1920 }
+  ],
+  "nodes": [
+    { "id": "front", "screens": ["front"] },
+    { "id": "left",  "screens": ["left"] },
+    { "id": "right", "screens": ["right"] },
+    { "id": "floor", "screens": ["floor"] }
+  ]
+}

@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>WebCAVE — node</title>
+    <meta name="theme-color" content="#000000" />
+    <style>
+      :root { --amber: #ffb300; --muted: #79848d; --mono: "SF Mono", "Cascadia Code", "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace; }
+      html, body { margin: 0; height: 100%; background: #000; overflow: hidden; cursor: none; }
+      body { display: flex; align-items: center; justify-content: center; }
+      #view { display: block; }
+      #hud {
+        position: fixed; left: 12px; top: 10px; pointer-events: none; z-index: 5;
+        font: 11px var(--mono); letter-spacing: 0.05em; color: #dfe5ea;
+        background: rgba(0, 0, 0, 0.55); padding: 6px 8px; border-radius: 4px; white-space: pre;
+      }
+      #hud::before { content: "● "; color: var(--amber); }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <div id="hud">connecting...</div>
+    <script type="module" src="/src/node/main.ts"></script>
+  </body>
+</html>

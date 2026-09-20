@@ -1,0 +1,19 @@
+{
+  "$schema": "./schema.json",
+  "name": "wall-2x2",
+  "description": "A 2x2 wall of 16:9 displays, 1.2 m wide each with a 2 cm bezel gap, at z = 0. Viewer 3 m back. Good for testing flat (2D) apps such as the map.",
+  "defaultHead": { "position": [0, 1.6, 3] },
+  "app": { "name": "map" },
+  "screens": [
+    { "id": "tl", "center": [-0.61, 1.9475, 0], "width": 1.2, "height": 0.675, "widthPx": 1920, "heightPx": 1080 },
+    { "id": "tr", "center": [0.61, 1.9475, 0],  "width": 1.2, "height": 0.675, "widthPx": 1920, "heightPx": 1080 },
+    { "id": "bl", "center": [-0.61, 1.2525, 0], "width": 1.2, "height": 0.675, "widthPx": 1920, "heightPx": 1080 },
+    { "id": "br", "center": [0.61, 1.2525, 0],  "width": 1.2, "height": 0.675, "widthPx": 1920, "heightPx": 1080 }
+  ],
+  "nodes": [
+    { "id": "tl", "screens": ["tl"] },
+    { "id": "tr", "screens": ["tr"] },
+    { "id": "bl", "screens": ["bl"] },
+    { "id": "br", "screens": ["br"] }
+  ]
+}

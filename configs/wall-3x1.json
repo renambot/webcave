@@ -1,0 +1,16 @@
+{
+  "$schema": "./schema.json",
+  "name": "wall-3x1",
+  "description": "A flat wall of three 16:9 displays, 1.2 m wide each, at z = 0. Viewer 3 m back at eye height 1.6 m.",
+  "defaultHead": { "position": [0, 1.6, 3] },
+  "screens": [
+    { "id": "tile0", "center": [-1.2, 1.6, 0], "width": 1.2, "height": 0.675, "widthPx": 1920, "heightPx": 1080 },
+    { "id": "tile1", "center": [0, 1.6, 0],    "width": 1.2, "height": 0.675, "widthPx": 1920, "heightPx": 1080 },
+    { "id": "tile2", "center": [1.2, 1.6, 0],  "width": 1.2, "height": 0.675, "widthPx": 1920, "heightPx": 1080 }
+  ],
+  "nodes": [
+    { "id": "tile0", "screens": ["tile0"] },
+    { "id": "tile1", "screens": ["tile1"] },
+    { "id": "tile2", "screens": ["tile2"] }
+  ]
+}

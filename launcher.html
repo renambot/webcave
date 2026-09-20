@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>WebCAVE — node launcher</title>
+    <meta name="theme-color" content="#0d1013" />
+    <style>
+      :root {
+        --bg: #0d1013; --panel: #14181d; --panel-edge: #1f262d; --ink: #dfe5ea; --muted: #79848d; --amber: #ffb300; --green: #3ddc84;
+        --mono: "SF Mono", "Cascadia Code", "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+        --sans: -apple-system, "Segoe UI", system-ui, sans-serif;
+      }
+      * { box-sizing: border-box; margin: 0; }
+      body { background: var(--bg); color: var(--ink); font: 15px/1.5 var(--sans); min-height: 100vh; padding: 24px clamp(12px, 3vw, 40px); display: flex; flex-direction: column; gap: 14px; }
+      header { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+      header h1 { font: 600 14px var(--mono); letter-spacing: 0.22em; text-transform: uppercase; color: var(--amber); }
+      header h1 span { color: var(--muted); }
+      #link-status { margin-left: auto; font: 11px var(--mono); color: var(--amber); letter-spacing: 0.05em; }
+      #link-status.ok { color: var(--green); }
+      section { background: var(--panel); border: 1px solid var(--panel-edge); border-radius: 6px; padding: 14px 18px; }
+      h2 { font: 600 11px var(--mono); letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+      .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+      button, select { font: 13px var(--mono); color: var(--ink); background: #1b2128; border: 1px solid #2a333c; border-radius: 4px; padding: 6px 11px; }
+      button { cursor: pointer; }
+      button:hover:not(:disabled) { border-color: var(--amber); color: var(--amber); }
+      button.primary { border-color: var(--amber); color: var(--amber); }
+      button:disabled { opacity: 0.4; cursor: default; }
+      table { border-collapse: collapse; font: 13px var(--mono); }
+      th { text-align: left; color: var(--muted); font-weight: normal; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; padding: 4px 14px 4px 0; }
+      td { padding: 4px 14px 4px 0; font-variant-numeric: tabular-nums; }
+      .muted { color: var(--muted); font-size: 13px; }
+      .map-row { display: flex; align-items: center; gap: 10px; margin: 6px 0; }
+      .map-label { font: 12px var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--amber); min-width: 90px; }
+      #cmd { font: 12px var(--mono); color: var(--ink); background: #0b0e11; border: 1px solid var(--panel-edge); border-radius: 4px; padding: 10px 12px; white-space: pre-wrap; overflow-wrap: anywhere; min-height: 2.6em; }
+      #note { color: var(--amber); font-size: 13px; min-height: 1.2em; }
+      p { color: var(--ink); }
+      p.muted { margin-top: 8px; }
+      code { font: 12px var(--mono); background: #1b2128; border: 1px solid #2a333c; padding: 1px 5px; border-radius: 3px; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true">
+        <rect width="26" height="26" rx="5" fill="#1b2128"/>
+        <path d="M5 8.5 L13 4.5 L21 8.5 L21 17.5 L13 21.5 L5 17.5 Z" fill="none" stroke="#ffb300" stroke-width="1.4"/>
+        <path d="M5 8.5 L13 12.5 L21 8.5 M13 12.5 L13 21.5" fill="none" stroke="#ffb300" stroke-width="1.1" opacity="0.7"/>
+        <circle cx="13" cy="13.5" r="1.6" fill="#ffb300"/>
+      </svg>
+      <h1>webcave <span>· node launcher</span></h1>
+      <span id="link-status">● connecting</span>
+    </header>
+
+    <section>
+      <h2>This computer's node</h2>
+      <div class="row">
+        <select id="node" title="Node from the cluster config"></select>
+      </div>
+      <p class="muted">A node with several screens runs one browser window per display. Pick which display shows which screen, then launch.</p>
+    </section>
+
+    <section>
+      <h2>Displays</h2>
+      <div class="row" style="margin-bottom: 10px">
+        <button id="btn-detect">detect displays</button>
+      </div>
+      <div id="displays"></div>
+    </section>
+
+    <section>
+      <h2>Screen → display</h2>
+      <div id="mapping"></div>
+      <div class="row" style="margin-top: 12px">
+        <button id="btn-launch" class="primary" disabled>launch node windows</button>
+        <button id="btn-close" disabled>close all</button>
+        <span id="note"></span>
+      </div>
+      <p class="muted">Windows open fullscreen on their display when the browser grants the window-management permission (Chrome, Edge). Otherwise each opens on its display and goes fullscreen on the first click inside it.</p>
+    </section>
+
+    <section>
+      <h2>Unattended equivalent</h2>
+      <pre id="cmd"></pre>
+      <p class="muted">The same layout as kiosk windows, with no click and no permission prompt. Positions come from the detected displays.</p>
+    </section>
+
+    <script type="module" src="/src/launcher/main.ts"></script>
+  </body>
+</html>
