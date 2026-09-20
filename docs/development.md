@@ -30,6 +30,7 @@ src/render/     per-screen viewport renderer, stereo packer, off-axis helper, 3D
 public/models/  sample glTF assets
 public/volumes/ OpenVDB files for the vdb and points apps (not in the repository)
 public/crayoland/ Crayoland's original World, Sounds, textures, ground masks, hand models, sounds as MP3
+public/aquarium/  WebGL Aquarium: tdl library, adapted core, shaders, models and textures (BSD)
 scripts/        launch-nodes.sh (one kiosk Chrome per display), gen-schema.ts, screenshot.mjs, fake-tracker.ts (pretend DTrack / NatNet / VRPN)
 index.html, simulator.html, node.html, launcher.html, panel.html (an app's control panel alone, for a tablet)
 ```

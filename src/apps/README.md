@@ -17,16 +17,20 @@ src/apps/
   density/        2D choropleth on MapLibre        (flat app, built on map/wallmap.ts)
   map2d/          clustered earthquakes, donut markers (flat app, built on map/wallmap.ts)
   dotdensity/     Toronto dot-density map on deck.gl with a control panel (flat app; panel.ts is the sidebar)
+  aquarium/       WebGL Aquarium as a raw WebGL app (raw app; the adapted program is public/aquarium/aquarium-core.js)
   crayoland/      Dave Pape's Crayoland, ported    (scene app; world.ts parses the original files,
                                                     creatures.ts deterministic bees and butterflies,
                                                     sound.ts Web Audio soundscape)
   <yours>/        index.ts (+ any helpers, shaders, data)
 ```
 
-Two kinds of app share the folder convention:
+Three kinds of app share the folder convention:
 
 - **Scene apps** own a `THREE.Scene`; WebCAVE renders it per screen with
   off-axis cameras, stereo and navigation. For 3D content.
+- **Raw apps** draw with their own WebGL code: `render(ctx)` runs once per
+  eye per screen with the context, the off-axis view / projection matrices
+  and the bound eye target. For existing WebGL programs (see `aquarium/`).
 - **Flat apps** render themselves (2D) into a container per screen and get
   the screen's rectangle in the overall wall image. For maps, documents,
   dashboards. Stereo and navigation do not apply.
@@ -89,6 +93,34 @@ Rules that keep every node in step:
   placeholder while `ready` is pending.
 - Lights are yours. There is no environment map yet, so PBR materials need
   generous direct light.
+
+## Raw WebGL app contract
+
+```ts
+import type { AppDefinition, AppSpec, RawApp, RawRenderContext } from "../types";
+
+function create(spec: AppSpec): RawApp {
+  const perContext = new Map<WebGLRenderingContext, MyResources>(); // resources belong to a context
+  return {
+    kind: "raw",
+    name: "myraw",
+    ready: Promise.resolve(),
+    status: "ready",
+    update(time, state) { /* advance from cluster time only */ },
+    render(ctx: RawRenderContext) {
+      // ctx.gl, ctx.view, ctx.viewInverse, ctx.projection (column-major, meters, world frame),
+      // ctx.eyePosition, ctx.width/height; framebuffer and viewport already bound. Draw, return.
+      let r = perContext.get(ctx.gl) ?? init(ctx.gl);
+      r.draw(ctx.projection, ctx.view);
+    },
+  };
+}
+export default { name: "myraw", description: "…", create } satisfies AppDefinition;
+```
+
+WebCAVE resets its own GL state around `render`, so leave any state you like,
+but do not swap or rebind the default framebuffer. Multisampled eye targets
+are resolved for you.
 
 ## Flat app contract
 

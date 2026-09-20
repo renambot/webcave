@@ -14,6 +14,13 @@
  *                            Stereo and off-axis projection do not apply.
  *                            Example: map (MapLibre).
  *
+ *   "raw" apps (RawApp)      draw with their own WebGL code. WebCAVE owns the
+ *                            context, the render targets and the cameras, and
+ *                            calls render() once per eye with the off-axis
+ *                            view and projection matrices; the app owns its
+ *                            shaders, buffers and draw calls. For existing
+ *                            WebGL programs. Example: aquarium.
+ *
  * Both kinds share one rule that keeps a cluster in step: what is drawn must
  * be a function of the FrameState the Manager broadcast for that frame, never
  * of local wall-clock time or local input. For scene apps that means
@@ -27,7 +34,7 @@
  *   - for the 3 m CAVE preset the walls are at x = ±1.5 and z = -1.5
  */
 import type * as THREE from "three";
-import type { AppSpec, ScreenConfig } from "../core/config";
+import type { AppSpec, ScreenConfig, Vec3 } from "../core/config";
 import type { FrameState } from "../core/protocol";
 import type { WallLayout } from "../core/wall";
 import type { ActionState } from "../input/actions";
@@ -189,10 +196,60 @@ export interface FlatApp {
   dispose?(): void;
 }
 
-export type AnyApp = CaveApp | FlatApp;
+/**
+ * What a raw app gets for one eye of one screen. Matrices are column-major
+ * 4x4 in the world frame (meters): `view` maps world to eye space, `viewInverse`
+ * is the eye's pose in the world, `projection` the off-axis frustum through the
+ * screen with the cluster's near and far. The framebuffer and viewport are
+ * already bound and sized to width x height; draw, do not swap. WebCAVE
+ * resets its own GL state after the call, so leave whatever state you like.
+ *
+ * GL resources belong to a context, and a simulator page draws each screen
+ * with a different context: keep per-context resources in a Map keyed by `gl`.
+ */
+export interface RawRenderContext {
+  gl: WebGL2RenderingContext | WebGLRenderingContext;
+  eye: "left" | "right" | "center";
+  /** Eye position in the world frame, meters. */
+  eyePosition: Vec3;
+  view: ArrayLike<number>;
+  viewInverse: ArrayLike<number>;
+  projection: ArrayLike<number>;
+  width: number;
+  height: number;
+}
+
+/** An application that draws with its own WebGL code from WebCAVE's cameras. */
+export interface RawApp {
+  readonly kind: "raw";
+  readonly name: string;
+  readonly ready: Promise<void>;
+  status: string;
+  /** Advance to cluster time `time`; once per frame per window, before the eyes are drawn. Deterministic, like CaveApp.update. */
+  update(time: number, state?: FrameState): void;
+  /** Draw one eye of one screen into the bound framebuffer. */
+  render(ctx: RawRenderContext): void;
+  onInput?: InputHook;
+  readonly navigation?: NavigationHints;
+  setAudio?(enabled: boolean): void;
+  setDebug?(enabled: boolean): void;
+  createPanel?(container: HTMLElement, ctx: PanelContext): AppPanel;
+  dispose?(): void;
+}
+
+export type AnyApp = CaveApp | FlatApp | RawApp;
 
 export function isFlatApp(app: AnyApp): app is FlatApp {
   return app.kind === "flat";
+}
+
+export function isRawApp(app: AnyApp): app is RawApp {
+  return app.kind === "raw";
+}
+
+/** Scene apps are the ones that are neither flat nor raw. */
+export function isSceneApp(app: AnyApp): app is CaveApp {
+  return app.kind !== "flat" && app.kind !== "raw";
 }
 
 /** What an app folder's index.ts default-exports. The registry collects these. */

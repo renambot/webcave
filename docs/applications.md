@@ -1,6 +1,6 @@
 # Applications
 
-An application owns a three.js scene and advances it from the cluster's simulation time. WebCAVE handles cameras, stereo and screens. Nine are included, in `src/apps/`:
+An application owns a three.js scene and advances it from the cluster's simulation time. WebCAVE handles cameras, stereo and screens. Ten are included, in `src/apps/`:
 
 | Name | What it shows | Options |
 |---|---|---|
@@ -12,6 +12,7 @@ An application owns a three.js scene and advances it from the cluster's simulati
 | `density` | 2D choropleth of population density from a GeoJSON (MapLibre's "visualize population density" example, Rwanda provinces); same wall and camera machinery as `map` | the `map` camera options plus `data` (GeoJSON URL with `population` and `sq-km` per feature), `opacity` |
 | `map2d` | Clustered earthquakes with SVG donut-chart clusters (MapLibre's "display HTML clusters with custom properties" example), the world spanning the wall once; same wall and camera machinery as `map` | the `map` camera options plus `data` (GeoJSON URL of points with a numeric `mag`), `clusterRadius` (pixels, 80) |
 | `dotdensity` | Toronto 2021 dot-density map (School of Cities): 278,000 deck.gl dots, one per ten people, coloured by a census field chosen in a control panel; dark basemap, dot size and a 3D mode | the `map` camera options plus `data` (CSV URL), `labels` (place labels JSON), `summaries` (folder of legend CSVs) |
+| `aquarium` | The WebGL Aquarium (Google, 2009) as a raw WebGL app: the CAVE stands in the tank and up to 30,000 fish swim through the room; fish count, options, lasers and speed in a panel | `model` (folder URL with the assets; default `/aquarium/`), option `scale` (meters per aquarium unit, 0.1) |
 | `crayoland` | Dave Pape's Crayoland (EVL, 1995): a crayon-drawn meadow with bees, butterflies, flies, and flowers and rocks to grab and throw with the wand; birds, frogs, a stream and the hive's hum on the audio node | `model` (folder URL with `World`, `Sounds`, `tex/`, `audio/`; default `/crayoland/`), options `world`, `sounds` (file names); with the simulator's debug button or `?debug=1`: pick spheres, wand point, touched object highlighted |
 
 The application is part of the cluster config, so every Node runs the same one. Set it on the Manager:
@@ -22,7 +23,7 @@ npm run manager -- --app gltf --model /models/DamagedHelmet.glb --size 0.8 --spi
 
 For development, URL parameters override it on the simulator or a Node: `?app=gltf&model=/models/DamagedHelmet.glb&size=0.8&spin=0.3&mx=0&my=1.5&mz=-1.05`. Files under `public/` are served at the root, so drop a `.glb` in `public/models/` and reference it as `/models/name.glb`. The bundled Damaged Helmet is a Khronos sample, CC BY 4.0 (see `public/models/README.md`).
 
-There are two kinds of application. **Scene apps** (shapes, gltf, vdb, points, crayoland) own a three.js scene that WebCAVE renders from each screen's off-axis camera, with stereo and navigation. **Flat apps** (map, density, map2d, dotdensity) are 2D: they render themselves into a container per screen and receive the screen's rectangle in the overall wall image, so adjacent screens join into one picture. Stereo does not apply to flat apps.
+There are three kinds of application. **Scene apps** (shapes, gltf, vdb, points, crayoland) own a three.js scene that WebCAVE renders from each screen's off-axis camera, with stereo and navigation. **Raw apps** (aquarium) draw with their own WebGL code: WebCAVE binds the eye's render target and hands over the off-axis view and projection matrices, once per eye, and the app issues its own draw calls. **Flat apps** (map, density, map2d, dotdensity) are 2D: they render themselves into a container per screen and receive the screen's rectangle in the overall wall image, so adjacent screens join into one picture. Stereo does not apply to flat apps.
 
 ## Adding an application
 
@@ -73,7 +74,9 @@ The CAVE frame is meters, Y up, floor at y = 0, viewer near the origin looking t
 
 **8. Flat (2D) apps.** For maps, documents and dashboards, export `kind: "flat"` and a `createView(container, screen, layout, opts)` that draws exactly the screen's rectangle of the shared picture (`layout.rects[screen.id]`), reading its state from `state.appState` and reporting changes with `opts.send` when `opts.interactive`. A MapLibre app is thirty lines on top of `map/wallmap.ts`; the density app shows it.
 
-**9. A control panel.** An app whose original had a sidebar of controls implements `createPanel(container, ctx)`: build your controls into `container` with plain DOM or any framework, make every control call `ctx.send({ myKey: ... })`, and return `{ update(state), dispose() }` where `update` reflects `state.appState` back into the controls. The simulator shows the panel in a third column, and `panel.html?manager=ws://...` shows it alone for a tablet or a laptop next to the wall; the wall itself never sees it. Several panels can be open at once and always agree, because they all mirror the same state. The dot-density app is the example.
+**9. Raw WebGL apps.** For an existing WebGL program, export `kind: "raw"` with `update(time, state)` and `render(ctx)`. WebCAVE calls `render` once per eye per screen with `ctx.gl`, `ctx.view`, `ctx.viewInverse` and `ctx.projection` (column-major, world frame, meters), the eye position, and the target's size; the framebuffer and viewport are already bound, so draw and return. GL resources belong to a context, and the simulator draws each screen with its own, so keep them in a `Map` keyed by `ctx.gl`. Stereo, off-axis projection, navigation and the barrier come for free. The aquarium is the example, including how a program in other units is fed matrices in meters.
+
+**10. A control panel.** An app whose original had a sidebar of controls implements `createPanel(container, ctx)`: build your controls into `container` with plain DOM or any framework, make every control call `ctx.send({ myKey: ... })`, and return `{ update(state), dispose() }` where `update` reflects `state.appState` back into the controls. The simulator shows the panel in a third column, and `panel.html?manager=ws://...` shows it alone for a tablet or a laptop next to the wall; the wall itself never sees it. Several panels can be open at once and always agree, because they all mirror the same state. The dot-density app is the example.
 
 Rules that keep the cluster in step:
 
@@ -107,6 +110,24 @@ The change reaches all nodes within one frame, and they apply it for the same fr
 - The whole `appState` is resent every frame, so keep it compact: ids and rounded numbers rather than meshes or large arrays. Textures and models are never in the state; a node loads them from `public/` by URL, and the state only names which one is current.
 
 The shapes app is the smallest example: `onInput` sends a clock toggle when button A is pressed, and `update` reads the clock to rotate the carousel on every node, about ten lines in all.
+
+## Raw WebGL apps and the aquarium
+
+Existing WebGL programs, written against the API directly or with a helper library rather than three.js, port through the **raw** contract. WebCAVE keeps everything it already does for a scene app, the per-screen off-axis cameras, the stereo eye targets and packing, navigation and the frame barrier, and replaces the scene by two calls: `update(time, state)` once per frame, and `render(ctx)` once per eye per screen with the context, the eye's view matrix and its inverse, the projection, the eye position and the target size. The eye's framebuffer is bound and sized when `render` runs; the app draws and returns, and WebCAVE resets its own GL state around the call so both can share the context. The eye targets are multisampled, and WebCAVE resolves them after the raw draw.
+
+```
+http://localhost:5173/simulator.html?config=cave-3m&app=aquarium
+npm run manager -- --config cave-3m --app aquarium
+```
+
+`aquarium` is the WebGL Aquarium from WebGLSamples (Google, 2009, BSD): 2,300 lines of WebGL on the tdl helper library, with a `render` function that already took a projection and a view-inverse matrix for its VR mode. `public/aquarium/aquarium-core.js` is that program with the page, UI, network sync, WebXR and multiview removed, and one instance per WebGL context; its header lists the changes. `src/apps/aquarium/index.ts` loads tdl and the core as classic scripts, keeps an instance per context, and converts matrices: the tank is in the aquarium's own units, 74 across its radius, and at 0.1 m per unit (the `scale` option) it is a 7.4 m globe with the fish swimming 1 to 4 m above the floor, so the CAVE stands at its center and the fish pass through the room. Eye space stays rigid in the conversion: only the translations and the projection's near-times-far term are scaled.
+
+- **Time.** The fish were pure functions of time already; the clock is now the cluster time times the speed setting. Light rays and bubble bursts, which used `Math.random` and countdowns, are hashed from time, so every screen shows the same rays and bubbles.
+- **Settings.** The original settings page is a panel: fish count (1 to 30,000), the seven rendering options, lasers, speed and the fog preset, all in `appState.aquarium`; shader variants for fog, normal maps and reflection are rebuilt when those change.
+- **Several contexts.** tdl keeps its program and texture caches per context, and the core wraps its texture classes so image uploads go to the context they were created in whatever context is current at load time.
+- **Assets** (11 MB of models and textures) live in `public/aquarium/` with the license; each screen loads them once.
+
+Not carried over: the orbiting camera (navigation replaces it), the FPS-based automatic quality switch, and the WebXR and multiview paths.
 
 ## Control panels and the dot-density map
 

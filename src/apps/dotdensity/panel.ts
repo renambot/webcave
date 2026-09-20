@@ -101,8 +101,10 @@ export function createDotDensityPanel(container: HTMLElement, ctx: PanelContext,
   container.append(root);
 
   let current: DotDensityState = stateOf(ctx.getState().appState);
+  // Apply optimistically, so two clicks in one frame both survive.
   function patch(p: Partial<DotDensityState>) {
-    ctx.send({ dotDensity: { ...current, ...p } });
+    current = { ...current, ...p };
+    ctx.send({ dotDensity: current });
   }
 
   // Legend data per field, fetched once.

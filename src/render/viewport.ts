@@ -25,6 +25,7 @@ import * as THREE from "three";
 import type { ClusterConfig, ScreenConfig, StereoParams, Vec3 } from "../core/config";
 import { screenSize } from "../core/projection";
 import type { FrameState } from "../core/protocol";
+import type { RawApp, RawRenderContext } from "../apps/types";
 import { applyOffAxis, eyePositions } from "./offaxis";
 import { StereoPacker, canvasSizeFor, isStereo } from "./stereo";
 
@@ -126,6 +127,62 @@ export class ViewportRenderer {
       this.renderer.render(scene, this.camera);
     }
     this.renderer.setRenderTarget(null);
+  }
+
+  /**
+   * Render a raw WebGL app's eye images: same lifecycle as renderFrame(), but
+   * instead of drawing a scene, each eye's off-axis camera is handed to the
+   * app as matrices and the app draws into the eye target with its own code.
+   * three.js state is reset around the call so the two can share the context.
+   */
+  renderRaw(app: RawApp, state: FrameState) {
+    this.lastFrame = state;
+    this.applyNavigation(state.navigation);
+    const eyes = eyePositions(state.head, this.stereo.eyeSeparation);
+    const draw = (eye: Vec3, which: RawRenderContext["eye"], target: THREE.WebGLRenderTarget) => {
+      this.setupCamera(eye); // camera pose + projection through this screen; rig matrices updated
+      this.camera.matrixWorldInverse.copy(this.camera.matrixWorld).invert();
+      this.camera.getWorldPosition(this.worldEye);
+      // Forget three.js's cached state, bind the target (which also sets the viewport), draw, forget again.
+      this.renderer.resetState();
+      this.renderer.setRenderTarget(target);
+      app.render({
+        gl: this.renderer.getContext(),
+        eye: which,
+        eyePosition: [this.worldEye.x, this.worldEye.y, this.worldEye.z],
+        view: this.camera.matrixWorldInverse.elements,
+        viewInverse: this.camera.matrixWorld.elements,
+        projection: this.camera.projectionMatrix.elements,
+        width: target.width,
+        height: target.height,
+      });
+      this.resolveMultisample(target);
+      this.renderer.resetState();
+    };
+    if (isStereo(this.stereo.mode)) {
+      draw(eyes.left, "left", this.packer.left);
+      draw(eyes.right, "right", this.packer.right);
+    } else {
+      const eye = this.stereo.monoEye === "left" ? eyes.left : this.stereo.monoEye === "right" ? eyes.right : eyes.center;
+      draw(eye, this.stereo.monoEye, this.packer.left);
+    }
+    this.renderer.setRenderTarget(null);
+  }
+  private worldEye = new THREE.Vector3();
+
+  /**
+   * The eye targets are multisampled. three.js resolves the multisample
+   * buffer into the target's texture at the end of its own render(); a raw
+   * app never goes through that, so blit it here or the texture stays empty.
+   */
+  private resolveMultisample(target: THREE.WebGLRenderTarget) {
+    const gl = this.renderer.getContext();
+    if (!(gl instanceof WebGL2RenderingContext)) return;
+    const props = this.renderer.properties.get(target) as { __webglFramebuffer?: WebGLFramebuffer; __webglMultisampledFramebuffer?: WebGLFramebuffer };
+    if (!props.__webglMultisampledFramebuffer || !props.__webglFramebuffer) return;
+    gl.bindFramebuffer(gl.READ_FRAMEBUFFER, props.__webglMultisampledFramebuffer);
+    gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, props.__webglFramebuffer);
+    gl.blitFramebuffer(0, 0, target.width, target.height, 0, 0, target.width, target.height, gl.COLOR_BUFFER_BIT, gl.NEAREST);
   }
 
   /** Pack the last rendered eyes onto the canvas. `frame` feeds frame-sequential parity. */
