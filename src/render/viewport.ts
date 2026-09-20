@@ -172,6 +172,23 @@ export class ViewportRenderer {
 
   /** Offscreen canvases a WebGPU app renders each eye into, sized like the eye targets. */
   private gpuCanvases: Partial<Record<"left" | "right", OffscreenCanvas>> = {};
+  /** Full-target quad that copies a WebGPU eye image into an eye target, flipped to GL's row order. */
+  private blitTexture = (() => {
+    const t = new THREE.Texture();
+    t.colorSpace = THREE.NoColorSpace;
+    t.minFilter = THREE.LinearFilter;
+    t.magFilter = THREE.LinearFilter;
+    t.generateMipmaps = false;
+    return t;
+  })();
+  private blitCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+  private blitScene = (() => {
+    const scene = new THREE.Scene();
+    const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.MeshBasicMaterial({ map: this.blitTexture, toneMapped: false, depthTest: false, depthWrite: false }));
+    quad.scale.y = -1; // ImageBitmap rows are top-down; the target is read bottom-up
+    scene.add(quad);
+    return scene;
+  })();
 
   /**
    * Render a WebGPU app's eye images. WebGPU cannot draw into WebGL's eye
@@ -185,7 +202,6 @@ export class ViewportRenderer {
     this.lastFrame = state;
     this.applyNavigation(state.navigation);
     const eyes = eyePositions(state.head, this.stereo.eyeSeparation);
-    const gl = this.renderer.getContext();
     const draw = (eye: Vec3, which: WebGpuRenderContext["eye"], slot: "left" | "right", target: THREE.WebGLRenderTarget) => {
       this.setupCamera(eye);
       this.camera.matrixWorldInverse.copy(this.camera.matrixWorld).invert();
@@ -208,24 +224,22 @@ export class ViewportRenderer {
         width: target.width,
         height: target.height,
       });
-      // Make sure three.js has allocated the target's texture, then overwrite it with the canvas image.
-      this.renderer.setRenderTarget(target);
-      this.renderer.setRenderTarget(null);
-      const tex = (this.renderer.properties.get(target.texture) as { __webglTexture?: WebGLTexture }).__webglTexture;
-      if (!tex) return;
       let bitmap: ImageBitmap;
       try {
         bitmap = canvas.transferToImageBitmap();
       } catch {
         return; // nothing rendered yet (context not configured)
       }
+      // Draw the bitmap into the eye target through a quad. WebGL ignores its
+      // Y-flip flag for ImageBitmap sources, so the flip is in the quad; three.js
+      // also resolves the multisampled target on the way.
+      this.blitTexture.image = bitmap;
+      this.blitTexture.needsUpdate = true;
       this.renderer.resetState();
-      gl.bindTexture(gl.TEXTURE_2D, tex);
-      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
-      gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gl.RGBA, gl.UNSIGNED_BYTE, bitmap);
-      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 0);
+      this.renderer.setRenderTarget(target);
+      this.renderer.render(this.blitScene, this.blitCamera);
+      this.blitTexture.image = null;
       bitmap.close();
-      this.renderer.resetState();
     };
     if (isStereo(this.stereo.mode)) {
       draw(eyes.left, "left", "left", this.packer.left);
