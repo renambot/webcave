@@ -24,7 +24,7 @@
  *   createApp              tiles, overview, toolbar, help, keyboard, frame loop
  *
  * URL parameters: config=NAME|url, manager=ws://..., app=/model=/size=/spin=/mx my mz,
- * stereo=, anaglyph=, overview=none|walls|world, yaw= pitch= x= y= z=, help=1.
+ * stereo=, anaglyph=, overview=none|walls|world, yaw= pitch= x= y= z=, help=1, autohead=1.
  */
 import * as THREE from "three";
 import { type ClusterConfig, type StereoMode, type AnaglyphScheme, resolveStereo } from "../core/config";
@@ -301,7 +301,7 @@ function createApp(cfg: ClusterConfig, link: ControlLink, hooks: AppHooks): App 
   const overviewModeSel = $<HTMLSelectElement>("#overview-mode");
 
   // Toggle buttons (panoweb style): .active plus aria-pressed.
-  const toggles = { swap: false, autoHead: true };
+  const toggles = { swap: false, autoHead: false };
   const setToggle = (btn: HTMLButtonElement, on: boolean) => {
     btn.classList.toggle("active", on);
     btn.setAttribute("aria-pressed", String(on));
@@ -381,8 +381,10 @@ function createApp(cfg: ClusterConfig, link: ControlLink, hooks: AppHooks): App 
     toggles.autoHead = on;
     setToggle(btnAutoHead, on);
     link.send({ type: "setHeadAuto", enabled: on });
+    if (!on) sendHead(); // take over from the sway at the simulator's own pose, so keys do not jump
   };
   btnAutoHead.addEventListener("click", () => setAutoHead(!toggles.autoHead));
+  if (params.get("autohead") === "1") setAutoHead(true); // simulated head sway is off by default
   $("#btn-reset").addEventListener("click", () => resetAll());
 
   if (params.has("overview")) overviewModeSel.value = params.get("overview")!;

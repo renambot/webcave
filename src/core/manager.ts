@@ -52,7 +52,8 @@ export class ClusterManager {
   private pendingFrame = -1;
   private barrierTimer: ReturnType<typeof setTimeout> | null = null;
   private head: HeadPose;
-  private autoHead = true;
+  /** Simulated head sway; off by default so the head stays at defaultHead until a tracker or the simulator moves it. */
+  private autoHead = false;
   private navigation: Navigation = { position: [0, 0, 0], yaw: 0, pitch: 0 };
   /** Shared application state; see FrameState.appState. */
   private appState: Record<string, unknown> = {};

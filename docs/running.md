@@ -11,7 +11,7 @@ Other scripts: `npm run build`, `npm run preview`, `npm run typecheck`, `npm run
 
 ## Simulator
 
-No server needed: open <http://localhost:5173/simulator.html?config=cave-3m> or `?config=wall-3x1`. The config dropdown lists every file in `configs/`. The toolbar controls stereo mode, anaglyph scheme, IPD, eye swap, sync tier and head motion.
+No server needed: open <http://localhost:5173/simulator.html?config=cave-3m> or `?config=wall-3x1`. The config dropdown lists every file in `configs/`. The toolbar controls stereo mode, anaglyph scheme, IPD, eye swap, sync tier and the overview. The head starts at the config's default position and is moved with the keys below; the **auto head** button (or `?autohead=1`) replaces it with a simulated sway, handy for checking stereo and off-axis projection without touching the keyboard.
 
 | Keys | Action |
 |---|---|
@@ -21,7 +21,7 @@ No server needed: open <http://localhost:5173/simulator.html?config=cave-3m> or 
 | `Space` | Pause or resume the application's rotation on every screen (through the shared app state) |
 | Gamepad | Left stick move, right stick look, triggers up/down, Y toggles rotation, Back resets; see [input.md](input.md) |
 | `Enter` / `Backspace` | Application buttons primary / secondary, same as gamepad A / B |
-| `W` `S` / `A` `D` / `Q` `E` | Move the head: forward/back, left/right, down/up (with "auto head" off) |
+| `W` `S` / `A` `D` / `Q` `E` | Move the head: forward/back, left/right, down/up (not while auto head is on) |
 | `Shift` or `Alt` + the same keys | Rotate the head: pitch, yaw, roll |
 | Mouse on a tile (3D apps) | Drag to look, right-drag to pan, wheel to fly, double-click to reset |
 | Mouse drag on overview | Orbit the 3D overview |
