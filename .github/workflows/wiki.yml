@@ -1,0 +1,60 @@
+# Publish the documentation to the repository's GitHub wiki.
+#
+# On every push to main that touches the docs (or on demand), build the wiki
+# pages from README.md and docs/ with scripts/build-wiki.mjs and push them to
+# the wiki repository (<repo>.wiki.git). The wiki must exist: create its first
+# page once in the GitHub UI (Wiki tab, "Create the first page"), after which
+# this workflow keeps it in sync. Edit the docs in the repository, never the
+# wiki: the next run overwrites it.
+name: Publish wiki
+
+on:
+  push:
+    branches: [main]
+    paths: ["README.md", "docs/**", "scripts/build-wiki.mjs", ".github/workflows/wiki.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wiki
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Build wiki pages
+        run: node scripts/build-wiki.mjs .wiki
+
+      - name: Push to the wiki repository
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          # The wiki repository exists only once the wiki is enabled and has a first page.
+          if ! git ls-remote "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.wiki.git" >/dev/null 2>&1; then
+            echo "::notice::No wiki repository yet: enable the wiki and create its first page in the GitHub UI, then re-run this workflow."
+            exit 0
+          fi
+          git clone --depth 1 "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.wiki.git" wiki-repo
+          # Replace the content entirely, keeping the wiki's git history.
+          find wiki-repo -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          cp -R .wiki/. wiki-repo/
+          cd wiki-repo
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "wiki already up to date"
+          else
+            git commit -m "Sync docs from ${GITHUB_SHA::7}"
+            git push
+          fi

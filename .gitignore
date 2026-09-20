@@ -4,3 +4,4 @@ dist
 
 # Local sample volumes (large, not redistributed); see public/volumes/README.md
 public/volumes/*.vdb
+.wiki
