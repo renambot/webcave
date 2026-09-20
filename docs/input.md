@@ -17,11 +17,11 @@ Input goes through an abstraction layer in `src/input/`, so applications and the
 | `Enter` / `Backspace` | Application buttons primary / secondary (gamepad A / B) |
 | Mouse on a 3D view | Drag to look, right-drag to pan, wheel to fly, double-click to reset |
 
-The simulator adds head keys (`W S A D Q E`, with `Shift` or `Alt` to rotate) and wand keys (`Ctrl` + the same) that are simulator-only; see [running.md](running.md).
+The simulator adds head keys (`W S A D Q E`, with `Alt` to rotate) and wand keys (`Shift` + the same, `Shift` + `Alt` to rotate) that are simulator-only; see [running.md](running.md).
 
 ## The wand
 
-Tracked poses are not actions: the head and the wand are each a 6-DOF pose, position and orientation, travelling in every frame (`state.head`, `state.wand`, CAVE frame), and every node sees the same values. A tracker bridge sets them absolutely; until then the Manager derives the wand from the head every frame as a hand offset in the head's yaw frame (`defaultWand`, adjusted by the simulator's `Ctrl` keys), so it moves with the body and not with the gaze. Its buttons are ordinary actions, so a gamepad, the keyboard or the physical wand's buttons all work: `primary` (Enter, gamepad A) and `tertiary` (gamepad X) are the grab buttons in Crayoland. Applications convert the wand to world coordinates with the navigation helpers and react on the controller, publishing the result as shared state (see [applications.md](applications.md)).
+Tracked poses are not actions: the head and the wand are each a 6-DOF pose, position and orientation, travelling in every frame (`state.head`, `state.wand`, CAVE frame), and every node sees the same values. A tracker bridge sets them absolutely; until then the Manager derives the wand from the head every frame as a hand offset in the head's yaw frame (`defaultWand`, adjusted by the simulator's `Shift` keys), so it moves with the body and not with the gaze. Its buttons are ordinary actions, so a gamepad, the keyboard or the physical wand's buttons all work: `primary` (Enter, gamepad A) and `tertiary` (gamepad X) are the grab buttons in Crayoland. Applications convert the wand to world coordinates with the navigation helpers and react on the controller, publishing the result as shared state (see [applications.md](applications.md)).
 
 ## Gamepads
 

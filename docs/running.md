@@ -22,15 +22,17 @@ No server needed: open <http://localhost:5173/simulator.html?config=cave-3m> or 
 | Gamepad | Left stick move, right stick look, triggers fly up/down, bumpers look up/down, Y toggles rotation, Back resets; see [input.md](input.md) |
 | `Enter` / `Backspace` | Application buttons primary / secondary, same as gamepad A / B |
 | `W` `S` / `A` `D` / `Q` `E` | Move the head: forward/back, left/right, down/up (not while auto head is on) |
-| `Shift` or `Alt` + the same keys | Rotate the head: pitch, yaw, roll |
-| `Ctrl` + `W` `S` / `A` `D` / `Q` `E` | Move the wand; `Ctrl` + `Shift` + `W S A D` pitch and yaw it |
+| `Alt` + the same keys | Rotate the head: pitch, yaw, roll |
+| `Shift` + `W` `S` / `A` `D` / `Q` `E` | Move the wand (the hand) relative to the head; `Shift` + `Alt` + `W S A D` pitch and yaw it |
 | Mouse on a tile (3D apps) | Drag to look, right-drag to pan, wheel to fly, double-click to reset |
 | Mouse drag on overview | Orbit the 3D overview |
 | `H` or `?` | Toggle the keyboard help overlay (`Esc` closes; `?help=1` opens it at load) |
 
 The head moves the viewer inside the physical CAVE and changes each screen's off-axis frustum. Navigation moves the whole CAVE through the virtual world, which is how you look up, down or turn. URL parameters set the initial navigation: `?yaw=30&pitch=20&x=0&y=0&z=-2` (degrees and meters).
 
-The wand is the hand-held tracked controller. Its pose is part of every frame like the head's, shown as a stick in the overview and in the readout; applications use it to point and grab (Crayoland draws a hand there). Its buttons are the ordinary input actions: `Enter` or gamepad A is the primary button. Without a tracker the wand behaves like a hand: half a meter ahead of the head and below the eyes, following the head's position and yaw but not its pitch, so looking down does not move it. The simulator's `Ctrl` keys adjust that offset. A tracker bridge will replace it with the measured pose.
+The wand is the hand-held tracked controller. Its pose is part of every frame like the head's, shown as a stick in the overview and in the readout; applications use it to point and grab (Crayoland draws a hand there). Its buttons are the ordinary input actions: `Enter` or gamepad A is the primary button. Without a tracker the wand behaves like a hand: half a meter ahead of the head and below the eyes, following the head's position and yaw but not its pitch, so looking down does not move it. The simulator's `Shift` keys adjust that offset. A tracker bridge will replace it with the measured pose.
+
+The head and wand keys are matched by physical key, so they work whatever the modifier makes of the letter, and they avoid `Ctrl`, which Chrome reserves on Windows and Linux (`Ctrl+W` closes the tab). `Alt` plus a letter would open Chrome's menu or focus the address bar there; the simulator swallows those events while it has focus.
 
 The **audio** button (or `?audio=1`) makes the simulator the cluster's sound output for applications that have sound; only one window in a cluster should play. The button switches sound on and off without reloading for apps that support it.
 

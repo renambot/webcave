@@ -39,7 +39,7 @@ export interface InputControllerOptions {
 }
 
 export class InputController {
-  /** Keys currently held (lower-case key names). Pages may read this for their own bindings. */
+  /** Keys currently held: lower-case key names ("w", "arrowup") and physical codes ("keyw"). Pages may read this for their own bindings. */
   readonly keys = new Set<string>();
   /** Keys pressed since the last frame, so a tap shorter than a frame registers as an edge. */
   readonly taps = new Set<string>();
@@ -114,8 +114,14 @@ export class InputController {
       if (NAV_KEYS.has(k)) e.preventDefault();
       if (!e.repeat) this.taps.add(k);
       this.keys.add(k);
+      // Also the physical key ("keyw"), for bindings that must survive
+      // modifiers: on macOS Option+W reports the key as "∑", Shift+W as "W".
+      if (e.code) this.keys.add(e.code.toLowerCase());
     });
-    window.addEventListener("keyup", (e) => this.keys.delete(e.key.toLowerCase()));
+    window.addEventListener("keyup", (e) => {
+      this.keys.delete(e.key.toLowerCase());
+      if (e.code) this.keys.delete(e.code.toLowerCase());
+    });
     window.addEventListener("blur", () => this.keys.clear());
   }
 

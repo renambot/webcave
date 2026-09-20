@@ -63,7 +63,7 @@ export interface FrameState {
    * The wand (hand-held tracked controller), CAVE frame. From a tracker when
    * one reports it; otherwise derived from the head every frame as a hand
    * would be: the config's defaultWand offset, applied in the head's yaw
-   * frame (the simulator's Ctrl keys adjust that offset). Its buttons are not
+   * frame (the simulator's Shift keys adjust that offset). Its buttons are not
    * here: they arrive as input actions (appState.input) so any device can
    * stand in for the physical wand. Apps convert it to world coordinates
    * with caveToWorld(navigation, ...).

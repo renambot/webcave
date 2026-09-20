@@ -459,11 +459,14 @@ function createApp(cfg: ClusterConfig, link: ControlLink, hooks: AppHooks): App 
       toggleHelp(false);
       return false;
     }
+    // Alt + letter opens Chrome's menu or focuses the address bar on Windows and
+    // Linux; the head and wand bindings below use those combinations, so swallow them.
+    if ((e.altKey || e.shiftKey) && /^Key[WSADQE]$/.test(e.code)) e.preventDefault();
     return helpEl.hidden; // keys do nothing while help is open
   });
   for (const t of tiles) input.bindMouse(t.viewport.renderer.domElement);
 
-  // Manual head: W/S A/D Q/E move (1 m/s); Shift or Alt + same rotate (60°/s).
+  // Manual head: W/S A/D Q/E move (1 m/s); Alt + same rotate (60°/s).
   // Only active with auto head off. The head is sent as an absolute pose
   // (position + quaternion), the same message a tracker bridge would send.
   const head = { position: [...cfg.defaultHead.position] as [number, number, number], yaw: 0, pitch: 0, roll: 0 };
@@ -488,62 +491,65 @@ function createApp(cfg: ClusterConfig, link: ControlLink, hooks: AppHooks): App 
   }
 
   // Simulated wand: a hand hanging off the head. The Manager derives the pose
-  // from the head and this offset (head yaw frame) every frame; Ctrl + W/S A/D
-  // Q/E move the offset (1 m/s), Ctrl + Shift + W/S A/D pitch and yaw it
+  // from the head and this offset (head yaw frame) every frame; Shift + W/S A/D
+  // Q/E move the offset (1 m/s), Shift + Alt + W/S A/D pitch and yaw it
   // (60°/s). Sent as a relative setWand; a tracker sends absolute poses instead.
   // Its buttons are the ordinary input actions (Enter / gamepad A = primary).
+  // Keys are matched by physical code (keyw...) so modifiers do not change
+  // them, and Ctrl is avoided: Ctrl+W closes the tab on Windows and Linux.
   const wand = { position: [...cfg.defaultWand.position] as [number, number, number], yaw: 0, pitch: 0 };
   function sendWand() {
     headEuler.set(wand.pitch, wand.yaw, 0);
     headQuat.setFromEuler(headEuler);
     link.send({ type: "setWand", wand: { position: [...wand.position], orientation: [headQuat.x, headQuat.y, headQuat.z, headQuat.w] }, relative: true });
   }
+  const K = { w: "keyw", s: "keys", a: "keya", d: "keyd", q: "keyq", e: "keye" };
   function stepWand(dt: number): boolean {
-    if (!keys.has("control")) return false;
+    if (!keys.has("shift")) return false;
     let changed = false;
-    if (keys.has("shift")) {
+    if (keys.has("alt")) {
       const r = ((60 * Math.PI) / 180) * dt;
-      if (keys.has("w")) (wand.pitch += r), (changed = true);
-      if (keys.has("s")) (wand.pitch -= r), (changed = true);
-      if (keys.has("a")) (wand.yaw += r), (changed = true);
-      if (keys.has("d")) (wand.yaw -= r), (changed = true);
+      if (keys.has(K.w)) (wand.pitch += r), (changed = true);
+      if (keys.has(K.s)) (wand.pitch -= r), (changed = true);
+      if (keys.has(K.a)) (wand.yaw += r), (changed = true);
+      if (keys.has(K.d)) (wand.yaw -= r), (changed = true);
       wand.pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, wand.pitch));
     } else {
       const v = 1.0 * dt;
       const p = wand.position;
-      if (keys.has("w")) (p[2] -= v), (changed = true);
-      if (keys.has("s")) (p[2] += v), (changed = true);
-      if (keys.has("a")) (p[0] -= v), (changed = true);
-      if (keys.has("d")) (p[0] += v), (changed = true);
-      if (keys.has("q")) (p[1] -= v), (changed = true);
-      if (keys.has("e")) (p[1] += v), (changed = true);
+      if (keys.has(K.w)) (p[2] -= v), (changed = true);
+      if (keys.has(K.s)) (p[2] += v), (changed = true);
+      if (keys.has(K.a)) (p[0] -= v), (changed = true);
+      if (keys.has(K.d)) (p[0] += v), (changed = true);
+      if (keys.has(K.q)) (p[1] -= v), (changed = true);
+      if (keys.has(K.e)) (p[1] += v), (changed = true);
     }
     if (changed) sendWand();
-    return true; // Ctrl held: the head keys stay out of it
+    return true; // Shift held: the head keys stay out of it
   }
+  // Head: W/S A/D Q/E move (1 m/s); Alt + the same rotate (60°/s).
   function stepHead(dt: number) {
     if (stepWand(dt)) return;
     if (toggles.autoHead) return;
-    const rotate = keys.has("shift") || keys.has("alt");
     let changed = false;
-    if (rotate) {
+    if (keys.has("alt")) {
       const r = ((60 * Math.PI) / 180) * dt;
-      if (keys.has("w")) (head.pitch += r), (changed = true);
-      if (keys.has("s")) (head.pitch -= r), (changed = true);
-      if (keys.has("a")) (head.yaw += r), (changed = true);
-      if (keys.has("d")) (head.yaw -= r), (changed = true);
-      if (keys.has("q")) (head.roll += r), (changed = true);
-      if (keys.has("e")) (head.roll -= r), (changed = true);
+      if (keys.has(K.w)) (head.pitch += r), (changed = true);
+      if (keys.has(K.s)) (head.pitch -= r), (changed = true);
+      if (keys.has(K.a)) (head.yaw += r), (changed = true);
+      if (keys.has(K.d)) (head.yaw -= r), (changed = true);
+      if (keys.has(K.q)) (head.roll += r), (changed = true);
+      if (keys.has(K.e)) (head.roll -= r), (changed = true);
       head.pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, head.pitch));
     } else {
       const v = 1.0 * dt;
       const p = head.position;
-      if (keys.has("w")) (p[2] -= v), (changed = true);
-      if (keys.has("s")) (p[2] += v), (changed = true);
-      if (keys.has("a")) (p[0] -= v), (changed = true);
-      if (keys.has("d")) (p[0] += v), (changed = true);
-      if (keys.has("q")) (p[1] -= v), (changed = true);
-      if (keys.has("e")) (p[1] += v), (changed = true);
+      if (keys.has(K.w)) (p[2] -= v), (changed = true);
+      if (keys.has(K.s)) (p[2] += v), (changed = true);
+      if (keys.has(K.a)) (p[0] -= v), (changed = true);
+      if (keys.has(K.d)) (p[0] += v), (changed = true);
+      if (keys.has(K.q)) (p[1] -= v), (changed = true);
+      if (keys.has(K.e)) (p[1] += v), (changed = true);
     }
     if (changed || keys.size === 0) sendHead();
   }
