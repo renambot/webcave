@@ -1,0 +1,122 @@
+[
+  {
+    "name": "Willowdale",
+    "type": "quarter",
+    "coordinates": [-79.4109234, 43.7615095]
+  },
+  {
+    "name": "Spadina - Fort York",
+    "type": "quarter",
+    "coordinates": [-79.3962675, 43.6416088]
+  },
+  {
+    "name": "Toronto Centre",
+    "type": "quarter",
+    "coordinates": [-79.3685708, 43.6604085]
+  },
+  {
+    "name": "Davenport",
+    "type": "quarter",
+    "coordinates": [-79.4483222, 43.6715454]
+  },
+  {
+    "name": "University - Rosedale",
+    "type": "quarter",
+    "coordinates": [-79.3918111, 43.663336]
+  },
+  {
+    "name": "Don Valley West",
+    "type": "quarter",
+    "coordinates": [-79.3818798, 43.7275183]
+  },
+  {
+    "name": "Don Valley East",
+    "type": "quarter",
+    "coordinates": [-79.3342029, 43.7305734]
+  },
+  {
+    "name": "York Centre",
+    "type": "quarter",
+    "coordinates": [-79.463352, 43.750241]
+  },
+  {
+    "name": "Eglinton - Lawrence",
+    "type": "quarter",
+    "coordinates": [-79.429765, 43.7192647]
+  },
+  {
+    "name": "Humber River - Black Creek",
+    "type": "quarter",
+    "coordinates": [-79.5382285, 43.7337368]
+  },
+  {
+    "name": "Don Valley North",
+    "type": "quarter",
+    "coordinates": [-79.3470385, 43.7750911]
+  },
+  {
+    "name": "Etobicoke North",
+    "type": "quarter",
+    "coordinates": [-79.5892249, 43.7410925]
+  },
+  {
+    "name": "Etobicoke - Lakeshore",
+    "type": "quarter",
+    "coordinates": [-79.4981677, 43.6046194]
+  },
+  {
+    "name": "York South - Weston",
+    "type": "quarter",
+    "coordinates": [-79.4988181, 43.6844658]
+  },
+  {
+    "name": "Scarborough North",
+    "type": "quarter",
+    "coordinates": [-79.2576834, 43.8099025]
+  },
+  {
+    "name": "Scarborough Southwest",
+    "type": "quarter",
+    "coordinates": [-79.2549582, 43.7010356]
+  },
+  {
+    "name": "Toronto - St. Paul's",
+    "type": "quarter",
+    "coordinates": [-79.4169647, 43.687689]
+  },
+  {
+    "name": "Etobicoke Centre",
+    "type": "quarter",
+    "coordinates": [-79.538988, 43.6798579]
+  },
+  {
+    "name": "Beaches - East York",
+    "type": "quarter",
+    "coordinates": [-79.3060214, 43.6814698]
+  },
+  {
+    "name": "Toronto - Danforth",
+    "type": "quarter",
+    "coordinates": [-79.3448597, 43.6789439]
+  },
+  {
+    "name": "Scarborough - Rouge Park",
+    "type": "quarter",
+    "coordinates": [-79.1708032, 43.8083627]
+  },
+  {
+    "name": "Scarborough Centre",
+    "type": "quarter",
+    "coordinates": [-79.284828, 43.7475018]
+  },
+  {
+    "name": "Scarborough - Guildwood",
+    "type": "quarter",
+    "coordinates": [-79.2158124, 43.7618571]
+  },
+  {
+    "name": "Scarborough - Agincourt",
+    "type": "quarter",
+    "coordinates": [-79.315759, 43.7967785]
+  }
+]

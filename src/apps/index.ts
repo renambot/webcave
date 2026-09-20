@@ -15,7 +15,7 @@
  */
 import type { AnyApp, AppContext, AppDefinition, AppSpec } from "./types";
 
-export type { AnyApp, AppContext, AppDefinition, AppSpec, CaveApp, FlatApp, FlatView, FlatViewOptions, InputHook, NavigationHints } from "./types";
+export type { AnyApp, AppContext, AppDefinition, AppPanel, AppSpec, CaveApp, FlatApp, FlatView, FlatViewOptions, InputHook, NavigationHints, PanelContext } from "./types";
 export { inputOf, type ActionState } from "../input/actions";
 export { isFlatApp, spinTime, toggleSpinPatch, clockTime, toggleClockPatch } from "./types";
 

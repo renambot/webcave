@@ -32,7 +32,7 @@ import { type ClusterConfig, type StereoMode, type AnaglyphScheme, resolveStereo
 import { bundledConfigNames, bundledConfigs, loadConfig } from "../core/configs";
 import { ClusterManager, type ManagerTransport } from "../core/manager";
 import { decode, encode, type ClientMessage, type ServerMessage, type NodeStats, type FrameState } from "../core/protocol";
-import { appSpecFromParams, createApp as createCaveApp, isFlatApp, toggleSpinPatch, type FlatView } from "../apps";
+import { appSpecFromParams, createApp as createCaveApp, isFlatApp, toggleSpinPatch, type AppPanel, type FlatView } from "../apps";
 import { InputController } from "../input/controller";
 import { wallLayout } from "../core/wall";
 import { screenSize } from "../core/projection";
@@ -224,6 +224,16 @@ function createApp(cfg: ClusterConfig, link: ControlLink, hooks: AppHooks): App 
   }
 
   const overview = new OverviewRenderer(cfg, overviewCanvas);
+
+  // The app's control panel, when it has one: a third column next to the
+  // overview. Controls send shared-state patches; update() reflects the state.
+  let panel: AppPanel | null = null;
+  if (demo.createPanel) {
+    const panelEl = $("#panel");
+    panelEl.hidden = false;
+    $("#stage").classList.add("has-panel");
+    panel = demo.createPanel(panelEl, { send: (patch) => link.send({ type: "setAppState", patch }), getState: () => lastState });
+  }
 
   // Debug handle for scripts/screenshot.mjs --eval and the browser console.
   (window as unknown as { webcave: unknown }).webcave = { cfg, app: demo, tiles, flatViews, lastState: () => lastState, input: () => input };
@@ -579,6 +589,7 @@ function createApp(cfg: ClusterConfig, link: ControlLink, hooks: AppHooks): App 
 
     stepHead(dt);
     input.step(dt);
+    panel?.update(lastState);
     // Local mode: this drives frame -> render -> ack -> present for all tiles.
     // Controller mode: frames arrive over the socket instead.
     link.tick();

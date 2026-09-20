@@ -23,6 +23,7 @@ src/manager/    WebSocket server wrapping ClusterManager
 src/tracker/    tracking bridge: DTrack, NatNet and VRPN sources, calibration, config schema, CLI
 src/node/       render node page
 src/launcher/   node launcher: displays of this computer, one window per screen
+src/panel/      panel page: mounts an app's createPanel() as a controller, no views
 src/simulator/  in-page cluster with in-memory transport, or controller of a live Manager
 src/apps/       application contract and auto-discovering registry; one folder per app
 src/render/     per-screen viewport renderer, stereo packer, off-axis helper, 3D overview
@@ -30,7 +31,7 @@ public/models/  sample glTF assets
 public/volumes/ OpenVDB files for the vdb and points apps (not in the repository)
 public/crayoland/ Crayoland's original World, Sounds, textures, ground masks, hand models, sounds as MP3
 scripts/        launch-nodes.sh (one kiosk Chrome per display), gen-schema.ts, screenshot.mjs, fake-tracker.ts (pretend DTrack / NatNet / VRPN)
-index.html, simulator.html, node.html, launcher.html
+index.html, simulator.html, node.html, launcher.html, panel.html (an app's control panel alone, for a tablet)
 ```
 
 ## Frame protocol

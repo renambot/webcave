@@ -110,10 +110,11 @@ npm run tracker -- --config path/to/room.json --manager ws://manager-host:8765
 
 Its status line every five seconds lists the bodies it sees. Details and calibration in [tracking.md](tracking.md).
 
-**6. Control and monitor.** From any laptop on the network, open the simulator as a controller:
+**6. Control and monitor.** From any laptop on the network, open the simulator as a controller, or, for an application with a control panel, the panel page on a tablet:
 
 ```
 http://manager-host:5173/simulator.html?manager=ws://manager-host:8765
+http://manager-host:5173/panel.html?manager=ws://manager-host:8765
 ```
 
 It shows the same frames as the wall, the overview with head and wand, and the barrier statistics per node in the footer. Its keyboard and gamepad drive navigation and the applications' buttons alongside the tracked wand. Late-frame counts that keep climbing point at a node that renders too slowly or a network problem; switch the config to `"sync": "loose"` if a soft sync is acceptable.

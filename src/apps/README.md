@@ -16,6 +16,7 @@ src/apps/
   map/            MapLibre map across a wall       (flat app; wallmap.ts = shared MapLibre machinery)
   density/        2D choropleth on MapLibre        (flat app, built on map/wallmap.ts)
   map2d/          clustered earthquakes, donut markers (flat app, built on map/wallmap.ts)
+  dotdensity/     Toronto dot-density map on deck.gl with a control panel (flat app; panel.ts is the sidebar)
   crayoland/      Dave Pape's Crayoland, ported    (scene app; world.ts parses the original files,
                                                     creatures.ts deterministic bees and butterflies,
                                                     sound.ts Web Audio soundscape)
@@ -170,6 +171,16 @@ record with `send`; every node's `update()` turns that record plus `time` and
 the current wand into geometry (the held flower hangs off the wand matrix, a
 thrown one follows its parabola from `p0, v0, t0`). Nothing accumulates on
 the nodes, so any node can join at any time and agree with the others.
+
+## Control panels
+
+`createPanel(container, ctx)` is the app's sidebar, mounted by the simulator
+(a third column) and by `panel.html` (full page, for a tablet), never on the
+wall. Build controls into `container`; each one calls `ctx.send(patch)`;
+return `{ update(state), dispose() }` and mirror `state.appState` into the
+controls in `update`, so every open panel shows the same thing as the wall.
+Wall map definitions get an `onFrame(map, state, view)` hook to rebuild
+layers when that state changes. `dotdensity/panel.ts` is the example.
 
 ## Sound
 

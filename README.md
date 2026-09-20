@@ -12,8 +12,9 @@ A **Manager** owns the clock, the frame counter, the tracked head pose and the n
 - Off-axis projection per screen from a head position; navigation moves the CAVE through the virtual world
 - Frame barrier synchronization between Manager and Nodes, with a loose mode fallback
 - Stereo output packing: mono, side-by-side, top-bottom, row, column and checkerboard interleaved, red-cyan anaglyph (Dubois and black-and-white), frame-sequential (experimental)
-- Applications behind a minimal contract, one folder each, auto-discovered: animated shapes, glTF models, OpenVDB volumes and point clouds decoded in the browser, MapLibre maps spread across a wall with a shared interactive camera (3D buildings, a choropleth, clustered earthquakes with donut charts), and a port of Crayoland, the original CAVE demo, with its bees, butterflies, grabbable flowers and soundscape
+- Applications behind a minimal contract, one folder each, auto-discovered: animated shapes, glTF models, OpenVDB volumes and point clouds decoded in the browser, MapLibre maps spread across a wall with a shared interactive camera (3D buildings, a choropleth, clustered earthquakes with donut charts, a deck.gl dot-density map of Toronto driven from a control panel), and a port of Crayoland, the original CAVE demo, with its bees, butterflies, grabbable flowers and soundscape
 - Tracked head and wand in every frame, fed by a tracking bridge that speaks ART DTrack, OptiTrack NatNet and VRPN with a calibration into the CAVE frame; shared application state replicated by the Manager; input from keyboards, mice, gamepads and the wand's buttons through a device-independent action layer; one node designated as the sound output
+- Application control panels: an app's sidebar runs on the simulator or a tablet page and drives the wall through shared state
 - Multi-screen nodes placed with the Window Management API or kiosk Chrome
 - Simulator with live stereo controls and a 3D overview of screens, head and frusta
 

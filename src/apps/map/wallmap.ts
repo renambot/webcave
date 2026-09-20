@@ -103,12 +103,20 @@ export interface WallMapDefinition {
   setup?(map: MapLibreMap, opts: WallMapOptions): void;
   /** Whether the map repeats the world sideways at low zoom (MapLibre default true). A world-scale app spanning a wide wall wants false. */
   renderWorldCopies?: boolean;
+  /**
+   * Called on each view every frame after the camera is applied, once setup()
+   * has run: react to shared state (layers, styles, overlays) from
+   * `state.appState`. `view.k` is this canvas's scale relative to the wall
+   * (1 on a real node, smaller in the simulator), for pixel sizes.
+   */
+  onFrame?(map: MapLibreMap, state: FrameState, view: { k: number; camera: MapCamera }): void;
 }
 
 /** OpenFreeMap: free vector tiles (OpenMapTiles schema), no API key. */
 export const OPENFREEMAP_BRIGHT = "https://tiles.openfreemap.org/styles/bright";
 
-function readOptions(spec: AppSpec, def: WallMapDefinition): WallMapOptions {
+/** Resolve a definition's defaults with the spec's options: the camera and style a fresh view starts from. */
+export function readOptions(spec: AppSpec, def: WallMapDefinition): WallMapOptions {
   const raw = (spec.options ?? {}) as Record<string, unknown>;
   const d = def.defaults;
   const num = (v: unknown, fallback: number) => (typeof v === "number" && Number.isFinite(v) ? v : fallback);
@@ -198,6 +206,8 @@ class MapView implements FlatView {
   readonly map: MapLibreMap;
   private div: HTMLDivElement;
   private applied: MapCamera | null = null;
+  /** setup() has run; onFrame may be called. */
+  private setupDone = false;
   /** True while we are calling jumpTo, so our own "move" events are not reported back. */
   private applying = false;
   /** Canvas rectangle in native wall pixels: the tile extended toward the wall center. */
@@ -275,6 +285,7 @@ class MapView implements FlatView {
     this.map.once("load", () => {
       try {
         def.setup?.(this.map, opts);
+        this.setupDone = true;
       } catch (e) {
         setStatus(`${def.name} setup failed: ${(e as Error).message}`);
         return;
@@ -332,12 +343,20 @@ class MapView implements FlatView {
     // While this view is being dragged it is the source of truth: the shared
     // camera coming back is a frame or two old and applying it would fight
     // the drag. "Being dragged" = we reported a camera very recently.
-    if (this.viewOpts.interactive && performance.now() - this.lastSentAt < 250) return;
-    if (sameCamera(this.applied, cam)) return;
-    this.applying = true;
-    this.map.jumpTo({ center: cam.center, zoom: cam.zoom + Math.log2(this.k), bearing: cam.bearing, pitch: cam.pitch, padding: this.padding });
-    this.applying = false;
-    this.applied = { ...cam, center: [cam.center[0], cam.center[1]] };
+    const dragging = this.viewOpts.interactive && performance.now() - this.lastSentAt < 250;
+    if (!dragging && !sameCamera(this.applied, cam)) {
+      this.applying = true;
+      this.map.jumpTo({ center: cam.center, zoom: cam.zoom + Math.log2(this.k), bearing: cam.bearing, pitch: cam.pitch, padding: this.padding });
+      this.applying = false;
+      this.applied = { ...cam, center: [cam.center[0], cam.center[1]] };
+    }
+    if (this.setupDone && this.def.onFrame) {
+      try {
+        this.def.onFrame(this.map, state, { k: this.k, camera: this.applied ?? cam });
+      } catch (e) {
+        this.setStatus(`${this.def.name} frame failed: ${(e as Error).message}`);
+      }
+    }
   }
 
   /**

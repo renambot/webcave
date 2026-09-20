@@ -14,6 +14,7 @@ export default defineConfig({
         simulator: resolve(__dirname, "simulator.html"),
         node: resolve(__dirname, "node.html"),
         launcher: resolve(__dirname, "launcher.html"),
+        panel: resolve(__dirname, "panel.html"),
       },
     },
   },

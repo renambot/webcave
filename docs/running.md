@@ -40,6 +40,8 @@ The head and wand keys are matched by physical key, so they work whatever the mo
 
 The **audio** button (or `?audio=1`) makes the simulator the cluster's sound output for applications that have sound; only one window in a cluster should play. The button switches sound on and off without reloading for apps that support it. The **debug** button (or `?debug=1`) asks the application for its debug drawing the same way; Crayoland shows every object's pick sphere, the wand point and the touched object.
 
+Applications with a control panel (`createPanel`, see [applications.md](applications.md)) get a third column next to the overview with their controls; the dot-density map is one. The same panel stands alone at <http://localhost:5173/panel.html?manager=ws://localhost:8765>, sized for a tablet.
+
 ### Overview panel
 
 The **Overview** shows the physical installation: screens, frusta, the head as a sphere with a cone whose tip points in the viewing direction, and the wand as a stick with a bright tip. Its content mode is selectable in the toolbar or with `?overview=`:

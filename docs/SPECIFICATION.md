@@ -288,6 +288,7 @@ What is implemented:
 | Deterministic randomness helpers (stateless hash, seeded PRNG, smooth noise) | `src/core/random.ts` | done |
 | "crayoland" app: Dave Pape's Crayoland ported from C++; original World/Sounds files, merged and instanced picture quads, fixed-step seeded bee and butterfly simulations, controller-published grab/throw, anger and landing, Web Audio soundscape | `src/apps/crayoland/`, `public/crayoland/` | done; navigation follows heading, not the wand |
 | Tracking bridge: DTrack (6d, 6df2, 6df), NatNet (frames, version and asset names over the command port), VRPN (TCP-only client: cookie, descriptions, Tracker/Button/Analog) in TypeScript; calibration (units, signed axis permutation, yaw, offset, per-body local offset); wand buttons and joystick as input actions; fake trackers for testing | `src/tracker/`, `configs/trackers/`, `scripts/fake-tracker.ts` | done; verified against the fakes, not yet against hardware |
+| App control panels (`createPanel`), simulator side column and standalone `panel.html`; wall map `onFrame` hook and `renderWorldCopies`; "dotdensity" app: School of Cities' Toronto dot-density map on deck.gl (MapboxOverlay follows MapLibre padding), sidebar ported to a panel, 3D mode eased from state time | `src/apps/types.ts`, `src/panel/`, `src/apps/dotdensity/` | done; first deck.gl app |
 | Vicon DataStream, OSC/VMC, guided calibration, WebGPU renderer, warp/blend, more 2D adapters (deck.gl, Leaflet, DOM), adapters for existing three.js/WebXR apps | | not started |
 
 ## Suggested milestones

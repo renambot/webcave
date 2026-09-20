@@ -1,6 +1,6 @@
 # Applications
 
-An application owns a three.js scene and advances it from the cluster's simulation time. WebCAVE handles cameras, stereo and screens. Eight are included, in `src/apps/`:
+An application owns a three.js scene and advances it from the cluster's simulation time. WebCAVE handles cameras, stereo and screens. Nine are included, in `src/apps/`:
 
 | Name | What it shows | Options |
 |---|---|---|
@@ -11,6 +11,7 @@ An application owns a three.js scene and advances it from the cluster's simulati
 | `points` | OpenVDB PointDataGrid (particles) as a point cloud, decoded in the browser; colours from `Cd` when present | `points` URL, `grid`, `size`, `spin`, position, `maxPoints`, `pointSize`, `colorAttribute`, `color` |
 | `density` | 2D choropleth of population density from a GeoJSON (MapLibre's "visualize population density" example, Rwanda provinces); same wall and camera machinery as `map` | the `map` camera options plus `data` (GeoJSON URL with `population` and `sq-km` per feature), `opacity` |
 | `map2d` | Clustered earthquakes with SVG donut-chart clusters (MapLibre's "display HTML clusters with custom properties" example), the world spanning the wall once; same wall and camera machinery as `map` | the `map` camera options plus `data` (GeoJSON URL of points with a numeric `mag`), `clusterRadius` (pixels, 80) |
+| `dotdensity` | Toronto 2021 dot-density map (School of Cities): 278,000 deck.gl dots, one per ten people, coloured by a census field chosen in a control panel; dark basemap, dot size and a 3D mode | the `map` camera options plus `data` (CSV URL), `labels` (place labels JSON), `summaries` (folder of legend CSVs) |
 | `crayoland` | Dave Pape's Crayoland (EVL, 1995): a crayon-drawn meadow with bees, butterflies, flies, and flowers and rocks to grab and throw with the wand; birds, frogs, a stream and the hive's hum on the audio node | `model` (folder URL with `World`, `Sounds`, `tex/`, `audio/`; default `/crayoland/`), options `world`, `sounds` (file names); with the simulator's debug button or `?debug=1`: pick spheres, wand point, touched object highlighted |
 
 The application is part of the cluster config, so every Node runs the same one. Set it on the Manager:
@@ -21,7 +22,7 @@ npm run manager -- --app gltf --model /models/DamagedHelmet.glb --size 0.8 --spi
 
 For development, URL parameters override it on the simulator or a Node: `?app=gltf&model=/models/DamagedHelmet.glb&size=0.8&spin=0.3&mx=0&my=1.5&mz=-1.05`. Files under `public/` are served at the root, so drop a `.glb` in `public/models/` and reference it as `/models/name.glb`. The bundled Damaged Helmet is a Khronos sample, CC BY 4.0 (see `public/models/README.md`).
 
-There are two kinds of application. **Scene apps** (shapes, gltf, vdb, points, crayoland) own a three.js scene that WebCAVE renders from each screen's off-axis camera, with stereo and navigation. **Flat apps** (map, density, map2d) are 2D: they render themselves into a container per screen and receive the screen's rectangle in the overall wall image, so adjacent screens join into one picture. Stereo does not apply to flat apps.
+There are two kinds of application. **Scene apps** (shapes, gltf, vdb, points, crayoland) own a three.js scene that WebCAVE renders from each screen's off-axis camera, with stereo and navigation. **Flat apps** (map, density, map2d, dotdensity) are 2D: they render themselves into a container per screen and receive the screen's rectangle in the overall wall image, so adjacent screens join into one picture. Stereo does not apply to flat apps.
 
 ## Adding an application
 
@@ -72,6 +73,8 @@ The CAVE frame is meters, Y up, floor at y = 0, viewer near the origin looking t
 
 **8. Flat (2D) apps.** For maps, documents and dashboards, export `kind: "flat"` and a `createView(container, screen, layout, opts)` that draws exactly the screen's rectangle of the shared picture (`layout.rects[screen.id]`), reading its state from `state.appState` and reporting changes with `opts.send` when `opts.interactive`. A MapLibre app is thirty lines on top of `map/wallmap.ts`; the density app shows it.
 
+**9. A control panel.** An app whose original had a sidebar of controls implements `createPanel(container, ctx)`: build your controls into `container` with plain DOM or any framework, make every control call `ctx.send({ myKey: ... })`, and return `{ update(state), dispose() }` where `update` reflects `state.appState` back into the controls. The simulator shows the panel in a third column, and `panel.html?manager=ws://...` shows it alone for a tablet or a laptop next to the wall; the wall itself never sees it. Several panels can be open at once and always agree, because they all mirror the same state. The dot-density app is the example.
+
 Rules that keep the cluster in step:
 
 - Every pose is a function of the frame `time` the Manager sends. No `Date.now()`, no accumulated deltas. Randomness comes from the seeded, stateless helpers in `src/core/random.ts`, or from a simulation stepped at a fixed rate from time zero, which a late-joining node fast-forwards.
@@ -104,6 +107,26 @@ The change reaches all nodes within one frame, and they apply it for the same fr
 - The whole `appState` is resent every frame, so keep it compact: ids and rounded numbers rather than meshes or large arrays. Textures and models are never in the state; a node loads them from `public/` by URL, and the state only names which one is current.
 
 The shapes app is the smallest example: `onInput` sends a clock toggle when button A is pressed, and `update` reads the clock to rotate the carousel on every node, about ten lines in all.
+
+## Control panels and the dot-density map
+
+Many visualizations are a page with controls on the side and the picture in the rest. WebCAVE splits that along its own seam: the picture becomes a flat app on the wall, the sidebar becomes a **panel** on a controller. The app implements `createPanel(container, ctx)`; the simulator mounts it in a column next to the overview, and the standalone page `panel.html?manager=ws://host:8765` mounts it full width for a tablet. Every control sends a shared-state patch through `ctx.send`, the Manager replicates it, every view redraws from `state.appState`, and every open panel is updated from the same state each frame, so nothing on a panel is ever out of step with the wall.
+
+```
+http://localhost:5173/simulator.html?config=wall-3x1&app=dotdensity
+http://localhost:5173/panel.html?manager=ws://localhost:8765
+npm run manager -- --config wall-3x1 --app dotdensity
+```
+
+`dotdensity` is the port of the School of Cities' Toronto 2021 dot-density map, a SvelteKit page with MapLibre, deck.gl and a sidebar. What moved where:
+
+- **The dots** (about 278,000, one per ten people, from a 23 MB CSV fetched once per view) are a deck.gl `PointCloudLayer` through deck's `MapboxOverlay`, which reads MapLibre's camera and padding, so it aligns with the wall machinery's off-center tiles without any extra work. Colours per field are precomputed once into byte arrays; the layer is rebuilt only when the state it depends on changes (the wall map definition's `onFrame` hook).
+- **The sidebar** became `panel.ts`: field buttons, a legend built from the original's summary CSVs, a dot-size slider, a dark-basemap toggle and a 3D toggle, all writing `appState.dotDensity`. The 3D toggle also sets the shared camera's pitch to 54°, and the dots' heights ease in over 0.6 s from the toggle time carried in the state, so all screens animate together.
+- **The dark basemap**, an inverted custom OSM style in the original, is a CSS invert filter on the MapLibre canvas here, leaving the deck canvas untouched.
+- **Zoom.** The city spans about 42 km; the default zoom 13.3 spreads it over a 5760-pixel wall, where the original showed it in 540 pixels. Set `zoom` in the config for other widths. Dot size follows the original's zoom-dependent scale, floored at one pixel so scaled simulator tiles still show dots.
+- **Data** stays with its authors: the point CSV is fetched from schoolofcities.github.io (set `data` to a local copy for an offline installation); the small legend summaries and place labels are in `public/data/dotdensity/` with a credits file.
+
+Not carried over: the tweened Svelte transitions (replaced by the state-time ease), the original's custom basemap style, and its map controls, which the wall does not need. The overview's wall-texture mode shows the MapLibre canvas only, without the deck overlay or the dark filter.
 
 ## Crayoland
 

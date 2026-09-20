@@ -79,6 +79,23 @@ export interface NavigationHints {
   planar?: boolean;
 }
 
+/**
+ * What a control panel gets from its host page (the simulator's side column,
+ * or the standalone panel page on a tablet).
+ */
+export interface PanelContext {
+  /** Patch the shared app state on the Manager (shallow merge), like onInput's send. */
+  send: (patch: Record<string, unknown>) => void;
+  /** The latest frame, for reading the current shared state on demand. */
+  getState: () => FrameState;
+}
+
+/** A mounted control panel. `update` runs once per frame with the latest state so several panels stay consistent. */
+export interface AppPanel {
+  update(state: FrameState): void;
+  dispose(): void;
+}
+
 /** A running 3D application instance. Created once per browser window. */
 export interface CaveApp {
   readonly kind?: "scene";
@@ -114,6 +131,13 @@ export interface CaveApp {
   setAudio?(enabled: boolean): void;
   /** Optional: switch debug drawing on or off at runtime (the simulator's debug button). */
   setDebug?(enabled: boolean): void;
+  /**
+   * Optional: a control panel (the app's "sidebar"), mounted by controller
+   * pages only, never on the wall. Build DOM into `container`; every control
+   * sends a shared-state patch through `ctx.send`, and `update(state)`
+   * reflects the state back so the panel shows what the wall shows.
+   */
+  createPanel?(container: HTMLElement, ctx: PanelContext): AppPanel;
   /** Optional: release GPU resources when the app is replaced. */
   dispose?(): void;
 }
@@ -160,6 +184,8 @@ export interface FlatApp {
   setAudio?(enabled: boolean): void;
   /** Optional: switch debug drawing on or off at runtime (see CaveApp.setDebug). */
   setDebug?(enabled: boolean): void;
+  /** Optional: a control panel for controller pages (see CaveApp.createPanel). */
+  createPanel?(container: HTMLElement, ctx: PanelContext): AppPanel;
   dispose?(): void;
 }
 

@@ -62,10 +62,20 @@
         grid-template-columns: 1fr minmax(420px, 36vw);
         gap: 10px;
       }
+      #stage.has-panel { grid-template-columns: 1fr minmax(320px, 28vw) 300px; }
       #grid {
         display: grid;
         gap: 8px;
         min-height: 0;
+      }
+      /* App control panel (createPanel): the app's own controls, scrolled if tall. */
+      #panel {
+        min-height: 0; overflow: auto;
+        background: var(--panel, #12151c);
+        border: 1px solid var(--panel-edge);
+        border-radius: 6px;
+        padding: 12px 14px;
+        font-size: 13px;
       }
       .tile {
         position: relative;
@@ -182,7 +192,7 @@
       button.small { min-width: 0; padding: 4px 9px; font-size: 12px; }
 
       @media (max-width: 900px) {
-        #stage { grid-template-columns: 1fr; grid-template-rows: 1fr 240px; }
+        #stage, #stage.has-panel { grid-template-columns: 1fr; grid-template-rows: 1fr 240px auto; }
         header h1 span { display: none; }
         #app-info { display: none; }
         footer span:last-child { display: none; }
@@ -211,6 +221,7 @@
         <canvas id="overview"></canvas>
         <span class="label">overview</span>
       </div>
+      <aside id="panel" hidden></aside>
     </div>
 
     <div id="console">
