@@ -79,6 +79,7 @@ export const nodeSchema = z.object({
   id: z.string().min(1).describe("Node id; a computer, or a display when one per node"),
   screens: z.array(z.string()).min(1).describe("Screen ids this node renders, one window each"),
   input: z.boolean().optional().describe("Let this node's windows take keyboard, mouse and gamepad input and steer the cluster (default false)"),
+  audio: z.boolean().optional().describe("This node plays the application's sound: the machine connected to the speakers (default false)"),
 });
 
 export const appSchema = z.object({
@@ -103,6 +104,10 @@ export const clusterFileSchema = z.object({
     .object({ position: vec3, orientation: quat.default([0, 0, 0, 1]) })
     .default({ position: [0, 1.6, 0], orientation: [0, 0, 0, 1] })
     .describe("Head pose when nothing is tracking"),
+  defaultWand: z
+    .object({ position: vec3, orientation: quat.default([0, 0, 0, 1]) })
+    .default({ position: [0.25, 1.1, -0.3], orientation: [0, 0, 0, 1] })
+    .describe("Wand pose before a tracker or the simulator sets one; points along -z"),
   stereo: stereoSchema.default({}).describe("Cluster-wide stereo defaults"),
   app: appSchema.default({ name: "shapes" }),
   screens: z.array(screenSchema).min(1),
@@ -177,6 +182,7 @@ export function parseClusterConfig(data: unknown, source = "config"): ClusterCon
     near: f.near,
     far: f.far,
     defaultHead: f.defaultHead,
+    defaultWand: f.defaultWand,
     stereo: { ...defaultStereo, ...f.stereo },
     screens,
     nodes: f.nodes,

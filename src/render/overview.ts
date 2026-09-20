@@ -27,7 +27,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import type { ClusterConfig, ScreenConfig, Vec3 } from "../core/config";
 import { screenCenter, screenPd } from "../core/projection";
-import type { HeadPose, Navigation } from "../core/protocol";
+import type { HeadPose, Navigation, Pose } from "../core/protocol";
 import { applyOffAxis } from "./offaxis";
 
 /** Flat apps: the canvas each screen's view draws into, keyed by screen id. */
@@ -54,6 +54,8 @@ export class OverviewRenderer {
   private controls: OrbitControls;
   /** Head marker: sphere at the eye center plus a cone pointing forward (-Z of the head frame). */
   private head = new THREE.Group();
+  /** Wand marker: a short stick along its -Z with a bright tip, so where it points is visible. */
+  private wand = new THREE.Group();
   private frusta: THREE.LineSegments;
   private cfg: ClusterConfig;
   private walls: WallView[] = [];
@@ -125,6 +127,15 @@ export class OverviewRenderer {
     coneGeo.rotateX(-Math.PI / 2); // +Y -> -Z
     this.head.add(new THREE.Mesh(coneGeo, new THREE.MeshStandardMaterial({ color: 0xfef08a, emissive: 0xb45309, emissiveIntensity: 0.6 })));
     this.scene.add(this.head);
+    const stickLen = 0.3;
+    const stick = new THREE.CylinderGeometry(0.012, 0.018, stickLen, 12);
+    stick.translate(0, stickLen / 2, 0);
+    stick.rotateX(-Math.PI / 2); // +Y -> -Z
+    this.wand.add(new THREE.Mesh(stick, new THREE.MeshStandardMaterial({ color: 0x7dd3fc, emissive: 0x0369a1, emissiveIntensity: 0.5 })));
+    const tip = new THREE.Mesh(new THREE.SphereGeometry(0.025, 16, 12), new THREE.MeshStandardMaterial({ color: 0xe0f2fe, emissive: 0x38bdf8, emissiveIntensity: 0.8 }));
+    tip.position.z = -stickLen;
+    this.wand.add(tip);
+    this.scene.add(this.wand);
     this.scene.add(new THREE.HemisphereLight(0xffffff, 0x334455, 1.2));
 
     // Frustum lines: 4 per screen, eye to each corner
@@ -160,10 +171,16 @@ export class OverviewRenderer {
    * @param worldScene   the scene app's scene, or null for flat apps
    * @param wallCanvases flat apps: each screen's canvas, shown on the walls in
    *                     "walls" mode (uploaded as a texture every frame)
+   * @param wand         the wand pose (CAVE frame), drawn as a stick; hidden when absent
    */
-  render(head: HeadPose, nav: Navigation, worldScene: THREE.Scene | null, wallCanvases?: WallCanvases) {
+  render(head: HeadPose, nav: Navigation, worldScene: THREE.Scene | null, wallCanvases?: WallCanvases, wand?: Pose) {
     this.head.position.set(...head.position);
     this.head.quaternion.set(...head.orientation);
+    this.wand.visible = !!wand;
+    if (wand) {
+      this.wand.position.set(...wand.position);
+      this.wand.quaternion.set(...wand.orientation);
+    }
     this.updateFrusta(head.position);
     this.controls.update();
 

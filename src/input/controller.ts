@@ -75,11 +75,16 @@ export class InputController {
     const ownsNav = !!(app as { ownsNavigation?: boolean } | null)?.ownsNavigation;
 
     if (!ownsNav) {
+      // Speeds and constraints may come from the app (a world in feet wants
+      // faster flight; a walk-through wants to stay on the ground).
+      const hints = (app as { navigation?: { flySpeed?: number; turnSpeed?: number; planar?: boolean } } | null)?.navigation;
+      const flySpeed = hints?.flySpeed ?? this.opts.flySpeed;
+      const turnSpeed = hints?.turnSpeed ?? this.opts.turnSpeed;
       const [mx, my] = actions.move;
       const [lx, ly] = actions.look;
-      const yaw = -lx * this.opts.turnSpeed * dt;
-      const pitch = ly * this.opts.turnSpeed * dt;
-      const move: [number, number, number] = [mx * this.opts.flySpeed * dt, actions.fly * this.opts.flySpeed * dt, -my * this.opts.flySpeed * dt];
+      const yaw = -lx * turnSpeed * dt;
+      const pitch = hints?.planar ? 0 : ly * turnSpeed * dt;
+      const move: [number, number, number] = [mx * flySpeed * dt, hints?.planar ? 0 : actions.fly * flySpeed * dt, -my * flySpeed * dt];
       if (yaw || pitch || move[0] || move[1] || move[2]) this.send({ type: "navigate", move, yaw, pitch });
     }
     if (edges.has("reset")) this.opts.onReset();
@@ -138,8 +143,9 @@ export class InputController {
       const dy = e.clientY - lastY;
       lastX = e.clientX;
       lastY = e.clientY;
-      if (dragging === "look") this.send({ type: "navigate", move: [0, 0, 0], yaw: -dx * LOOK, pitch: -dy * LOOK });
-      else this.send({ type: "navigate", move: [-dx * PAN, dy * PAN, 0], yaw: 0, pitch: 0 });
+      const planar = !!(this.opts.getApp() as { navigation?: { planar?: boolean } } | null)?.navigation?.planar;
+      if (dragging === "look") this.send({ type: "navigate", move: [0, 0, 0], yaw: -dx * LOOK, pitch: planar ? 0 : -dy * LOOK });
+      else this.send({ type: "navigate", move: [-dx * PAN, planar ? 0 : dy * PAN, 0], yaw: 0, pitch: 0 });
     });
     const end = (e: PointerEvent) => {
       if (!dragging) return;

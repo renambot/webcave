@@ -17,7 +17,7 @@
 ```
 configs/        cluster configuration files (JSON) and their generated schema
 docs/           this documentation and the specification
-src/core/       config types, config file schema and loader, projection math, wall pixel layout, protocol, ClusterManager (transport-agnostic), Window Management helpers
+src/core/       config types, config file schema and loader, projection math, wall pixel layout, protocol, ClusterManager (transport-agnostic), Window Management helpers, navigation (CAVE <-> world) and deterministic random helpers
 src/input/      input abstraction: action vocabulary, keyboard and gamepad devices with profiles, InputController
 src/manager/    WebSocket server wrapping ClusterManager
 src/node/       render node page
@@ -27,13 +27,14 @@ src/apps/       application contract and auto-discovering registry; one folder p
 src/render/     per-screen viewport renderer, stereo packer, off-axis helper, 3D overview
 public/models/  sample glTF assets
 public/volumes/ OpenVDB files for the vdb and points apps (not in the repository)
+public/crayoland/ Crayoland's original World, Sounds, textures, ground masks, hand models, sounds as MP3
 scripts/        launch-nodes.sh (one kiosk Chrome per display), gen-schema.ts, screenshot.mjs
 index.html, simulator.html, node.html, launcher.html
 ```
 
 ## Frame protocol
 
-The Manager owns the frame counter; simulation time is `frame / fps`, so every node computes the same poses without a shared wall clock. Per frame it sends `frame {state}` with the head pose, navigation and the shared app state, waits for `ack` from every node in barrier mode (with a timeout, after which late nodes are reported), then sends `present {frame}` so all screens flip together. Loose mode skips the wait. Clients send `hello`, `ack`, `setHead`, `setNavigation` / `navigate`, `setAppState {patch}` and `input {actions}`. Messages are defined in `src/core/protocol.ts`; the logic is in `src/core/manager.ts`, which the WebSocket server and the in-memory simulator both wrap.
+The Manager owns the frame counter; simulation time is `frame / fps`, so every node computes the same poses without a shared wall clock. Per frame it sends `frame {state}` with the head and wand poses, navigation and the shared app state, waits for `ack` from every node in barrier mode (with a timeout, after which late nodes are reported), then sends `present {frame}` so all screens flip together. Loose mode skips the wait. Clients send `hello`, `ack`, `setHead`, `setWand`, `setNavigation` / `navigate`, `setAppState {patch}` and `input {actions}`. Messages are defined in `src/core/protocol.ts`; the logic is in `src/core/manager.ts`, which the WebSocket server and the in-memory simulator both wrap.
 
 ## Testing pages headlessly
 

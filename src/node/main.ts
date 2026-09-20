@@ -24,6 +24,7 @@
  *   stereo=MODE  override the configured output mode (scene apps)
  *   input=1      take keyboard, mouse and gamepad input on this window (development;
  *                the config's `input: true` on the node is the proper switch)
+ *   audio=1      this window plays the application's sound (config: `audio: true` on the node)
  *   app= model= size= spin= mx= my= mz= style= center= zoom= ...   override the application, for development
  *
  * A computer with several displays runs one window per display, all with the
@@ -64,6 +65,8 @@ let displayInfo = "";
 let clientId = nodeId;
 /** Input on this window: config `input: true` on the node, or ?input=1. */
 let inputEnabled = params.get("input") === "1";
+/** Sound output on this window: config `audio: true` on the node, or ?audio=1. */
+let audioEnabled = params.get("audio") === "1";
 let input: InputController | null = null;
 let sendToManager: ((m: ClientMessage) => void) | null = null;
 /** Last frame received, for the debug handle. */
@@ -127,7 +130,7 @@ function teardown() {
 /** Build the renderer or flat view for the current config and screen. */
 function setup(c: ClusterConfig, s: ScreenConfig) {
   const spec = appSpecFromParams(params, c.app);
-  app = createApp(spec);
+  app = createApp(spec, { audio: audioEnabled });
   if (isFlatApp(app)) {
     canvas.style.display = "none";
     if (!flatContainer) {
@@ -153,7 +156,7 @@ function setup(c: ClusterConfig, s: ScreenConfig) {
   if (inputEnabled && !input) {
     input = new InputController({
       send: (m) => sendToManager?.(m),
-      getState: () => lastState ?? { frame: 0, time: 0, head: c.defaultHead, navigation: { position: [0, 0, 0], yaw: 0, pitch: 0 }, appState: {}, issuedAt: 0 },
+      getState: () => lastState ?? { frame: 0, time: 0, head: c.defaultHead, wand: c.defaultWand, navigation: { position: [0, 0, 0], yaw: 0, pitch: 0 }, appState: {}, issuedAt: 0 },
       getApp: () => app,
       onReset: () => sendToManager?.({ type: "setNavigation", navigation: { position: [0, 0, 0], yaw: 0, pitch: 0 } }),
       forcedProfile: params.get("gamepad"),
@@ -187,7 +190,9 @@ function connect() {
         }
         send({ type: "hello", nodeId: clientId, role: "node" });
         sendToManager = send;
-        inputEnabled = inputEnabled || !!cfg.nodes.find((n) => n.id === nodeId)?.input;
+        const me = cfg.nodes.find((n) => n.id === nodeId);
+        inputEnabled = inputEnabled || !!me?.input;
+        audioEnabled = audioEnabled || !!me?.audio;
         teardown();
         setup(cfg, screen);
         break;
@@ -218,7 +223,7 @@ function connect() {
         if (now - lastHud > 500) {
           const me = msg.nodes.find((n) => n.nodeId === clientId);
           const mode = viewport ? viewport.stereo.mode : "flat";
-          const inputInfo = input ? `\ninput on${input.pads.length ? " · 🎮 " + input.pads.map((g) => g.profile).join(", ") : ""} · keys, mouse drag / wheel, gamepad` : "";
+          const inputInfo = (input ? `\ninput on${input.pads.length ? " · 🎮 " + input.pads.map((g) => g.profile).join(", ") : ""} · keys, mouse drag / wheel, gamepad` : "") + (audioEnabled ? "\naudio on" : "");
           hud.textContent =
             `${clientId}  ${mode}  frames ${frames}  late ${me?.lateFrames ?? 0}  render ${me?.renderMs.toFixed(1) ?? "-"} ms` +
             `\n${app?.name ?? ""}: ${app?.status ?? ""}` +

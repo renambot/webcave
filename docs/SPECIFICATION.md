@@ -283,6 +283,10 @@ What is implemented:
 | Kiosk launcher: one Chrome per node or per `node:view`, per-display position, own profile, kill switch | `scripts/launch-nodes.sh` | done (macOS, Linux) |
 | Window Management API: display enumeration, fullscreen on a chosen display, `screen=` on nodes | `src/core/screens.ts`, `src/node/main.ts` | done (Chromium, secure context) |
 | Launcher page: map a multi-screen node's screens to this computer's displays, open fullscreen popups, emit the kiosk command | `launcher.html`, `src/launcher/main.ts` | done |
+| Wand pose in every frame (`setWand`, `defaultWand`), simulated in the simulator (Ctrl keys), drawn in the overview; CAVE <-> world helpers for apps | `src/core/protocol.ts`, `src/core/navigation.ts`, `src/simulator/main.ts`, `src/render/overview.ts` | done; tracker bridge to come |
+| Sound output node (`audio: true`, `?audio=1`) passed to apps as `AppContext.audio`; app navigation hints (speed, turn, planar) | `src/core/config.ts`, `src/apps/types.ts`, `src/input/controller.ts` | done; single node, no spatialization |
+| Deterministic randomness helpers (stateless hash, seeded PRNG, smooth noise) | `src/core/random.ts` | done |
+| "crayoland" app: Dave Pape's Crayoland ported from C++; original World/Sounds files, merged and instanced picture quads, fixed-step seeded bee and butterfly simulations, controller-published grab/throw, anger and landing, Web Audio soundscape | `src/apps/crayoland/`, `public/crayoland/` | done; navigation follows heading, not the wand |
 | Tracking protocol parsers, WebGPU renderer, warp/blend, more 2D adapters (deck.gl, Leaflet, DOM), adapters for existing three.js/WebXR apps | | not started |
 
 ## Suggested milestones

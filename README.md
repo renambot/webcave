@@ -12,12 +12,12 @@ A **Manager** owns the clock, the frame counter, the tracked head pose and the n
 - Off-axis projection per screen from a head position; navigation moves the CAVE through the virtual world
 - Frame barrier synchronization between Manager and Nodes, with a loose mode fallback
 - Stereo output packing: mono, side-by-side, top-bottom, row, column and checkerboard interleaved, red-cyan anaglyph (Dubois and black-and-white), frame-sequential (experimental)
-- Applications behind a minimal contract, one folder each, auto-discovered: animated shapes, glTF models, OpenVDB volumes and point clouds decoded in the browser, and MapLibre maps spread across a wall with a shared interactive camera
-- Shared application state replicated by the Manager; input from keyboards, mice and gamepads through a device-independent action layer
+- Applications behind a minimal contract, one folder each, auto-discovered: animated shapes, glTF models, OpenVDB volumes and point clouds decoded in the browser, MapLibre maps spread across a wall with a shared interactive camera, and a port of Crayoland, the original CAVE demo, with its bees, butterflies, grabbable flowers and soundscape
+- Tracked head and wand in every frame; shared application state replicated by the Manager; input from keyboards, mice and gamepads through a device-independent action layer; one node designated as the sound output
 - Multi-screen nodes placed with the Window Management API or kiosk Chrome
 - Simulator with live stereo controls and a 3D overview of screens, head and frusta
 
-Not yet: tracking input (OptiTrack, Vicon, ART, VRPN), WebGPU renderer, warp and blend, adapters for existing three.js or WebXR apps.
+Not yet: tracker bridges feeding the head and wand (OptiTrack, Vicon, ART, VRPN), WebGPU renderer, warp and blend, adapters for existing three.js or WebXR apps.
 
 ## Quick start
 

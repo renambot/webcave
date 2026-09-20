@@ -4,7 +4,7 @@ Input goes through an abstraction layer in `src/input/`, so applications and the
 
 1. **Devices produce an action state.** Keyboard and gamepads today; a tracked wand or a phone later. The vocabulary is small: `move` and `look` as 2D axes, `fly`, a `dpad`, and buttons `primary`, `secondary`, `tertiary`, `quaternary`, `prev`, `next`, `reset`, `menu`, `spin`. Axes are normalized with dead zones applied. Several devices are merged (largest axis wins, buttons OR).
 2. **A controller binds standard actions to cluster behaviour.** `move`, `look` and `fly` become navigation increments, `reset` resets, `spin` pauses the rotation clock. Each input client also reports its action state to the Manager, which merges all of them (largest axis wins, buttons OR) and replicates the result to every node in the frame, so a wall node sees exactly what the sticks do. The same `InputController` class in `src/input/controller.ts` runs in the simulator and on nodes that are allowed to take input.
-3. **Applications react.** A scene app reads `inputOf(state)` in `update()` on every node, deterministically. An app can also implement `onInput(actions, dt, state, send)`, which runs on the controller only and may patch shared state; the map uses it to pan, rotate, pitch and zoom from a gamepad, and declares `ownsNavigation` so the sticks are not also flying the CAVE.
+3. **Applications react.** A scene app reads `inputOf(state)` in `update()` on every node, deterministically. An app can also implement `onInput(actions, dt, state, send)`, which runs on the controller only and may patch shared state; the map uses it to pan, rotate, pitch and zoom from a gamepad, and declares `ownsNavigation` so the sticks are not also flying the CAVE. A scene app can instead keep the standard navigation and tune it with `navigation` hints: speed, turn rate, and `planar` to stay on the ground (Crayoland walks at 30 ft/s).
 
 ## Keyboard and mouse
 
@@ -17,7 +17,11 @@ Input goes through an abstraction layer in `src/input/`, so applications and the
 | `Enter` / `Backspace` | Application buttons primary / secondary (gamepad A / B) |
 | Mouse on a 3D view | Drag to look, right-drag to pan, wheel to fly, double-click to reset |
 
-The simulator adds head keys (`W S A D Q E`, with `Shift` or `Alt` to rotate) that are simulator-only; see [running.md](running.md).
+The simulator adds head keys (`W S A D Q E`, with `Shift` or `Alt` to rotate) and wand keys (`Ctrl` + the same) that are simulator-only; see [running.md](running.md).
+
+## The wand
+
+Tracked poses are not actions: the wand's position and orientation travel in every frame next to the head (`state.wand`, CAVE frame), set by a tracker bridge or by the simulator, and every node sees the same pose. Its buttons are ordinary actions, so a gamepad, the keyboard or the physical wand's buttons all work: `primary` (Enter, gamepad A) is the grab button in Crayoland. Applications convert the wand to world coordinates with the navigation helpers and react on the controller, publishing the result as shared state (see [applications.md](applications.md)).
 
 ## Gamepads
 

@@ -24,7 +24,8 @@
  *   createApp              tiles, overview, toolbar, help, keyboard, frame loop
  *
  * URL parameters: config=NAME|url, manager=ws://..., app=/model=/size=/spin=/mx my mz,
- * stereo=, anaglyph=, overview=none|walls|world, yaw= pitch= x= y= z=, help=1, autohead=1.
+ * stereo=, anaglyph=, overview=none|walls|world, yaw= pitch= x= y= z=, help=1, autohead=1,
+ * audio=1 (this page plays the application's sound).
  */
 import * as THREE from "three";
 import { type ClusterConfig, type StereoMode, type AnaglyphScheme, resolveStereo } from "../core/config";
@@ -170,7 +171,7 @@ function createApp(cfg: ClusterConfig, link: ControlLink, hooks: AppHooks): App 
   // The application comes from the cluster config; URL parameters override it.
   // A "scene" app is rendered by one ViewportRenderer per tile; a "flat" app
   // (the map) creates one FlatView per tile inside a plain div.
-  const demo = createCaveApp(appSpecFromParams(params, cfg.app));
+  const demo = createCaveApp(appSpecFromParams(params, cfg.app), { audio: params.get("audio") === "1" });
   const flat = isFlatApp(demo) ? demo : null;
   const sceneApp = isFlatApp(demo) ? null : demo;
   const layout3 = wallLayout(cfg);
@@ -180,6 +181,7 @@ function createApp(cfg: ClusterConfig, link: ControlLink, hooks: AppHooks): App 
     frame: 0,
     time: 0,
     head: { ...cfg.defaultHead },
+    wand: { ...cfg.defaultWand },
     navigation: { position: [0, 0, 0], yaw: 0, pitch: 0 },
     appState: {},
     issuedAt: 0,
@@ -319,6 +321,7 @@ function createApp(cfg: ClusterConfig, link: ControlLink, hooks: AppHooks): App 
     fps: $("#ro-fps"),
     head: $("#ro-head"),
     headrot: $("#ro-headrot"),
+    wand: $("#ro-wand"),
     nav: $("#ro-nav"),
     navrot: $("#ro-navrot"),
     late: $("#ro-late"),
@@ -461,8 +464,45 @@ function createApp(cfg: ClusterConfig, link: ControlLink, hooks: AppHooks): App 
     head.position = [...cfg.defaultHead.position] as [number, number, number];
     head.yaw = head.pitch = head.roll = 0;
     if (!toggles.autoHead) sendHead();
+    wand.position = [...cfg.defaultWand.position] as [number, number, number];
+    wand.yaw = wand.pitch = 0;
+    sendWand();
+  }
+
+  // Simulated wand: Ctrl + W/S A/D Q/E move it (1 m/s); Ctrl + Shift + W/S A/D
+  // pitch and yaw it (60°/s). Sent as an absolute pose like a tracker would.
+  // Its buttons are the ordinary input actions (Enter / gamepad A = primary).
+  const wand = { position: [...cfg.defaultWand.position] as [number, number, number], yaw: 0, pitch: 0 };
+  function sendWand() {
+    headEuler.set(wand.pitch, wand.yaw, 0);
+    headQuat.setFromEuler(headEuler);
+    link.send({ type: "setWand", wand: { position: [...wand.position], orientation: [headQuat.x, headQuat.y, headQuat.z, headQuat.w] } });
+  }
+  function stepWand(dt: number): boolean {
+    if (!keys.has("control")) return false;
+    let changed = false;
+    if (keys.has("shift")) {
+      const r = ((60 * Math.PI) / 180) * dt;
+      if (keys.has("w")) (wand.pitch += r), (changed = true);
+      if (keys.has("s")) (wand.pitch -= r), (changed = true);
+      if (keys.has("a")) (wand.yaw += r), (changed = true);
+      if (keys.has("d")) (wand.yaw -= r), (changed = true);
+      wand.pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, wand.pitch));
+    } else {
+      const v = 1.0 * dt;
+      const p = wand.position;
+      if (keys.has("w")) (p[2] -= v), (changed = true);
+      if (keys.has("s")) (p[2] += v), (changed = true);
+      if (keys.has("a")) (p[0] -= v), (changed = true);
+      if (keys.has("d")) (p[0] += v), (changed = true);
+      if (keys.has("q")) (p[1] -= v), (changed = true);
+      if (keys.has("e")) (p[1] += v), (changed = true);
+    }
+    if (changed) sendWand();
+    return true; // Ctrl held: the head keys stay out of it
   }
   function stepHead(dt: number) {
+    if (stepWand(dt)) return;
     if (toggles.autoHead) return;
     const rotate = keys.has("shift") || keys.has("alt");
     let changed = false;
@@ -525,9 +565,9 @@ function createApp(cfg: ClusterConfig, link: ControlLink, hooks: AppHooks): App 
     link.tick();
 
     if (flat) {
-      overview.render(lastState.head, lastState.navigation, null, new Map(flatViews.map((v) => [v.id, v.view.canvas])));
+      overview.render(lastState.head, lastState.navigation, null, new Map(flatViews.map((v) => [v.id, v.view.canvas])), lastState.wand);
     } else {
-      overview.render(lastState.head, lastState.navigation, sceneApp!.scene);
+      overview.render(lastState.head, lastState.navigation, sceneApp!.scene, undefined, lastState.wand);
     }
 
     const h = lastState.head.position;
@@ -538,6 +578,8 @@ function createApp(cfg: ClusterConfig, link: ControlLink, hooks: AppHooks): App 
     ro.fps.textContent = fps.toFixed(0);
     ro.head.textContent = `${f2(h[0])} ${f2(h[1])} ${f2(h[2])}`;
     ro.headrot.textContent = `${deg(head.yaw)}° ${deg(head.pitch)}° ${deg(head.roll)}°`;
+    const wp = lastState.wand?.position ?? wand.position;
+    ro.wand.textContent = `${f2(wp[0])} ${f2(wp[1])} ${f2(wp[2])}`;
     ro.nav.textContent = `${f1(nv.position[0])} ${f1(nv.position[1])} ${f1(nv.position[2])}`;
     ro.navrot.textContent = `${deg(nv.yaw)}° ${deg(nv.pitch)}°`;
     const nodeStats = link.stats();

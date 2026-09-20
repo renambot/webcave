@@ -109,6 +109,73 @@
         "position"
       ]
     },
+    "defaultWand": {
+      "default": {
+        "position": [
+          0.25,
+          1.1,
+          -0.3
+        ],
+        "orientation": [
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "description": "Wand pose before a tracker or the simulator sets one; points along -z",
+      "type": "object",
+      "properties": {
+        "position": {
+          "type": "array",
+          "items": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "additionalItems": false,
+          "minItems": 3,
+          "maxItems": 3,
+          "description": "x, y, z in meters"
+        },
+        "orientation": {
+          "default": [
+            0,
+            0,
+            0,
+            1
+          ],
+          "type": "array",
+          "items": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "additionalItems": false,
+          "minItems": 4,
+          "maxItems": 4,
+          "description": "quaternion x, y, z, w"
+        }
+      },
+      "required": [
+        "position"
+      ]
+    },
     "stereo": {
       "default": {},
       "description": "Cluster-wide stereo defaults",
@@ -546,6 +613,10 @@
           },
           "input": {
             "description": "Let this node's windows take keyboard, mouse and gamepad input and steer the cluster (default false)",
+            "type": "boolean"
+          },
+          "audio": {
+            "description": "This node plays the application's sound: the machine connected to the speakers (default false)",
             "type": "boolean"
           }
         },

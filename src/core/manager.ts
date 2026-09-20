@@ -24,7 +24,7 @@
  * Loose tier: broadcast frame N, nothing else; nodes present immediately.
  */
 import type { ClusterConfig } from "./config";
-import type { ClientMessage, FrameState, HeadPose, Navigation, NodeStats, ServerMessage } from "./protocol";
+import type { ClientMessage, FrameState, HeadPose, Navigation, NodeStats, Pose, ServerMessage } from "./protocol";
 import { emptyActions, isIdle, mergeActions, type ActionState } from "../input/actions";
 
 /** What the manager needs from a transport. Implemented over WebSocket and in memory. */
@@ -54,6 +54,8 @@ export class ClusterManager {
   private head: HeadPose;
   /** Simulated head sway; off by default so the head stays at defaultHead until a tracker or the simulator moves it. */
   private autoHead = false;
+  /** Wand pose, CAVE frame; from a tracker bridge or the simulator, else the config default. */
+  private wand: Pose;
   private navigation: Navigation = { position: [0, 0, 0], yaw: 0, pitch: 0 };
   /** Shared application state; see FrameState.appState. */
   private appState: Record<string, unknown> = {};
@@ -65,6 +67,7 @@ export class ClusterManager {
     this.config = config;
     this.transport = transport;
     this.head = { ...config.defaultHead };
+    this.wand = { ...config.defaultWand };
   }
 
   get currentFrame() {
@@ -73,6 +76,10 @@ export class ClusterManager {
 
   get headPose() {
     return this.head;
+  }
+
+  get wandPose() {
+    return this.wand;
   }
 
   get nav() {
@@ -133,6 +140,9 @@ export class ClusterManager {
       case "setHeadAuto":
         this.autoHead = msg.enabled;
         break;
+      case "setWand":
+        this.wand = msg.wand;
+        break;
       case "setNavigation":
         this.navigation = msg.navigation;
         break;
@@ -192,6 +202,7 @@ export class ClusterManager {
       frame: this.frame,
       time,
       head: this.head,
+      wand: this.wand,
       navigation: this.navigation,
       appState: this.appState,
       issuedAt: now,

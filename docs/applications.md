@@ -1,6 +1,6 @@
 # Applications
 
-An application owns a three.js scene and advances it from the cluster's simulation time. WebCAVE handles cameras, stereo and screens. Six are included, in `src/apps/`:
+An application owns a three.js scene and advances it from the cluster's simulation time. WebCAVE handles cameras, stereo and screens. Seven are included, in `src/apps/`:
 
 | Name | What it shows | Options |
 |---|---|---|
@@ -10,6 +10,7 @@ An application owns a three.js scene and advances it from the cluster's simulati
 | `vdb` | OpenVDB volume (smoke, clouds) ray-marched in the CAVE; the file is fetched and decoded in the browser | `vdb` URL, `grid`, `size`, `spin`, position, `density` (multiplier), `steps`, `color`, `maxDim`, `lightDir` |
 | `points` | OpenVDB PointDataGrid (particles) as a point cloud, decoded in the browser; colours from `Cd` when present | `points` URL, `grid`, `size`, `spin`, position, `maxPoints`, `pointSize`, `colorAttribute`, `color` |
 | `density` | 2D choropleth of population density from a GeoJSON (MapLibre's "visualize population density" example, Rwanda provinces); same wall and camera machinery as `map` | the `map` camera options plus `data` (GeoJSON URL with `population` and `sq-km` per feature), `opacity` |
+| `crayoland` | Dave Pape's Crayoland (EVL, 1995): a crayon-drawn meadow with bees, butterflies, flies, and flowers and rocks to grab and throw with the wand; birds, frogs, a stream and the hive's hum on the audio node | `model` (folder URL with `World`, `Sounds`, `tex/`, `audio/`; default `/crayoland/`), options `world`, `sounds` (file names) |
 
 The application is part of the cluster config, so every Node runs the same one. Set it on the Manager:
 
@@ -19,7 +20,7 @@ npm run manager -- --app gltf --model /models/DamagedHelmet.glb --size 0.8 --spi
 
 For development, URL parameters override it on the simulator or a Node: `?app=gltf&model=/models/DamagedHelmet.glb&size=0.8&spin=0.3&mx=0&my=1.5&mz=-1.05`. Files under `public/` are served at the root, so drop a `.glb` in `public/models/` and reference it as `/models/name.glb`. The bundled Damaged Helmet is a Khronos sample, CC BY 4.0 (see `public/models/README.md`).
 
-There are two kinds of application. **Scene apps** (shapes, gltf, vdb, points) own a three.js scene that WebCAVE renders from each screen's off-axis camera, with stereo and navigation. **Flat apps** (map, density) are 2D: they render themselves into a container per screen and receive the screen's rectangle in the overall wall image, so adjacent screens join into one picture. Stereo does not apply to flat apps.
+There are two kinds of application. **Scene apps** (shapes, gltf, vdb, points, crayoland) own a three.js scene that WebCAVE renders from each screen's off-axis camera, with stereo and navigation. **Flat apps** (map, density) are 2D: they render themselves into a container per screen and receive the screen's rectangle in the overall wall image, so adjacent screens join into one picture. Stereo does not apply to flat apps.
 
 ## Writing an application
 
@@ -27,9 +28,32 @@ Create a folder `src/apps/<name>/` whose `index.ts` default-exports an app defin
 
 Rules that keep the cluster in step:
 
-- Every pose is a function of the frame `time` the Manager sends. No `Date.now()`, no accumulated deltas.
+- Every pose is a function of the frame `time` the Manager sends. No `Date.now()`, no accumulated deltas. Randomness comes from the seeded, stateless helpers in `src/core/random.ts`, or from a simulation stepped at a fixed rate from time zero, which a late-joining node fast-forwards.
 - Anything a controller changes goes through the shared app state (`send(patch)` in `onInput`), which the Manager replicates in every frame. Toggle clocks with the helpers in `src/apps/types.ts` so the animation never jumps.
+- The head, the wand and the navigation are in the frame state; convert them to world coordinates with the helpers in `src/core/navigation.ts`.
+- An app receives an `AppContext` telling it whether this window is the sound output; a scene app may declare `navigation` hints (speed, turn rate, planar) for the standard bindings.
 - Assets load asynchronously per node; expose `ready` and a `status` string so the HUD can show progress.
+
+## Crayoland
+
+```
+http://localhost:5173/simulator.html?config=cave-3m&app=crayoland&audio=1
+npm run manager -- --app crayoland
+```
+
+Crayoland is the 1995 CAVE demo by Dave Pape at EVL, ported from its C++ source (about 2,200 lines against CAVElib, OpenGL and the Bergen sound server). The original data files load unchanged from `public/crayoland/`: `World` lists 245 static pictures (trees, mountains, clouds, the lake, the house), 313 grabbable pictures (flowers and rocks), a hive of 64 bees with 29 flowers to visit, 6 butterflies and a cloud of flies; `Sounds` places crickets, frogs, ducks, birds, a stream and footstep sounds. Units are feet; the scene sits in a group scaled to meters, so the CAVE floor is the meadow and the 3 m CAVE is roughly the original 10 ft cube.
+
+**What was ported and how.**
+
+- Pictures are upright textured quads with the original rotation formula, cut out with an alpha test as in the original. Static pictures sharing a texture are merged into one mesh; grabbable ones are instances of one quad per texture, so the whole world is about thirty draw calls.
+- The bees' state machine (hang out at the hive, fly to a flower, pollinate, return) and the butterflies' wandering are ported line for line into fixed-step simulations with a seeded random generator. Every node steps them itself from time zero, so all nodes agree and a node that joins late catches up in well under a second.
+- Interaction runs on the controller (the simulator, or a node with input enabled) and is published as shared state: a grab stores the object's offset in wand coordinates, a release stores its rest pose and throw velocity, poking the hive stores when the bees got angry, a still hand near a butterfly stores when it started seeking. Nodes turn these records plus the current wand and time into geometry: the held flower hangs off the wand, the thrown rock follows its parabola, the bees swarm the head, the butterfly glides to the hand and folds its wings. Nothing accumulates on the nodes.
+- Navigation uses the standard bindings with the app's hints: walking speed of 30 ft/s, 90°/s turning, and planar so the CAVE stays on the ground. The original moved along the wand's direction; here it moves along the navigation heading.
+- Sound is Web Audio on the window that has `audio` (config or `?audio=1`): positional loops, random calls with probability and distance attenuation, triggers, footsteps chosen by the ground masks (splashes in the lake), the hive's hum scaled by how many bees are near and tripled when angry, and a thud when the hive is hit. Browsers start audio only after a click or key press.
+
+**Playing.** Walk with the arrow keys and `I K J L`, or a gamepad. Move the wand with `Ctrl` + `W S A D Q E` (the stick in the overview and the hand in the scene follow it); press `Enter` or gamepad A while the hand is on a flower or rock to grab it, move the wand and release to throw. Hold the wand still near a butterfly and it comes to sit on the hand. Push the wand into the hive on the tree in the flower field and the bees chase you until you are 40 ft away.
+
+**Not carried over.** The original navigated along the wand's pointing direction with a joystick, and flew when a third button was held; here the standard bindings apply. Bergen's networked sound server is replaced by in-browser audio on one node. Frustum culling per CAVE wall (commented out in the original too) is left to three.js. The optional "hand" configuration for a glove is not ported.
 
 ## The VDB application
 

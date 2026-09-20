@@ -13,9 +13,9 @@
  *     override that spec during development, then createApp()
  *   - createApp() looks the name up here and returns a CaveApp
  */
-import type { AnyApp, AppDefinition, AppSpec } from "./types";
+import type { AnyApp, AppContext, AppDefinition, AppSpec } from "./types";
 
-export type { AnyApp, AppDefinition, AppSpec, CaveApp, FlatApp, FlatView, FlatViewOptions, InputHook } from "./types";
+export type { AnyApp, AppContext, AppDefinition, AppSpec, CaveApp, FlatApp, FlatView, FlatViewOptions, InputHook, NavigationHints } from "./types";
 export { inputOf, type ActionState } from "../input/actions";
 export { isFlatApp, spinTime, toggleSpinPatch, clockTime, toggleClockPatch } from "./types";
 
@@ -45,12 +45,12 @@ export const APP_NAMES = Object.keys(APPS).sort();
  * (or the first app found) and says so in the app's status, so a typo shows
  * up on the wall instead of a black screen.
  */
-export function createApp(spec: AppSpec): AnyApp {
+export function createApp(spec: AppSpec, ctx: AppContext = { audio: false }): AnyApp {
   const def = APPS[spec.name];
-  if (def) return def.create(spec);
+  if (def) return def.create(spec, ctx);
   const fallback = APPS.shapes ?? Object.values(APPS)[0];
   if (!fallback) throw new Error("no applications found under src/apps/");
-  const app = fallback.create(spec);
+  const app = fallback.create(spec, ctx);
   app.status = `unknown app "${spec.name}" (have: ${APP_NAMES.join(", ")}), showing ${fallback.name}`;
   return app;
 }

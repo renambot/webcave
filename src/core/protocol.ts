@@ -30,6 +30,14 @@ export interface HeadPose {
 }
 
 /**
+ * A tracked 6-DOF pose in the CAVE frame (meters, Y up): the wand today,
+ * further trackers (glove, second wand) later. The head is the same shape.
+ * Convention for the wand: it points along its local -Z, like a camera, so
+ * a zero orientation points at the front wall.
+ */
+export type Pose = HeadPose;
+
+/**
  * Navigation: where the physical CAVE sits in the virtual world.
  * Position is the CAVE origin in world units; yaw and pitch in radians.
  * Roll is intentionally absent (tilting the horizon in a CAVE causes sickness).
@@ -51,6 +59,14 @@ export interface FrameState {
   /** Simulation time in seconds, derived from the frame counter (frame / fps), never from the wall clock. */
   time: number;
   head: HeadPose;
+  /**
+   * The wand (hand-held tracked controller), CAVE frame. Set by a tracker or
+   * by the simulator's Ctrl + W S A D Q E keys; otherwise the config's
+   * defaultWand. Its buttons are not here: they arrive as input actions
+   * (appState.input) so any device can stand in for the physical wand.
+   * Apps convert it to world coordinates with caveToWorld(navigation, ...).
+   */
+  wand: Pose;
   navigation: Navigation;
   /**
    * Shared application state, owned by the Manager and replicated to every
@@ -87,6 +103,8 @@ export type ClientMessage =
   | { type: "setHead"; head: HeadPose }
   /** Toggle the manager's simulated head motion. */
   | { type: "setHeadAuto"; enabled: boolean }
+  /** Set the wand pose (CAVE frame); from a tracker bridge or the simulator. */
+  | { type: "setWand"; wand: Pose }
   /** Set navigation absolutely. */
   | { type: "setNavigation"; navigation: Navigation }
   /** Incremental navigation, applied in the CAVE's own frame (forward = -Z). */

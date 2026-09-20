@@ -15,6 +15,9 @@ src/apps/
   points/         OpenVDB PointDataGrid point cloud (scene app; pointsReader.ts decodes the multi-pass buffers)
   map/            MapLibre map across a wall       (flat app; wallmap.ts = shared MapLibre machinery)
   density/        2D choropleth on MapLibre        (flat app, built on map/wallmap.ts)
+  crayoland/      Dave Pape's Crayoland, ported    (scene app; world.ts parses the original files,
+                                                    creatures.ts deterministic bees and butterflies,
+                                                    sound.ts Web Audio soundscape)
   <yours>/        index.ts (+ any helpers, shaders, data)
 ```
 
@@ -34,9 +37,10 @@ simulation time. WebCAVE owns cameras, stereo, screens and navigation.
 ```ts
 // src/apps/myapp/index.ts
 import * as THREE from "three";
-import type { AppDefinition, AppSpec, CaveApp } from "../types";
+import type { AppContext, AppDefinition, AppSpec, CaveApp } from "../types";
 
-function create(spec: AppSpec): CaveApp {
+function create(spec: AppSpec, ctx: AppContext): CaveApp {
+  // ctx.audio: this window is the cluster's speaker (config `audio: true` on the node, or ?audio=1)
   const scene = new THREE.Scene();
   // build the scene; the physical floor is y = 0, the viewer stands near the origin,
   // the front wall of the 3 m CAVE is at z = -1.5
@@ -51,6 +55,8 @@ function create(spec: AppSpec): CaveApp {
       // it follows the shared spin clock, which Space in the simulator
       // pauses and resumes for every screen at once.
     },
+    // optional: how the standard navigation moves through this world
+    navigation: { flySpeed: 2, turnSpeed: 1.2, planar: false },
     dispose() {},               // optional
   };
 }
@@ -65,9 +71,14 @@ export default {
 Rules that keep every node in step:
 
 - Derive all motion from `time`. No `Date.now()`, no `Math.random()` at
-  runtime (seed anything random at creation), no per-frame deltas.
-- Do not touch cameras or the renderer. If you need the head or navigation,
-  ask; they belong in the frame state, not in the app.
+  runtime, no per-frame deltas. For randomness use `src/core/random.ts`:
+  `hash(frame, i)` for stateless per-frame jitter, `Rng(seed)` for a
+  simulation stepped at a fixed rate from time 0 (a late-joining node
+  fast-forwards to the current step), `noise1(t, seed)` for smooth wander.
+- Do not touch cameras or the renderer. The head, the wand and the navigation
+  are in `state` (`state.head`, `state.wand`, `state.navigation`, CAVE frame,
+  meters); convert them to world coordinates with `caveToWorld()` from
+  `src/core/navigation.ts` when the scene needs to react to where they are.
 - Static assets go in `public/` and are referenced as `/path/file`, so every
   node fetches the same URL. Large assets should load asynchronously with a
   placeholder while `ready` is pending.
@@ -139,7 +150,29 @@ input. Two ways in:
   `send({ map: ... })`). Set `ownsNavigation: true` on a flat app to keep the
   sticks from also flying the CAVE.
 
-Standard bindings (navigation, reset, spin) are handled for you.
+Standard bindings (navigation, reset, spin) are handled for you. A scene app
+can tune them with `navigation: { flySpeed, turnSpeed, planar }` (m/s, rad/s,
+and whether to stay on the ground).
+
+## The wand and user reactions
+
+`state.wand` is the tracked hand-held controller (position and orientation,
+CAVE frame). Its buttons are the ordinary actions (`primary` = Enter or
+gamepad A). The pattern Crayoland uses for everything the user does to the
+world: the controller's `onInput` sees the wand, decides ("grabbed object 12
+with this offset", "the bees are angry since t") and publishes a compact
+record with `send`; every node's `update()` turns that record plus `time` and
+the current wand into geometry (the held flower hangs off the wand matrix, a
+thrown one follows its parabola from `p0, v0, t0`). Nothing accumulates on
+the nodes, so any node can join at any time and agree with the others.
+
+## Sound
+
+Only the window with `ctx.audio` should make sound (one machine drives the
+speakers). Create the `AudioContext` on the first click or key press (the
+browser requires a gesture), fetch and decode your samples, and drive gains
+from `update()` using the head position from the frame. `crayoland/sound.ts`
+is a complete example with loops, random calls, triggers and footsteps.
 
 ## Selecting an app
 
@@ -152,6 +185,8 @@ npm run manager -- --model /models/Thing.glb --size 1 --spin 0.2   # gltf shorth
 
 For development, URL parameters override on the simulator or a node:
 `?app=myapp`, and for gltf `model=`, `size=`, `spin=`, `mx= my= mz=`.
+Crayoland: `?app=crayoland`, with `model=/other/folder/` to load another
+`World` and its textures.
 Extra options for your own app: read them from `spec` (add fields to
 `AppSpec` in `src/core/config.ts`) and, if useful, from the URL in
 `appSpecFromParams`.

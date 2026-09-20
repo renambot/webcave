@@ -44,6 +44,35 @@ import type { ActionState } from "../input/actions";
  */
 export type InputHook = (actions: ActionState, dt: number, state: FrameState, send: (patch: Record<string, unknown>) => void) => void;
 
+/**
+ * Where an application instance runs. Passed to AppDefinition.create() so an
+ * app can adapt to its host window without reading URL parameters itself.
+ */
+export interface AppContext {
+  /**
+   * This window is the cluster's sound output (config `audio: true` on the
+   * node, or ?audio=1 on a node or the simulator). Exactly one window should
+   * have it; apps with sound create their AudioContext only when it is set.
+   * Browsers start audio only after a user gesture: listen for the first
+   * click or key press and resume the context then.
+   */
+  audio: boolean;
+}
+
+/**
+ * How a scene app wants the standard navigation bound. Speeds are hints for
+ * the controller's move/look/fly actions; `planar` keeps the CAVE on the
+ * ground (no vertical motion, no pitch), for worlds you walk through.
+ */
+export interface NavigationHints {
+  /** m/s at full stick deflection (default 2). */
+  flySpeed?: number;
+  /** rad/s at full deflection (default 1.2). */
+  turnSpeed?: number;
+  /** Ignore fly and pitch: the CAVE floor stays on the world's ground. */
+  planar?: boolean;
+}
+
 /** A running 3D application instance. Created once per browser window. */
 export interface CaveApp {
   readonly kind?: "scene";
@@ -68,6 +97,8 @@ export interface CaveApp {
   update(time: number, state?: FrameState): void;
   /** Optional: react to input on controllers (see InputHook). Nodes also see inputOf(state) in update(). */
   onInput?: InputHook;
+  /** Optional: how fast the standard navigation moves through this world, and whether it stays on the ground. */
+  readonly navigation?: NavigationHints;
   /** Optional: release GPU resources when the app is replaced. */
   dispose?(): void;
 }
@@ -125,8 +156,8 @@ export interface AppDefinition {
   name: string;
   /** One line for listings. */
   description: string;
-  /** Build an instance. `spec` carries options from the config or URL (see AppSpec). */
-  create(spec: AppSpec): AnyApp;
+  /** Build an instance. `spec` carries options from the config or URL (see AppSpec); `ctx` says where it runs. */
+  create(spec: AppSpec, ctx: AppContext): AnyApp;
 }
 
 /**

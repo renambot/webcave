@@ -23,15 +23,20 @@ No server needed: open <http://localhost:5173/simulator.html?config=cave-3m> or 
 | `Enter` / `Backspace` | Application buttons primary / secondary, same as gamepad A / B |
 | `W` `S` / `A` `D` / `Q` `E` | Move the head: forward/back, left/right, down/up (not while auto head is on) |
 | `Shift` or `Alt` + the same keys | Rotate the head: pitch, yaw, roll |
+| `Ctrl` + `W` `S` / `A` `D` / `Q` `E` | Move the wand; `Ctrl` + `Shift` + `W S A D` pitch and yaw it |
 | Mouse on a tile (3D apps) | Drag to look, right-drag to pan, wheel to fly, double-click to reset |
 | Mouse drag on overview | Orbit the 3D overview |
 | `H` or `?` | Toggle the keyboard help overlay (`Esc` closes; `?help=1` opens it at load) |
 
 The head moves the viewer inside the physical CAVE and changes each screen's off-axis frustum. Navigation moves the whole CAVE through the virtual world, which is how you look up, down or turn. URL parameters set the initial navigation: `?yaw=30&pitch=20&x=0&y=0&z=-2` (degrees and meters).
 
+The wand is the hand-held tracked controller. Its pose is part of every frame like the head's, shown as a stick in the overview and in the readout; applications use it to point and grab (Crayoland draws a hand there). Its buttons are the ordinary input actions: `Enter` or gamepad A is the primary button. Until a tracker bridge exists, the simulator's `Ctrl` keys move it.
+
+Add `?audio=1` to make the simulator the cluster's sound output for applications that have sound; a click or key press starts it.
+
 ### Overview panel
 
-The **Overview** shows the physical installation: screens, frusta, and the head as a sphere with a cone whose tip points in the viewing direction. Its content mode is selectable in the toolbar or with `?overview=`:
+The **Overview** shows the physical installation: screens, frusta, the head as a sphere with a cone whose tip points in the viewing direction, and the wand as a stick with a bright tip. Its content mode is selectable in the toolbar or with `?overview=`:
 
 - `none`: geometry only
 - `walls`: each screen shows a mono render of what that wall displays, a "virtual CAVE" preview. The tiles show the actual stereo-packed output.
@@ -67,7 +72,7 @@ http://<dev-host>:5173/node.html?node=left
 http://<dev-host>:5173/node.html?node=right&stereo=anaglyph
 ```
 
-Click a Node, or press `f`, `Enter` or `Space`, to go fullscreen; press `h` to hide the HUD. Parameters: `node` (node id), `view` (which of the node's screens, for multi-screen nodes), `screen` (display index for fullscreen), `stereo` (override the output mode), `manager`, `input=1` (take input on this window, see [input.md](input.md)), and the application overrides listed in [applications.md](applications.md).
+Click a Node, or press `f`, `Enter` or `Space`, to go fullscreen; press `h` to hide the HUD. Parameters: `node` (node id), `view` (which of the node's screens, for multi-screen nodes), `screen` (display index for fullscreen), `stereo` (override the output mode), `manager`, `input=1` (take input on this window, see [input.md](input.md)), `audio=1` (this window plays the application's sound; the config's `audio: true` on the node is the proper switch), and the application overrides listed in [applications.md](applications.md).
 
 The application is part of the cluster config, so every Node runs the same one. Set it in the config file or with `--app` and its options on the Manager.
 

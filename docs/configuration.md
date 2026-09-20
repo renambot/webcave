@@ -29,15 +29,15 @@ Units are meters and degrees in a Y-up, right-handed frame with the physical flo
 
 ## Nodes
 
-A node is a computer running one browser window per screen it lists. `"input": true` lets that node's keyboard, mouse and gamepads steer the cluster (see [input.md](input.md)); it is off by default.
+A node is a computer running one browser window per screen it lists. `"input": true` lets that node's keyboard, mouse and gamepads steer the cluster (see [input.md](input.md)); `"audio": true` makes it the sound output for applications that have sound (the machine wired to the speakers; exactly one node should have it). Both are off by default.
 
 ```json
-{ "id": "pc", "screens": ["front", "left", "right", "floor"], "input": true }
+{ "id": "pc", "screens": ["front", "left", "right", "floor"], "input": true, "audio": true }
 ```
 
 ## Defaults and validation
 
-Everything except `name`, `screens` and `nodes` has a default: `fps` 60, `sync` barrier, `defaultHead` at (0, 1.6, 0), mono stereo, the shapes app. A screen may override stereo settings, for instance a passive wall whose odd column needs `"firstEye": "right"`. The `app` object selects the application and its options (see [applications.md](applications.md)).
+Everything except `name`, `screens` and `nodes` has a default: `fps` 60, `sync` barrier, `defaultHead` at (0, 1.6, 0), `defaultWand` at (0.25, 1.1, -0.3) pointing at the front wall, mono stereo, the shapes app. A screen may override stereo settings, for instance a passive wall whose odd column needs `"firstEye": "right"`. The `app` object selects the application and its options (see [applications.md](applications.md)).
 
 Validation errors name the field: `npm run schema` checks all files, and the Manager refuses to start on an invalid one and prints why.
 

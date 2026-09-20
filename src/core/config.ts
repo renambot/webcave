@@ -88,6 +88,13 @@ export interface NodeConfig {
   screens: string[];
   /** Whether this node's windows may take keyboard, mouse and gamepad input and steer the cluster. Default false. */
   input?: boolean;
+  /**
+   * Whether this node plays the application's sound (the machine wired to the
+   * speakers). Default false: a cluster has many render machines and one
+   * sound system, so exactly one node (or the simulator with ?audio=1) should
+   * have it. Apps receive it as AppContext.audio.
+   */
+  audio?: boolean;
 }
 
 /** Which application the cluster runs; see src/apps. */
@@ -112,6 +119,8 @@ export interface ClusterConfig {
   barrierTimeoutMs: number;
   /** Default head pose when nothing is tracking. */
   defaultHead: { position: Vec3; orientation: Quat };
+  /** Wand pose before any tracker or controller sets one: about where a hand holding a wand rests. */
+  defaultWand: { position: Vec3; orientation: Quat };
   near: number;
   far: number;
   stereo: StereoParams;
