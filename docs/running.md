@@ -11,6 +11,10 @@ Other scripts: `npm run build`, `npm run preview`, `npm run typecheck`, `npm run
 
 ## Simulator
 
+![The simulator as a controller of a live Manager running Crayoland: one tile per screen of a four-screen CAVE (front, left, right, floor), the overview with the wall images in place, the readout with frame, head, wand and navigation, and the toolbar](images/simulator-crayoland.jpg)
+
+*The simulator connected to a running Manager as a controller, mirroring a four-screen CAVE that runs the Crayoland application; an Xbox controller is driving it (footer). Crayoland and its crayon drawings are by Dave Pape, Electronic Visualization Laboratory, University of Illinois at Chicago (1995), used here with the port; see `public/crayoland/README.md`.*
+
 No server needed: open <http://localhost:5173/simulator.html?config=cave-3m> or `?config=wall-3x1`. The config dropdown lists every file in `configs/`. The toolbar controls stereo mode, anaglyph scheme, IPD, eye swap, sync tier and the overview. The head starts at the config's default position and is moved with the keys below; the **auto head** button (or `?autohead=1`) replaces it with a simulated sway, handy for checking stereo and off-axis projection without touching the keyboard.
 
 | Keys | Action |
@@ -48,7 +52,7 @@ The **Overview** shows the physical installation: screens, frusta, the head as a
 
 ### Simulator as controller
 
-Point the simulator at a running Manager and it stops running its own. It receives the same frames as the Nodes, mirrors the wall in its tiles and overview, and its keyboard, gamepad and toolbar drive the cluster's head and navigation.
+Point the simulator at a running Manager and it stops running its own. The picture at the top of this page shows this mode: the header reads "controller · ws://localhost:8765", the config selector shows the server's config greyed out, and the late-frame counter reports the real cluster's barrier. It receives the same frames as the Nodes, mirrors the wall in its tiles and overview, and its keyboard, gamepad and toolbar drive the cluster's head and navigation.
 
 ```
 http://localhost:5173/simulator.html?manager=ws://localhost:8765
