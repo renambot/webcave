@@ -119,7 +119,11 @@ export interface ClusterConfig {
   barrierTimeoutMs: number;
   /** Default head pose when nothing is tracking. */
   defaultHead: { position: Vec3; orientation: Quat };
-  /** Wand pose before any tracker or controller sets one: about where a hand holding a wand rests. */
+  /**
+   * Where the wand sits relative to the head when no tracker reports it, in a
+   * frame at the head turned by the head's yaw: a hand in front of and below
+   * the eyes, moving with the body but not with the gaze.
+   */
   defaultWand: { position: Vec3; orientation: Quat };
   near: number;
   far: number;

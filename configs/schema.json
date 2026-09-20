@@ -112,9 +112,9 @@
     "defaultWand": {
       "default": {
         "position": [
-          0.25,
-          1.1,
-          -0.3
+          0.15,
+          -0.45,
+          -0.5
         ],
         "orientation": [
           0,
@@ -123,7 +123,7 @@
           1
         ]
       },
-      "description": "Wand pose before a tracker or the simulator sets one; points along -z",
+      "description": "Wand offset from the head when no tracker reports it (head yaw frame): a hand slightly right, below and ahead of the eyes, pointing forward",
       "type": "object",
       "properties": {
         "position": {

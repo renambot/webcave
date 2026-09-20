@@ -26,6 +26,7 @@
 import type { ClusterConfig } from "./config";
 import type { ClientMessage, FrameState, HeadPose, Navigation, NodeStats, Pose, ServerMessage } from "./protocol";
 import { emptyActions, isIdle, mergeActions, type ActionState } from "../input/actions";
+import { wandFromHead } from "./pose";
 
 /** What the manager needs from a transport. Implemented over WebSocket and in memory. */
 export interface ManagerTransport {
@@ -54,8 +55,10 @@ export class ClusterManager {
   private head: HeadPose;
   /** Simulated head sway; off by default so the head stays at defaultHead until a tracker or the simulator moves it. */
   private autoHead = false;
-  /** Wand pose, CAVE frame; from a tracker bridge or the simulator, else the config default. */
-  private wand: Pose;
+  /** Absolute wand pose from a tracker, or null to derive the wand from the head. */
+  private wandAbsolute: Pose | null = null;
+  /** Hand offset in the head's yaw frame, used when no absolute pose is set (config default, or the simulator's keys). */
+  private wandOffset: Pose;
   private navigation: Navigation = { position: [0, 0, 0], yaw: 0, pitch: 0 };
   /** Shared application state; see FrameState.appState. */
   private appState: Record<string, unknown> = {};
@@ -67,7 +70,7 @@ export class ClusterManager {
     this.config = config;
     this.transport = transport;
     this.head = { ...config.defaultHead };
-    this.wand = { ...config.defaultWand };
+    this.wandOffset = { ...config.defaultWand };
   }
 
   get currentFrame() {
@@ -78,8 +81,8 @@ export class ClusterManager {
     return this.head;
   }
 
-  get wandPose() {
-    return this.wand;
+  get wandPose(): Pose {
+    return this.wandAbsolute ?? wandFromHead(this.head, this.wandOffset);
   }
 
   get nav() {
@@ -141,7 +144,12 @@ export class ClusterManager {
         this.autoHead = msg.enabled;
         break;
       case "setWand":
-        this.wand = msg.wand;
+        if (msg.relative) {
+          this.wandOffset = msg.wand;
+          this.wandAbsolute = null; // back to following the head
+        } else {
+          this.wandAbsolute = msg.wand;
+        }
         break;
       case "setNavigation":
         this.navigation = msg.navigation;
@@ -202,7 +210,7 @@ export class ClusterManager {
       frame: this.frame,
       time,
       head: this.head,
-      wand: this.wand,
+      wand: this.wandPose,
       navigation: this.navigation,
       appState: this.appState,
       issuedAt: now,

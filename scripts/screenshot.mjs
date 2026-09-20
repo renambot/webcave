@@ -8,7 +8,8 @@
  *   node scripts/screenshot.mjs <url> <out.png> [seconds=10] [width=1600] [height=900] [--drag x1,y1,x2,y2[,delaySeconds]]
  *
  * --eval "expr" evaluates a JS expression in the page before the screenshot
- * and prints the JSON result (the simulator exposes window.webcave).
+ * and prints the JSON result (the simulator exposes window.webcave). A promise
+ * (an async IIFE) is awaited, so an expression can drive the page and wait.
  * --key "k[,delaySeconds[,holdSeconds]]" presses key k (a character such as " " or "l", or a
  *   named key such as Enter or ArrowLeft) after the
  *   delay, holding it for holdSeconds (default 0 = tap).
@@ -143,7 +144,8 @@ async function main() {
     await sleep(seconds * 1000);
   }
   if (evalExpr) {
-    const r = await send("Runtime.evaluate", { expression: `JSON.stringify(${evalExpr})`, returnByValue: true });
+    // A promise-returning expression (an async IIFE) is awaited before stringifying.
+    const r = await send("Runtime.evaluate", { expression: `Promise.resolve(${evalExpr}).then((v) => JSON.stringify(v))`, returnByValue: true, awaitPromise: true });
     console.log("eval:", r.result.value ?? r.result.description);
   }
   const shot = await send("Page.captureScreenshot", { format: "png" });

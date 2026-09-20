@@ -21,11 +21,11 @@ The simulator adds head keys (`W S A D Q E`, with `Shift` or `Alt` to rotate) an
 
 ## The wand
 
-Tracked poses are not actions: the wand's position and orientation travel in every frame next to the head (`state.wand`, CAVE frame), set by a tracker bridge or by the simulator, and every node sees the same pose. Its buttons are ordinary actions, so a gamepad, the keyboard or the physical wand's buttons all work: `primary` (Enter, gamepad A) is the grab button in Crayoland. Applications convert the wand to world coordinates with the navigation helpers and react on the controller, publishing the result as shared state (see [applications.md](applications.md)).
+Tracked poses are not actions: the head and the wand are each a 6-DOF pose, position and orientation, travelling in every frame (`state.head`, `state.wand`, CAVE frame), and every node sees the same values. A tracker bridge sets them absolutely; until then the Manager derives the wand from the head every frame as a hand offset in the head's yaw frame (`defaultWand`, adjusted by the simulator's `Ctrl` keys), so it moves with the body and not with the gaze. Its buttons are ordinary actions, so a gamepad, the keyboard or the physical wand's buttons all work: `primary` (Enter, gamepad A) and `tertiary` (gamepad X) are the grab buttons in Crayoland. Applications convert the wand to world coordinates with the navigation helpers and react on the controller, publishing the result as shared state (see [applications.md](applications.md)).
 
 ## Gamepads
 
-Gamepads use the browser Gamepad API. Pads reporting the W3C standard layout work out of the box: left stick moves, right stick looks, triggers go up and down, A is `primary`, Y or Triangle toggles rotation, Back or Select resets. Other layouts are matched by id against profiles in `src/input/gamepad.ts` (Xbox on Linux, older PlayStation mappings); adding a device is adding a profile. Connected pads show in the simulator footer, and `?gamepad=NAME` forces a profile. Browsers only expose a pad after a button press on it.
+Gamepads use the browser Gamepad API. Pads reporting the W3C standard layout work out of the box: left stick moves, right stick looks, triggers fly up (RT) and down (LT), bumpers look up (RB) and down (LB), A is `primary`, Y or Triangle toggles rotation, Back or Select resets. Other layouts are matched by id against profiles in `src/input/gamepad.ts` (Xbox on Linux, older PlayStation mappings); adding a device is adding a profile. Connected pads show in the simulator footer, and `?gamepad=NAME` forces a profile. Browsers only expose a pad after a button press on it.
 
 ## Input on a node
 

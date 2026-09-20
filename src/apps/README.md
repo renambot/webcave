@@ -158,7 +158,7 @@ and whether to stay on the ground).
 
 `state.wand` is the tracked hand-held controller (position and orientation,
 CAVE frame). Its buttons are the ordinary actions (`primary` = Enter or
-gamepad A). The pattern Crayoland uses for everything the user does to the
+gamepad A; Crayoland also takes `tertiary`, gamepad X). The pattern Crayoland uses for everything the user does to the
 world: the controller's `onInput` sees the wand, decides ("grabbed object 12
 with this offset", "the bees are angry since t") and publishes a compact
 record with `send`; every node's `update()` turns that record plus `time` and
@@ -171,8 +171,11 @@ the nodes, so any node can join at any time and agree with the others.
 Only the window with `ctx.audio` should make sound (one machine drives the
 speakers). Create the `AudioContext` on the first click or key press (the
 browser requires a gesture), fetch and decode your samples, and drive gains
-from `update()` using the head position from the frame. `crayoland/sound.ts`
-is a complete example with loops, random calls, triggers and footsteps.
+from `update()` using the head position from the frame. Implement the optional
+`setAudio(enabled)` so the simulator's audio button can switch sound at
+runtime; it is called from a click, so starting the context inside it is
+allowed. `crayoland/sound.ts` is a complete example with loops, random calls,
+triggers and footsteps.
 
 ## Selecting an app
 

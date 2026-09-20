@@ -33,8 +33,8 @@ export interface ActionState {
     secondary: boolean; // B / Circle
     tertiary: boolean; // X / Square
     quaternary: boolean; // Y / Triangle
-    prev: boolean; // LB / L1
-    next: boolean; // RB / R1
+    prev: boolean; // LB / L1 (the controller also pitches down with it)
+    next: boolean; // RB / R1 (the controller also pitches up with it)
     reset: boolean; // Back / Select
     menu: boolean; // Start / Options
     spin: boolean; // Y by default: pause / resume rotation

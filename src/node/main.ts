@@ -40,6 +40,7 @@ import { appSpecFromParams, createApp, isFlatApp, type AnyApp, type FlatView } f
 import { InputController } from "../input/controller";
 import { screenSize } from "../core/projection";
 import { ViewportRenderer } from "../render/viewport";
+import { wandFromHead } from "../core/pose";
 
 const params = new URLSearchParams(location.search);
 const nodeId = params.get("node") ?? "front";
@@ -156,7 +157,7 @@ function setup(c: ClusterConfig, s: ScreenConfig) {
   if (inputEnabled && !input) {
     input = new InputController({
       send: (m) => sendToManager?.(m),
-      getState: () => lastState ?? { frame: 0, time: 0, head: c.defaultHead, wand: c.defaultWand, navigation: { position: [0, 0, 0], yaw: 0, pitch: 0 }, appState: {}, issuedAt: 0 },
+      getState: () => lastState ?? { frame: 0, time: 0, head: c.defaultHead, wand: wandFromHead(c.defaultHead, c.defaultWand), navigation: { position: [0, 0, 0], yaw: 0, pitch: 0 }, appState: {}, issuedAt: 0 },
       getApp: () => app,
       onReset: () => sendToManager?.({ type: "setNavigation", navigation: { position: [0, 0, 0], yaw: 0, pitch: 0 } }),
       forcedProfile: params.get("gamepad"),

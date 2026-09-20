@@ -6,8 +6,8 @@
  * Per frame, step():
  *   1. polls gamepads and reads held keys -> one merged ActionState
  *   2. binds the standard actions: move / look / fly -> "navigate" increments
- *      (unless the app owns navigation), reset -> onReset(), spin -> the
- *      shared spin clock
+ *      (unless the app owns navigation; the bumpers prev / next also pitch
+ *      down / up), reset -> onReset(), spin -> the shared spin clock
  *   3. sends the action state to the Manager ("input"), which merges the
  *      states of all input clients and replicates the result in every frame
  *   4. calls the app's onInput hook, if any, with a `send` that patches the
@@ -81,7 +81,9 @@ export class InputController {
       const flySpeed = hints?.flySpeed ?? this.opts.flySpeed;
       const turnSpeed = hints?.turnSpeed ?? this.opts.turnSpeed;
       const [mx, my] = actions.move;
-      const [lx, ly] = actions.look;
+      // Bumpers pitch as well as the right stick: RB / R1 looks up, LB / L1 looks down.
+      const [lx, lyStick] = actions.look;
+      const ly = Math.max(-1, Math.min(1, lyStick + (actions.buttons.next ? 1 : 0) - (actions.buttons.prev ? 1 : 0)));
       const yaw = -lx * turnSpeed * dt;
       const pitch = hints?.planar ? 0 : ly * turnSpeed * dt;
       const move: [number, number, number] = [mx * flySpeed * dt, hints?.planar ? 0 : actions.fly * flySpeed * dt, -my * flySpeed * dt];

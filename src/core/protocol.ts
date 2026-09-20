@@ -60,11 +60,13 @@ export interface FrameState {
   time: number;
   head: HeadPose;
   /**
-   * The wand (hand-held tracked controller), CAVE frame. Set by a tracker or
-   * by the simulator's Ctrl + W S A D Q E keys; otherwise the config's
-   * defaultWand. Its buttons are not here: they arrive as input actions
-   * (appState.input) so any device can stand in for the physical wand.
-   * Apps convert it to world coordinates with caveToWorld(navigation, ...).
+   * The wand (hand-held tracked controller), CAVE frame. From a tracker when
+   * one reports it; otherwise derived from the head every frame as a hand
+   * would be: the config's defaultWand offset, applied in the head's yaw
+   * frame (the simulator's Ctrl keys adjust that offset). Its buttons are not
+   * here: they arrive as input actions (appState.input) so any device can
+   * stand in for the physical wand. Apps convert it to world coordinates
+   * with caveToWorld(navigation, ...).
    */
   wand: Pose;
   navigation: Navigation;
@@ -103,8 +105,13 @@ export type ClientMessage =
   | { type: "setHead"; head: HeadPose }
   /** Toggle the manager's simulated head motion. */
   | { type: "setHeadAuto"; enabled: boolean }
-  /** Set the wand pose (CAVE frame); from a tracker bridge or the simulator. */
-  | { type: "setWand"; wand: Pose }
+  /**
+   * Set the wand. Absolute (a tracker bridge): the pose in the CAVE frame,
+   * used as is until the next message. Relative (`relative: true`, the
+   * simulator): an offset in the head's yaw frame that the Manager applies to
+   * the head every frame, so the hand keeps following the body.
+   */
+  | { type: "setWand"; wand: Pose; relative?: boolean }
   /** Set navigation absolutely. */
   | { type: "setNavigation"; navigation: Navigation }
   /** Incremental navigation, applied in the CAVE's own frame (forward = -Z). */

@@ -253,6 +253,7 @@
           <option value="loose">sync · loose</option>
         </select>
         <span class="spacer"></span>
+        <button id="btn-audio" title="Play the application's sound in this window (one window per cluster should)" aria-pressed="false">♪ audio</button>
         <button id="btn-autohead" title="Simulated head motion; off to drive the head with the keyboard" aria-pressed="false">↻ auto head</button>
         <select id="overview-mode" title="Overview content" aria-label="Overview content">
           <option value="none">overview · geometry</option>
@@ -288,10 +289,11 @@
         <table>
           <tr><td>Left stick</td><td>Move: strafe and forward / back (map: pan)</td></tr>
           <tr><td>Right stick</td><td>Look: yaw and pitch (map: rotate and pitch)</td></tr>
-          <tr><td>Triggers RT / LT</td><td>Up / down (map: zoom in / out)</td></tr>
+          <tr><td>Triggers RT / LT</td><td>Fly up / down (map: zoom in / out)</td></tr>
+          <tr><td>Bumpers RB / LB</td><td>Look up / down</td></tr>
           <tr><td>Y / Triangle</td><td>Pause / resume rotation</td></tr>
           <tr><td>Back / Select</td><td>Reset navigation and head</td></tr>
-          <tr><td>A B X, bumpers, d-pad</td><td>Passed to the application as primary, secondary, tertiary, prev, next, dpad. Shapes: A toggles auto-rotate</td></tr>
+          <tr><td>A B X, d-pad</td><td>Passed to the application as primary, secondary, tertiary, dpad (bumpers also as prev, next). Shapes: A toggles auto-rotate; Crayoland: A or X grabs</td></tr>
         </table>
         <p class="note">Connected pads and their profile show in the footer. Force a profile with <code>?gamepad=standard|xbox-linux|playstation-legacy</code>.</p>
         <h3>Mouse on a tile <span class="sub">— 3D apps; moves the navigation like the keys</span></h3>
@@ -313,11 +315,11 @@
         <p class="note">Head position sets each screen's off-axis frustum. Head rotation turns the cone in the overview and swings the stereo eye pair; it does not rotate the walls' images.</p>
         <h3>Wand <span class="sub">— the hand-held tracked controller, shown as a stick in the overview</span></h3>
         <table>
-          <tr><td><kbd>Ctrl</kbd> + <kbd>W</kbd> <kbd>S</kbd> / <kbd>A</kbd> <kbd>D</kbd> / <kbd>Q</kbd> <kbd>E</kbd></td><td>Move the wand forward / back, left / right, down / up</td></tr>
+          <tr><td><kbd>Ctrl</kbd> + <kbd>W</kbd> <kbd>S</kbd> / <kbd>A</kbd> <kbd>D</kbd> / <kbd>Q</kbd> <kbd>E</kbd></td><td>Move the hand forward / back, left / right, down / up, relative to the head</td></tr>
           <tr><td><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>W</kbd> <kbd>S</kbd> / <kbd>A</kbd> <kbd>D</kbd></td><td>Pitch / yaw the wand</td></tr>
-          <tr><td><kbd>Enter</kbd> · gamepad <kbd>A</kbd></td><td>Wand button (primary): grab in Crayoland</td></tr>
+          <tr><td><kbd>Enter</kbd> · gamepad <kbd>A</kbd> or <kbd>X</kbd></td><td>Wand button: grab in Crayoland</td></tr>
         </table>
-        <p class="note">Applications read the wand from the frame like the head; a tracker bridge will set it the same way.</p>
+        <p class="note">Without a tracker the wand is a hand hanging off the head: half a meter ahead, below the eyes, turning with the head's yaw but not its pitch. The keys move that offset. A tracker bridge will replace it with the measured pose.</p>
         <h3>Map application <span class="sub">— flat apps take the mouse in each tile</span></h3>
         <table>
           <tr><td>Drag</td><td>Pan</td></tr>
@@ -335,8 +337,9 @@
         <table>
           <tr><td><kbd>H</kbd> or <kbd>?</kbd></td><td>Toggle this help</td></tr>
           <tr><td><kbd>Esc</kbd></td><td>Close this help</td></tr>
+          <tr><td><em>audio</em> button</td><td>This window plays the application's sound (or <code>?audio=1</code>)</td></tr>
         </table>
-        <p class="note">URL parameters: <code>config=NAME (a file in configs/)</code> · <code>manager=ws://host:8765</code> (controller mode) · <code>app=shapes|gltf</code>, <code>model=URL</code>, <code>size</code>, <code>spin</code>, <code>mx my mz</code> · <code>stereo=</code>, <code>anaglyph=dubois|bw</code> · <code>overview=none|walls|world</code> · initial navigation <code>yaw</code>, <code>pitch</code> (degrees), <code>x</code>, <code>y</code>, <code>z</code> (meters) · <code>help=1</code>.</p>
+        <p class="note">URL parameters: <code>config=NAME (a file in configs/)</code> · <code>manager=ws://host:8765</code> (controller mode) · <code>app=shapes|gltf</code>, <code>model=URL</code>, <code>size</code>, <code>spin</code>, <code>mx my mz</code> · <code>stereo=</code>, <code>anaglyph=dubois|bw</code> · <code>overview=none|walls|world</code> · <code>audio=1</code> · initial navigation <code>yaw</code>, <code>pitch</code> (degrees), <code>x</code>, <code>y</code>, <code>z</code> (meters) · <code>help=1</code>.</p>
       </div>
     </div>
 

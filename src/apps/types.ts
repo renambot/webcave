@@ -99,6 +99,13 @@ export interface CaveApp {
   onInput?: InputHook;
   /** Optional: how fast the standard navigation moves through this world, and whether it stays on the ground. */
   readonly navigation?: NavigationHints;
+  /**
+   * Optional: switch this window's sound on or off at runtime (the simulator's
+   * audio button). Called from a click handler, so creating or resuming an
+   * AudioContext inside it is allowed. Without it, the simulator reloads the
+   * page with ?audio=1 instead.
+   */
+  setAudio?(enabled: boolean): void;
   /** Optional: release GPU resources when the app is replaced. */
   dispose?(): void;
 }
@@ -141,6 +148,8 @@ export interface FlatApp {
   onInput?: InputHook;
   /** When true, the controller does not bind move/look/fly to navigation, leaving the axes to onInput. */
   readonly ownsNavigation?: boolean;
+  /** Optional: switch this window's sound on or off at runtime (see CaveApp.setAudio). */
+  setAudio?(enabled: boolean): void;
   dispose?(): void;
 }
 

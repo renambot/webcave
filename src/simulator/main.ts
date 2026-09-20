@@ -38,6 +38,7 @@ import { wallLayout } from "../core/wall";
 import { screenSize } from "../core/projection";
 import { ViewportRenderer } from "../render/viewport";
 import { OverviewRenderer, type OverviewMode } from "../render/overview";
+import { wandFromHead } from "../core/pose";
 
 const params = new URLSearchParams(location.search);
 const managerUrl = params.get("manager");
@@ -171,7 +172,8 @@ function createApp(cfg: ClusterConfig, link: ControlLink, hooks: AppHooks): App 
   // The application comes from the cluster config; URL parameters override it.
   // A "scene" app is rendered by one ViewportRenderer per tile; a "flat" app
   // (the map) creates one FlatView per tile inside a plain div.
-  const demo = createCaveApp(appSpecFromParams(params, cfg.app), { audio: params.get("audio") === "1" });
+  const audioParam = params.get("audio") === "1";
+  const demo = createCaveApp(appSpecFromParams(params, cfg.app), { audio: audioParam });
   const flat = isFlatApp(demo) ? demo : null;
   const sceneApp = isFlatApp(demo) ? null : demo;
   const layout3 = wallLayout(cfg);
@@ -181,7 +183,7 @@ function createApp(cfg: ClusterConfig, link: ControlLink, hooks: AppHooks): App 
     frame: 0,
     time: 0,
     head: { ...cfg.defaultHead },
-    wand: { ...cfg.defaultWand },
+    wand: wandFromHead(cfg.defaultHead, cfg.defaultWand),
     navigation: { position: [0, 0, 0], yaw: 0, pitch: 0 },
     appState: {},
     issuedAt: 0,
@@ -298,12 +300,13 @@ function createApp(cfg: ClusterConfig, link: ControlLink, hooks: AppHooks): App 
   const ipdInput = $<HTMLInputElement>("#ipd");
   const btnSwap = $<HTMLButtonElement>("#btn-swap");
   const btnAutoHead = $<HTMLButtonElement>("#btn-autohead");
+  const btnAudio = $<HTMLButtonElement>("#btn-audio");
   const syncSel = $<HTMLSelectElement>("#sync");
   const configSel = $<HTMLSelectElement>("#config");
   const overviewModeSel = $<HTMLSelectElement>("#overview-mode");
 
   // Toggle buttons (panoweb style): .active plus aria-pressed.
-  const toggles = { swap: false, autoHead: false };
+  const toggles = { swap: false, autoHead: false, audio: audioParam };
   const setToggle = (btn: HTMLButtonElement, on: boolean) => {
     btn.classList.toggle("active", on);
     btn.setAttribute("aria-pressed", String(on));
@@ -387,6 +390,21 @@ function createApp(cfg: ClusterConfig, link: ControlLink, hooks: AppHooks): App 
     if (!on) sendHead(); // take over from the sway at the simulator's own pose, so keys do not jump
   };
   btnAutoHead.addEventListener("click", () => setAutoHead(!toggles.autoHead));
+  // Audio: apps with setAudio switch at runtime (this click is the gesture the
+  // browser wants); others reload with the parameter, since audio is decided at creation.
+  setToggle(btnAudio, toggles.audio);
+  btnAudio.addEventListener("click", () => {
+    toggles.audio = !toggles.audio;
+    setToggle(btnAudio, toggles.audio);
+    if (demo.setAudio) {
+      demo.setAudio(toggles.audio);
+    } else {
+      const p = new URLSearchParams(location.search);
+      if (toggles.audio) p.set("audio", "1");
+      else p.delete("audio");
+      location.search = p.toString();
+    }
+  });
   if (params.get("autohead") === "1") setAutoHead(true); // simulated head sway is off by default
   $("#btn-reset").addEventListener("click", () => resetAll());
 
@@ -469,14 +487,16 @@ function createApp(cfg: ClusterConfig, link: ControlLink, hooks: AppHooks): App 
     sendWand();
   }
 
-  // Simulated wand: Ctrl + W/S A/D Q/E move it (1 m/s); Ctrl + Shift + W/S A/D
-  // pitch and yaw it (60°/s). Sent as an absolute pose like a tracker would.
+  // Simulated wand: a hand hanging off the head. The Manager derives the pose
+  // from the head and this offset (head yaw frame) every frame; Ctrl + W/S A/D
+  // Q/E move the offset (1 m/s), Ctrl + Shift + W/S A/D pitch and yaw it
+  // (60°/s). Sent as a relative setWand; a tracker sends absolute poses instead.
   // Its buttons are the ordinary input actions (Enter / gamepad A = primary).
   const wand = { position: [...cfg.defaultWand.position] as [number, number, number], yaw: 0, pitch: 0 };
   function sendWand() {
     headEuler.set(wand.pitch, wand.yaw, 0);
     headQuat.setFromEuler(headEuler);
-    link.send({ type: "setWand", wand: { position: [...wand.position], orientation: [headQuat.x, headQuat.y, headQuat.z, headQuat.w] } });
+    link.send({ type: "setWand", wand: { position: [...wand.position], orientation: [headQuat.x, headQuat.y, headQuat.z, headQuat.w] }, relative: true });
   }
   function stepWand(dt: number): boolean {
     if (!keys.has("control")) return false;

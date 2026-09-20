@@ -106,8 +106,8 @@ export const clusterFileSchema = z.object({
     .describe("Head pose when nothing is tracking"),
   defaultWand: z
     .object({ position: vec3, orientation: quat.default([0, 0, 0, 1]) })
-    .default({ position: [0.25, 1.1, -0.3], orientation: [0, 0, 0, 1] })
-    .describe("Wand pose before a tracker or the simulator sets one; points along -z"),
+    .default({ position: [0.15, -0.45, -0.5], orientation: [0, 0, 0, 1] })
+    .describe("Wand offset from the head when no tracker reports it (head yaw frame): a hand slightly right, below and ahead of the eyes, pointing forward"),
   stereo: stereoSchema.default({}).describe("Cluster-wide stereo defaults"),
   app: appSchema.default({ name: "shapes" }),
   screens: z.array(screenSchema).min(1),

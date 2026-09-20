@@ -37,7 +37,7 @@ A node is a computer running one browser window per screen it lists. `"input": t
 
 ## Defaults and validation
 
-Everything except `name`, `screens` and `nodes` has a default: `fps` 60, `sync` barrier, `defaultHead` at (0, 1.6, 0), `defaultWand` at (0.25, 1.1, -0.3) pointing at the front wall, mono stereo, the shapes app. A screen may override stereo settings, for instance a passive wall whose odd column needs `"firstEye": "right"`. The `app` object selects the application and its options (see [applications.md](applications.md)).
+Everything except `name`, `screens` and `nodes` has a default: `fps` 60, `sync` barrier, `defaultHead` at (0, 1.6, 0), `defaultWand` as a hand offset from the head of (0.15, −0.45, −0.5) in the head's yaw frame, pointing forward, mono stereo, the shapes app. A screen may override stereo settings, for instance a passive wall whose odd column needs `"firstEye": "right"`. The `app` object selects the application and its options (see [applications.md](applications.md)).
 
 Validation errors name the field: `npm run schema` checks all files, and the Manager refuses to start on an invalid one and prints why.
 

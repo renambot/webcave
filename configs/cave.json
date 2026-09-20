@@ -8,12 +8,12 @@
   "app": { "name": "shapes" },
   "screens": [
     { "id": "front", "center": [0, 1.5, -1.5], "width": 5.3, "height": 3, "yaw": 0,   "widthPx": 1920, "heightPx": 1080 },
-    { "id": "left",  "center": [-2.666, 1.5, 0], "width": 5.3, "height": 3, "yaw": 90,  "widthPx": 1920, "heightPx": 1080 },
-    { "id": "right", "center": [2.666, 1.5, 0],  "width": 5.3, "height": 3, "yaw": -90, "widthPx": 1920, "heightPx": 1080 },
+    { "id": "left",  "center": [-2.65, 1.5, 1.15], "width": 5.3, "height": 3, "yaw": 90,  "widthPx": 1920, "heightPx": 1080 },
+    { "id": "right", "center": [2.65, 1.5, 1.15], "width": 5.3, "height": 3, "yaw": -90, "widthPx": 1920, "heightPx": 1080 },
     { "id": "floor", "center": [0, 0, 0],      "width": 5.3, "height": 3, "pitch": -90, "widthPx": 1920, "heightPx": 1080 }
   ],
   "nodes": [
-    { "id": "front", "screens": ["front"] },
+    { "id": "front", "screens": ["front"] , "audio":true},
     { "id": "left",  "screens": ["left"] },
     { "id": "right", "screens": ["right"] },
     { "id": "floor", "screens": ["floor"] }

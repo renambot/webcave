@@ -34,7 +34,7 @@ index.html, simulator.html, node.html, launcher.html
 
 ## Frame protocol
 
-The Manager owns the frame counter; simulation time is `frame / fps`, so every node computes the same poses without a shared wall clock. Per frame it sends `frame {state}` with the head and wand poses, navigation and the shared app state, waits for `ack` from every node in barrier mode (with a timeout, after which late nodes are reported), then sends `present {frame}` so all screens flip together. Loose mode skips the wait. Clients send `hello`, `ack`, `setHead`, `setWand`, `setNavigation` / `navigate`, `setAppState {patch}` and `input {actions}`. Messages are defined in `src/core/protocol.ts`; the logic is in `src/core/manager.ts`, which the WebSocket server and the in-memory simulator both wrap.
+The Manager owns the frame counter; simulation time is `frame / fps`, so every node computes the same poses without a shared wall clock. Per frame it sends `frame {state}` with the head and wand poses, navigation and the shared app state, waits for `ack` from every node in barrier mode (with a timeout, after which late nodes are reported), then sends `present {frame}` so all screens flip together. Loose mode skips the wait. Clients send `hello`, `ack`, `setHead`, `setWand` (absolute from a tracker, or a head-relative offset), `setNavigation` / `navigate`, `setAppState {patch}` and `input {actions}`. Messages are defined in `src/core/protocol.ts`; the logic is in `src/core/manager.ts`, which the WebSocket server and the in-memory simulator both wrap.
 
 ## Testing pages headlessly
 

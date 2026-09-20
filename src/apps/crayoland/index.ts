@@ -41,7 +41,7 @@ import type { Vec3 } from "../../core/config";
 import { caveToWorld, caveToWorldQuat } from "../../core/navigation";
 import { hash } from "../../core/random";
 import { inputOf, type ActionState } from "../../input/actions";
-import { parseSounds, parseWorld, pictureAxes, type BeesDef, type PictureDef } from "./world";
+import { parseSounds, parseWorld, pictureAxes, type BeesDef, type PictureDef, type SampleDef } from "./world";
 import { BeeSim, ButterflySim, SIM_HZ, angleDelta } from "./creatures";
 import { Soundscape } from "./sound";
 
@@ -154,6 +154,8 @@ export function createCrayolandApp(spec: AppSpec, ctx: AppContext): CaveApp {
   let handClosed: THREE.Object3D | null = null;
 
   let sound: Soundscape | null = null;
+  /** Parsed Sounds file and the hive's sample names, kept so audio can be switched on later. */
+  let soundDefs: { samples: SampleDef[]; bees: { loop?: string; hit?: string } } | null = null;
   const mat4 = new THREE.Matrix4();
   const mat4b = new THREE.Matrix4();
   const v3 = new THREE.Vector3();
@@ -168,8 +170,20 @@ export function createCrayolandApp(spec: AppSpec, ctx: AppContext): CaveApp {
     status: "loading world",
     update,
     onInput,
-    // 30 ft/s walking (the original's joystick did 40), 90°/s turning; stay on the ground.
-    navigation: { flySpeed: 30 * FT, turnSpeed: Math.PI / 2, planar: true },
+    // 30 ft/s walking (the original's joystick did 40), 90°/s turning. Not planar:
+    // the triggers fly up and down and the bumpers look up and down, like the
+    // original's third-button flight.
+    navigation: { flySpeed: 30 * FT, turnSpeed: Math.PI / 2 },
+    setAudio(enabled) {
+      if (enabled && !sound && soundDefs) {
+        sound = new Soundscape(base, soundDefs.samples, soundDefs.bees);
+        void sound.enable(); // we are inside a click: the browser lets the context start now
+      } else if (!enabled && sound) {
+        sound.dispose();
+        sound = null;
+        app.status = app.status.replace(/ · audio:.*$/, "");
+      }
+    },
     dispose() {
       sound?.dispose();
       for (const m of materials.values()) {
@@ -300,16 +314,16 @@ export function createCrayolandApp(spec: AppSpec, ctx: AppContext): CaveApp {
     if (handOpen) hand.add(handOpen);
     if (handClosed) hand.add(handClosed), (handClosed.visible = false);
 
-    // Sound, only where this window is the speaker.
-    if (ctx.audio) {
-      const st = await fetch(`${base}${soundsFile}`).then((r) => (r.ok ? r.text() : ""));
-      const bees = world.bees[0];
-      sound = new Soundscape(base, parseSounds(st), { loop: bees?.sound, hit: bees?.hitsound });
-    }
+    // Sound: the description is always read (it is tiny) so audio can be switched
+    // on later; the soundscape itself exists only where this window is the speaker.
+    const st = await fetch(`${base}${soundsFile}`).then((r) => (r.ok ? r.text() : ""));
+    const bees0 = world.bees[0];
+    soundDefs = { samples: parseSounds(st), bees: { loop: bees0?.sound, hit: bees0?.hitsound } };
+    if (ctx.audio) sound = new Soundscape(base, soundDefs.samples, soundDefs.bees);
 
     const nPict = world.pictures.filter((p) => p.kind === "pict").length;
     const bees = world.bees.reduce((a, b) => a + b.num, 0);
-    app.status = `${nPict} pictures · ${objects.length} objects · ${bees} bees · ${flies.length} butterflies · Enter / A grabs`;
+    app.status = `${nPict} pictures · ${objects.length} objects · ${bees} bees · ${flies.length} butterflies · Enter, A or X grabs`;
   }
   app.ready = build().catch((e: Error) => {
     app.status = `error: ${e.message}`;
@@ -337,8 +351,9 @@ export function createCrayolandApp(spec: AppSpec, ctx: AppContext): CaveApp {
     const wandM = mat4.compose(v3.set(...wand.p), wand.q, v3b.set(1, 1, 1));
     hand.position.set(...wand.p);
     hand.quaternion.copy(wand.q);
-    if (handOpen) handOpen.visible = !buttons.primary;
-    if (handClosed) handClosed.visible = buttons.primary;
+    const grabbing = buttons.primary || buttons.tertiary; // A or X on a pad, Enter on the keyboard
+    if (handOpen) handOpen.visible = !grabbing;
+    if (handClosed) handClosed.visible = grabbing;
 
     // Objects: held by the wand, moved earlier (at rest or flying), or where the World put them.
     const dirty = new Set<THREE.InstancedMesh>();
@@ -464,7 +479,8 @@ export function createCrayolandApp(spec: AppSpec, ctx: AppContext): CaveApp {
 
     // ---- Grab and throw (PictureObject::Update) ----
     const grab = as.crayGrab as Grab | null | undefined;
-    const primary = actions.buttons.primary;
+    // Grab button: primary (A, Enter) or tertiary (X); either one holds.
+    const primary = actions.buttons.primary || actions.buttons.tertiary;
     if (primary && !prevPrimary && !grab) {
       // Nearest object whose picking sphere (center of the quad) contains the wand.
       let best = -1, bestD = Infinity;

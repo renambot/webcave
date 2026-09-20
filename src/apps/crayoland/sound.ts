@@ -56,8 +56,11 @@ export class Soundscape {
   private bees: { gain: GainNode; source: AudioBufferSourceNode } | null = null;
   private beeAmpl = 0;
   private hitBuffer: AudioBuffer | null = null;
-  private started = false;
-  status = "audio: click or press a key to start";
+  private loaded = false;
+  private loading = false;
+  private gestureEvents = ["pointerdown", "keydown", "touchend"] as const;
+  private onGesture = () => void this.start();
+  status = "audio: click the page to start";
 
   /**
    * @param base       URL of the folder with audio/*.mp3 and the mask images
@@ -66,9 +69,10 @@ export class Soundscape {
    */
   constructor(private base: string, defs: SampleDef[], private beeSound: { loop?: string; hit?: string }) {
     this.samples = defs.map((def) => ({ def, buffer: null, gain: null, source: null, endTime: 0, latched: false, ampl: 0, last: [1e9, 0, 1e9] }));
-    const start = () => void this.start();
-    window.addEventListener("pointerdown", start, { once: true });
-    window.addEventListener("keydown", start, { once: true });
+    // Keep listening until the context really runs: a browser may refuse the
+    // first gesture (a modifier key, a synthetic event, a popup without
+    // activation) and only honour a later one.
+    for (const ev of this.gestureEvents) window.addEventListener(ev, this.onGesture);
   }
 
   /** The original sound files were AIFF; they ship here as MP3 under audio/. */
@@ -105,14 +109,41 @@ export class Soundscape {
     s.mask = { data: mask, w: c.width, h: c.height };
   }
 
+  /** Start now, from a caller that has a user gesture (a button handler); otherwise the next gesture starts it. */
+  enable(): Promise<void> {
+    return this.start();
+  }
+
+  /** Called on every gesture until the context is running; creates and loads once. */
   private async start() {
-    if (this.started) return;
-    this.started = true;
-    this.ctx = new AudioContext();
-    await this.ctx.resume().catch(() => {});
-    this.master = this.ctx.createGain();
-    this.master.connect(this.ctx.destination);
-    this.status = "audio: loading";
+    if (!this.ctx) {
+      this.ctx = new AudioContext();
+      this.master = this.ctx.createGain();
+      this.master.connect(this.ctx.destination);
+      this.ctx.addEventListener("statechange", () => {
+        if (this.ctx?.state === "running") for (const ev of this.gestureEvents) window.removeEventListener(ev, this.onGesture);
+        this.updateStatus();
+      });
+    }
+    // resume() only settles once the browser accepts a gesture, so do not await it:
+    // the state change above reports success, and loading proceeds meanwhile.
+    if (this.ctx.state !== "running") void this.ctx.resume().catch(() => {});
+    this.updateStatus();
+    if (this.loaded) return;
+    this.loaded = true;
+    this.loading = true;
+    await this.loadAll();
+    this.loading = false;
+    this.updateStatus();
+  }
+
+  private updateStatus() {
+    const n = this.samples.filter((s) => s.buffer).length;
+    const load = this.loading ? ", loading" : this.loaded && n < this.samples.length ? `, ${this.samples.length - n} missing` : "";
+    this.status = this.ctx?.state === "running" ? `audio: on${load}` : `audio: click the page to start${load}`;
+  }
+
+  private async loadAll() {
     await Promise.all([
       ...this.samples.map(async (s) => {
         s.buffer = await this.load(s.def.file);
@@ -140,7 +171,6 @@ export class Soundscape {
         if (this.beeSound.hit) this.hitBuffer = await this.load(this.beeSound.hit);
       })(),
     ]);
-    this.status = `audio: ${this.samples.filter((s) => s.buffer).length}/${this.samples.length} samples`;
   }
 
   private play(s: Sample, loop = false): AudioBufferSourceNode | null {
@@ -244,6 +274,7 @@ export class Soundscape {
   }
 
   dispose() {
+    for (const ev of this.gestureEvents) window.removeEventListener(ev, this.onGesture);
     void this.ctx?.close();
     this.ctx = null;
   }
