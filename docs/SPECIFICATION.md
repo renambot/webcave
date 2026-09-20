@@ -287,7 +287,8 @@ What is implemented:
 | Sound output node (`audio: true`, `?audio=1`) passed to apps as `AppContext.audio`; app navigation hints (speed, turn, planar) | `src/core/config.ts`, `src/apps/types.ts`, `src/input/controller.ts` | done; single node, no spatialization |
 | Deterministic randomness helpers (stateless hash, seeded PRNG, smooth noise) | `src/core/random.ts` | done |
 | "crayoland" app: Dave Pape's Crayoland ported from C++; original World/Sounds files, merged and instanced picture quads, fixed-step seeded bee and butterfly simulations, controller-published grab/throw, anger and landing, Web Audio soundscape | `src/apps/crayoland/`, `public/crayoland/` | done; navigation follows heading, not the wand |
-| Tracking protocol parsers, WebGPU renderer, warp/blend, more 2D adapters (deck.gl, Leaflet, DOM), adapters for existing three.js/WebXR apps | | not started |
+| Tracking bridge: DTrack (6d, 6df2, 6df), NatNet (frames, version and asset names over the command port), VRPN (TCP-only client: cookie, descriptions, Tracker/Button/Analog) in TypeScript; calibration (units, signed axis permutation, yaw, offset, per-body local offset); wand buttons and joystick as input actions; fake trackers for testing | `src/tracker/`, `configs/trackers/`, `scripts/fake-tracker.ts` | done; verified against the fakes, not yet against hardware |
+| Vicon DataStream, OSC/VMC, guided calibration, WebGPU renderer, warp/blend, more 2D adapters (deck.gl, Leaflet, DOM), adapters for existing three.js/WebXR apps | | not started |
 
 ## Suggested milestones
 
@@ -295,7 +296,7 @@ What is implemented:
 2. **Simulator**: Manager plus N iframes or windows on one machine, three.js cube with off-axis projection, barrier sync, dashboard showing skew.
 3. **Physical wall**: Window Management API placement on a 2 to 4 display host; measure skew with a camera.
 4. **2D adapters**: MapLibre and a generic DOM tile mode.
-5. **Tracking**: native NatNet, DTrack and VRPN parsers in the Manager, tracking-to-CAVE calibration tool, phone-based head tracking; stereo output. Then Vicon UDP/DataStream, Qualisys, OSC/VMC.
+5. **Tracking**: native NatNet, DTrack and VRPN parsers (done, in a bridge process), tracking-to-CAVE calibration tool, phone-based head tracking. Then Vicon UDP/DataStream, Qualisys, OSC/VMC.
 6. **Cluster**: multiple hosts over WebTransport, node rejoin, clock-scheduled tier.
 7. **Porting kit**: adapter API docs, recipes, AI porting skill, three example ports.
 8. **Advanced**: warp/blend from MPCDI, WebXR bridge, streamed sources, multi-app compositing.

@@ -1,0 +1,361 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Configuration name"
+    },
+    "description": {
+      "type": "string"
+    },
+    "manager": {
+      "default": "ws://localhost:8765",
+      "description": "WebCAVE Manager to feed",
+      "type": "string"
+    },
+    "rate": {
+      "default": 120,
+      "description": "Maximum poses sent per second per body",
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "source": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "dtrack"
+            },
+            "port": {
+              "default": 5000,
+              "description": "UDP port DTrack sends to (DTrack: Output settings)",
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "natnet"
+            },
+            "server": {
+              "default": "127.0.0.1",
+              "description": "Motive host, for the command port (version and asset names)",
+              "type": "string"
+            },
+            "multicast": {
+              "default": "239.255.42.99",
+              "description": "Multicast group; \"\" for unicast to this host",
+              "type": "string"
+            },
+            "dataPort": {
+              "default": 1511,
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            "commandPort": {
+              "default": 1510,
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "vrpn"
+            },
+            "host": {
+              "default": "localhost",
+              "type": "string"
+            },
+            "port": {
+              "default": 3883,
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "type"
+          ]
+        }
+      ]
+    },
+    "calibration": {
+      "default": {},
+      "type": "object",
+      "properties": {
+        "units": {
+          "default": "m",
+          "description": "Length unit of the tracker's positions",
+          "type": "string",
+          "enum": [
+            "m",
+            "cm",
+            "mm",
+            "ft",
+            "in"
+          ]
+        },
+        "axes": {
+          "default": [
+            "x",
+            "y",
+            "z"
+          ],
+          "description": "CAVE x, y, z as signed tracker axes, e.g. [\"x\", \"z\", \"-y\"] for a Z-up tracker",
+          "type": "array",
+          "items": [
+            {
+              "type": "string",
+              "enum": [
+                "x",
+                "y",
+                "z",
+                "-x",
+                "-y",
+                "-z"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "x",
+                "y",
+                "z",
+                "-x",
+                "-y",
+                "-z"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "x",
+                "y",
+                "z",
+                "-x",
+                "-y",
+                "-z"
+              ]
+            }
+          ],
+          "additionalItems": false,
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "yaw": {
+          "default": 0,
+          "description": "Rotation about the CAVE's up axis applied after the axis mapping, degrees",
+          "type": "number"
+        },
+        "offset": {
+          "default": [
+            0,
+            0,
+            0
+          ],
+          "description": "Translation added last, meters: the tracker origin in the CAVE frame",
+          "type": "array",
+          "items": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "additionalItems": false,
+          "minItems": 3,
+          "maxItems": 3
+        }
+      }
+    },
+    "head": {
+      "description": "Body tracked on the glasses",
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "Body id: DTrack body id, NatNet streaming id or asset name, VRPN \"Tracker0/0\" (device/sensor)",
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "localOffset": {
+          "default": [
+            0,
+            0,
+            0
+          ],
+          "description": "Offset from the sensor to the tracked point, in the sensor's own frame, meters (glasses sensor -> eye center)",
+          "type": "array",
+          "items": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "additionalItems": false,
+          "minItems": 3,
+          "maxItems": 3
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "wand": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "Body id: DTrack body id, NatNet streaming id or asset name, VRPN \"Tracker0/0\" (device/sensor)",
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "localOffset": {
+          "default": [
+            0,
+            0,
+            0
+          ],
+          "description": "Offset from the sensor to the tracked point, in the sensor's own frame, meters (glasses sensor -> eye center)",
+          "type": "array",
+          "items": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "additionalItems": false,
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "buttons": {
+          "default": {},
+          "description": "Button index -> action, e.g. {\"0\": \"primary\", \"1\": \"secondary\"}",
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "enum": [
+              "primary",
+              "secondary",
+              "tertiary",
+              "quaternary",
+              "prev",
+              "next",
+              "reset",
+              "menu",
+              "spin"
+            ]
+          }
+        },
+        "axes": {
+          "default": {},
+          "description": "Analog channel indexes for the move (x, y) and look (x, y) sticks and the fly axis",
+          "type": "object",
+          "properties": {
+            "move": {
+              "type": "array",
+              "items": [
+                {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                }
+              ],
+              "additionalItems": false,
+              "minItems": 2,
+              "maxItems": 2
+            },
+            "look": {
+              "type": "array",
+              "items": [
+                {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                }
+              ],
+              "additionalItems": false,
+              "minItems": 2,
+              "maxItems": 2
+            },
+            "fly": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            }
+          }
+        },
+        "buttonDevice": {
+          "description": "VRPN: Button device name (default: the wand's tracker device)",
+          "type": "string"
+        },
+        "analogDevice": {
+          "description": "VRPN: Analog device name (default: the wand's tracker device)",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ]
+    }
+  },
+  "required": [
+    "name",
+    "source"
+  ],
+  "title": "WebCAVE tracker bridge configuration",
+  "description": "Tracking source (DTrack, NatNet, VRPN), calibration into the CAVE frame, and which bodies are the head and the wand."
+}

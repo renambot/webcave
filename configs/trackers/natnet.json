@@ -1,0 +1,10 @@
+{
+  "$schema": "./schema.json",
+  "name": "natnet",
+  "description": "OptiTrack Motive streaming: rigid bodies named Head and Wand (or their streaming ids), multicast, meters, Y up.",
+  "manager": "ws://localhost:8765",
+  "source": { "type": "natnet", "server": "192.168.1.10", "multicast": "239.255.42.99", "dataPort": 1511, "commandPort": 1510 },
+  "calibration": { "units": "m", "axes": ["x", "y", "z"], "yaw": 0, "offset": [0, 0, 0] },
+  "head": { "id": "Head", "localOffset": [0, -0.02, -0.03] },
+  "wand": { "id": "Wand" }
+}

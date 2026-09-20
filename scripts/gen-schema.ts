@@ -8,6 +8,7 @@ import { writeFileSync, readdirSync, readFileSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { clusterJsonSchema, parseClusterConfig } from "../src/core/configFile";
+import { parseTrackerConfig, trackerJsonSchema } from "../src/tracker/config";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const out = resolve(root, "configs/schema.json");
@@ -26,6 +27,23 @@ for (const f of readdirSync(resolve(root, "configs")).filter((f) => f.endsWith("
   } catch (e) {
     failed++;
     console.error(`FAIL ${f}\n${(e as Error).message}`);
+  }
+}
+
+// Tracker bridge configs: their own schema and validation.
+const tOut = resolve(root, "configs/trackers/schema.json");
+const tSchema = trackerJsonSchema() as Record<string, unknown>;
+tSchema.title = "WebCAVE tracker bridge configuration";
+tSchema.description = "Tracking source (DTrack, NatNet, VRPN), calibration into the CAVE frame, and which bodies are the head and the wand.";
+writeFileSync(tOut, JSON.stringify(tSchema, null, 2) + "\n");
+console.log(`wrote ${tOut}`);
+for (const f of readdirSync(resolve(root, "configs/trackers")).filter((f) => f.endsWith(".json") && f !== "schema.json")) {
+  try {
+    const c = parseTrackerConfig(JSON.parse(readFileSync(resolve(root, "configs/trackers", f), "utf8")), f);
+    console.log(`ok   trackers/${f}: ${c.name}, ${c.source.type}`);
+  } catch (e) {
+    failed++;
+    console.error(`FAIL trackers/${f}\n${(e as Error).message}`);
   }
 }
 if (failed) process.exit(1);

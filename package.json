@@ -12,6 +12,7 @@
     "manager": "tsx src/manager/server.ts",
     "nodes": "scripts/launch-nodes.sh",
     "typecheck": "tsc --noEmit",
+    "tracker": "tsx src/tracker/bridge.ts",
     "schema": "tsx scripts/gen-schema.ts"
   },
   "dependencies": {

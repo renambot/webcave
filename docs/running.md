@@ -7,7 +7,7 @@ npm install
 npm run dev        # Vite dev server on http://localhost:5173
 ```
 
-Other scripts: `npm run build`, `npm run preview`, `npm run typecheck`, `npm run schema` (validate and regenerate the config schema), `npm run nodes` (kiosk launcher, below).
+Other scripts: `npm run build`, `npm run preview`, `npm run typecheck`, `npm run schema` (validate and regenerate the config schemas), `npm run nodes` (kiosk launcher, below), `npm run tracker` (tracking bridge, see [tracking.md](tracking.md)).
 
 ## Simulator
 
@@ -34,7 +34,7 @@ No server needed: open <http://localhost:5173/simulator.html?config=cave-3m> or 
 
 The head moves the viewer inside the physical CAVE and changes each screen's off-axis frustum. Navigation moves the whole CAVE through the virtual world, which is how you look up, down or turn. URL parameters set the initial navigation: `?yaw=30&pitch=20&x=0&y=0&z=-2` (degrees and meters).
 
-The wand is the hand-held tracked controller. Its pose is part of every frame like the head's, shown as a stick in the overview and in the readout; applications use it to point and grab (Crayoland draws a hand there). Its buttons are the ordinary input actions: `Enter` or gamepad A is the primary button. Without a tracker the wand behaves like a hand: half a meter ahead of the head and below the eyes, following the head's position and yaw but not its pitch, so looking down does not move it. The simulator's `Shift` keys and the gamepad's d-pad (on the simulator or an input node) adjust that offset. A tracker bridge will replace it with the measured pose.
+The wand is the hand-held tracked controller. Its pose is part of every frame like the head's, shown as a stick in the overview and in the readout; applications use it to point and grab (Crayoland draws a hand there). Its buttons are the ordinary input actions: `Enter` or gamepad A is the primary button. Without a tracker the wand behaves like a hand: half a meter ahead of the head and below the eyes, following the head's position and yaw but not its pitch, so looking down does not move it. The simulator's `Shift` keys and the gamepad's d-pad (on the simulator or an input node) adjust that offset. With a tracking system, the [tracking bridge](tracking.md) replaces both head and wand with the measured poses.
 
 The head and wand keys are matched by physical key, so they work whatever the modifier makes of the letter, and they avoid `Ctrl`, which Chrome reserves on Windows and Linux (`Ctrl+W` closes the tab). `Alt` plus a letter would open Chrome's menu or focus the address bar there; the simulator swallows those events while it has focus.
 

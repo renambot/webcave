@@ -15,11 +15,12 @@
 ## Layout
 
 ```
-configs/        cluster configuration files (JSON) and their generated schema
+configs/        cluster configuration files (JSON) and their generated schema; trackers/ holds the tracking bridge configs and schema
 docs/           this documentation and the specification
 src/core/       config types, config file schema and loader, projection math, wall pixel layout, protocol, ClusterManager (transport-agnostic), Window Management helpers, navigation (CAVE <-> world) and deterministic random helpers
 src/input/      input abstraction: action vocabulary, keyboard and gamepad devices with profiles, InputController
 src/manager/    WebSocket server wrapping ClusterManager
+src/tracker/    tracking bridge: DTrack, NatNet and VRPN sources, calibration, config schema, CLI
 src/node/       render node page
 src/launcher/   node launcher: displays of this computer, one window per screen
 src/simulator/  in-page cluster with in-memory transport, or controller of a live Manager
@@ -28,7 +29,7 @@ src/render/     per-screen viewport renderer, stereo packer, off-axis helper, 3D
 public/models/  sample glTF assets
 public/volumes/ OpenVDB files for the vdb and points apps (not in the repository)
 public/crayoland/ Crayoland's original World, Sounds, textures, ground masks, hand models, sounds as MP3
-scripts/        launch-nodes.sh (one kiosk Chrome per display), gen-schema.ts, screenshot.mjs
+scripts/        launch-nodes.sh (one kiosk Chrome per display), gen-schema.ts, screenshot.mjs, fake-tracker.ts (pretend DTrack / NatNet / VRPN)
 index.html, simulator.html, node.html, launcher.html
 ```
 
@@ -55,4 +56,4 @@ Chrome's own `--screenshot` flag runs only a few animation frames and is not usa
 npm run schema
 ```
 
-Rewrites `configs/schema.json` from the zod schema in `src/core/configFile.ts` and validates every file in `configs/`.
+Rewrites `configs/schema.json` from the zod schema in `src/core/configFile.ts` and `configs/trackers/schema.json` from `src/tracker/config.ts`, and validates every file in both folders.

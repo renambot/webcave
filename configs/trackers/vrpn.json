@@ -1,0 +1,16 @@
+{
+  "$schema": "./schema.json",
+  "name": "vrpn",
+  "description": "VRPN server: Tracker0 sensor 0 is the head, sensor 1 the wand; Wand0 serves its buttons and joystick.",
+  "manager": "ws://localhost:8765",
+  "source": { "type": "vrpn", "host": "localhost", "port": 3883 },
+  "calibration": { "units": "m", "axes": ["x", "y", "z"], "yaw": 0, "offset": [0, 0, 0] },
+  "head": { "id": "Tracker0/0" },
+  "wand": {
+    "id": "Tracker0/1",
+    "buttonDevice": "Wand0",
+    "analogDevice": "Wand0",
+    "buttons": { "0": "primary", "1": "secondary", "2": "tertiary", "3": "quaternary" },
+    "axes": { "move": [0, 1] }
+  }
+}

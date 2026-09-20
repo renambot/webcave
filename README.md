@@ -13,11 +13,11 @@ A **Manager** owns the clock, the frame counter, the tracked head pose and the n
 - Frame barrier synchronization between Manager and Nodes, with a loose mode fallback
 - Stereo output packing: mono, side-by-side, top-bottom, row, column and checkerboard interleaved, red-cyan anaglyph (Dubois and black-and-white), frame-sequential (experimental)
 - Applications behind a minimal contract, one folder each, auto-discovered: animated shapes, glTF models, OpenVDB volumes and point clouds decoded in the browser, MapLibre maps spread across a wall with a shared interactive camera, and a port of Crayoland, the original CAVE demo, with its bees, butterflies, grabbable flowers and soundscape
-- Tracked head and wand in every frame; shared application state replicated by the Manager; input from keyboards, mice and gamepads through a device-independent action layer; one node designated as the sound output
+- Tracked head and wand in every frame, fed by a tracking bridge that speaks ART DTrack, OptiTrack NatNet and VRPN with a calibration into the CAVE frame; shared application state replicated by the Manager; input from keyboards, mice, gamepads and the wand's buttons through a device-independent action layer; one node designated as the sound output
 - Multi-screen nodes placed with the Window Management API or kiosk Chrome
 - Simulator with live stereo controls and a 3D overview of screens, head and frusta
 
-Not yet: tracker bridges feeding the head and wand (OptiTrack, Vicon, ART, VRPN), WebGPU renderer, warp and blend, adapters for existing three.js or WebXR apps.
+Not yet: Vicon DataStream, OSC and VMC trackers, a guided tracker calibration, WebGPU renderer, warp and blend, adapters for existing three.js or WebXR apps.
 
 ## Quick start
 
@@ -34,6 +34,7 @@ For a real cluster, start the Manager and open one node page per display:
 
 ```sh
 npm run manager -- --config cave-3m
+npm run tracker -- --config dtrack      # optional: head and wand from a tracking system
 ```
 
 ```
@@ -45,6 +46,7 @@ http://<host>:5173/node.html?node=front&manager=ws://<manager-host>:8765
 - [Running](docs/running.md): simulator, keys, cluster mode, kiosk launch, multi-screen nodes, stereo modes
 - [Configuration files](docs/configuration.md): describing an installation in JSON
 - [Input devices](docs/input.md): keyboard, mouse, gamepads, input on nodes
+- [Tracking](docs/tracking.md): the tracking bridge for DTrack, NatNet and VRPN, calibration, wand buttons
 - [Applications](docs/applications.md): the bundled apps, their options, and how to write one
 - [Development notes](docs/development.md): technology, repository layout, frame protocol, testing tools
 - [Specification](docs/SPECIFICATION.md): design document, research notes and roadmap
