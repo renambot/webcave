@@ -3,6 +3,8 @@ import { resolve } from "node:path";
 
 export default defineConfig({
   server: { port: 5173, host: true },
+  // wgsl-preprocessor ships no "main" entry; point the bare import at its file.
+  resolve: { alias: { "wgsl-preprocessor": resolve(__dirname, "node_modules/wgsl-preprocessor/wgsl-preprocessor.js") } },
   // MapLibre spawns its tile worker with new URL("maplibre-gl-worker.mjs", import.meta.url).
   // Vite's dependency pre-bundling rewrites the module and breaks that URL, so the
   // worker never starts and tiles never load. Serve the package as-is instead.

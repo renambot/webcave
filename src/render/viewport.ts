@@ -25,7 +25,7 @@ import * as THREE from "three";
 import type { ClusterConfig, ScreenConfig, StereoParams, Vec3 } from "../core/config";
 import { screenSize } from "../core/projection";
 import type { FrameState } from "../core/protocol";
-import type { RawApp, RawRenderContext } from "../apps/types";
+import type { RawApp, RawRenderContext, WebGpuApp, WebGpuRenderContext } from "../apps/types";
 import { applyOffAxis, eyePositions } from "./offaxis";
 import { StereoPacker, canvasSizeFor, isStereo } from "./stereo";
 
@@ -169,6 +169,73 @@ export class ViewportRenderer {
     this.renderer.setRenderTarget(null);
   }
   private worldEye = new THREE.Vector3();
+
+  /** Offscreen canvases a WebGPU app renders each eye into, sized like the eye targets. */
+  private gpuCanvases: Partial<Record<"left" | "right", OffscreenCanvas>> = {};
+
+  /**
+   * Render a WebGPU app's eye images. WebGPU cannot draw into WebGL's eye
+   * targets, so each eye gets an OffscreenCanvas of the target's size; the
+   * app renders and submits, the canvas's image is taken with
+   * transferToImageBitmap() (which waits for the GPU work) and copied into the
+   * eye target's texture with texSubImage2D. Everything after that, packing
+   * and presenting, is the ordinary WebGL path.
+   */
+  renderGpu(app: WebGpuApp, state: FrameState) {
+    this.lastFrame = state;
+    this.applyNavigation(state.navigation);
+    const eyes = eyePositions(state.head, this.stereo.eyeSeparation);
+    const gl = this.renderer.getContext();
+    const draw = (eye: Vec3, which: WebGpuRenderContext["eye"], slot: "left" | "right", target: THREE.WebGLRenderTarget) => {
+      this.setupCamera(eye);
+      this.camera.matrixWorldInverse.copy(this.camera.matrixWorld).invert();
+      this.camera.getWorldPosition(this.worldEye);
+      let canvas = this.gpuCanvases[slot];
+      if (!canvas) canvas = this.gpuCanvases[slot] = new OffscreenCanvas(target.width, target.height);
+      if (canvas.width !== target.width || canvas.height !== target.height) {
+        canvas.width = target.width;
+        canvas.height = target.height;
+      }
+      app.render({
+        canvas,
+        eye: which,
+        eyePosition: [this.worldEye.x, this.worldEye.y, this.worldEye.z],
+        view: this.camera.matrixWorldInverse.elements,
+        viewInverse: this.camera.matrixWorld.elements,
+        projection: this.camera.projectionMatrix.elements,
+        near: this.cfg.near,
+        far: this.cfg.far,
+        width: target.width,
+        height: target.height,
+      });
+      // Make sure three.js has allocated the target's texture, then overwrite it with the canvas image.
+      this.renderer.setRenderTarget(target);
+      this.renderer.setRenderTarget(null);
+      const tex = (this.renderer.properties.get(target.texture) as { __webglTexture?: WebGLTexture }).__webglTexture;
+      if (!tex) return;
+      let bitmap: ImageBitmap;
+      try {
+        bitmap = canvas.transferToImageBitmap();
+      } catch {
+        return; // nothing rendered yet (context not configured)
+      }
+      this.renderer.resetState();
+      gl.bindTexture(gl.TEXTURE_2D, tex);
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
+      gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gl.RGBA, gl.UNSIGNED_BYTE, bitmap);
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 0);
+      bitmap.close();
+      this.renderer.resetState();
+    };
+    if (isStereo(this.stereo.mode)) {
+      draw(eyes.left, "left", "left", this.packer.left);
+      draw(eyes.right, "right", "right", this.packer.right);
+    } else {
+      const eye = this.stereo.monoEye === "left" ? eyes.left : this.stereo.monoEye === "right" ? eyes.right : eyes.center;
+      draw(eye, this.stereo.monoEye, "left", this.packer.left);
+    }
+    this.renderer.setRenderTarget(null);
+  }
 
   /**
    * The eye targets are multisampled. three.js resolves the multisample

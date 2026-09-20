@@ -38,7 +38,7 @@ import { resolveStereo } from "../core/config";
 import { decode, encode, type ClientMessage, type FrameState, type ServerMessage } from "../core/protocol";
 import { currentScreenIndex, describeScreen, getScreens, hasWindowManagement, requestFullscreenOn } from "../core/screens";
 import { wallLayout } from "../core/wall";
-import { appSpecFromParams, createApp, isFlatApp, isRawApp, isSceneApp, type AnyApp, type FlatView } from "../apps";
+import { appSpecFromParams, createApp, isFlatApp, isRawApp, isSceneApp, isWebGpuApp, type AnyApp, type FlatView } from "../apps";
 import { InputController } from "../input/controller";
 import { screenSize } from "../core/projection";
 import { ViewportRenderer } from "../render/viewport";
@@ -215,6 +215,9 @@ function connect() {
         } else if (viewport && isRawApp(app)) {
           app.update(msg.state.time, msg.state);
           viewport.renderRaw(app, msg.state);
+        } else if (viewport && isWebGpuApp(app)) {
+          app.update(msg.state.time, msg.state);
+          viewport.renderGpu(app, msg.state);
         } else if (viewport && isSceneApp(app)) {
           app.update(msg.state.time, msg.state);
           viewport.renderFrame(app.scene, msg.state);

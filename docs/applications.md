@@ -1,6 +1,6 @@
 # Applications
 
-An application owns a three.js scene and advances it from the cluster's simulation time. WebCAVE handles cameras, stereo and screens. Ten are included, in `src/apps/`:
+An application owns a three.js scene and advances it from the cluster's simulation time. WebCAVE handles cameras, stereo and screens. Eleven are included, in `src/apps/`:
 
 | Name | What it shows | Options |
 |---|---|---|
@@ -13,6 +13,7 @@ An application owns a three.js scene and advances it from the cluster's simulati
 | `map2d` | Clustered earthquakes with SVG donut-chart clusters (MapLibre's "display HTML clusters with custom properties" example) on the example's own demo-tiles basemap, the world spanning the wall once; same wall and camera machinery as `map` | the `map` camera options plus `data` (GeoJSON URL of points with a numeric `mag`), `clusterRadius` (pixels, 80) |
 | `dotdensity` | Toronto 2021 dot-density map (School of Cities): 278,000 deck.gl dots, one per ten people, coloured by a census field chosen in a control panel; dark basemap, dot size and a 3D mode | the `map` camera options plus `data` (CSV URL), `labels` (place labels JSON), `summaries` (folder of legend CSVs) |
 | `aquarium` | The WebGL Aquarium (Google, 2009) as a raw WebGL app: the CAVE stands in the tank and up to 30,000 fish swim through the room; fish count, options, lasers and speed in a panel | `model` (folder URL with the assets; default `/aquarium/`), option `scale` (meters per aquarium unit, 0.1) |
+| `metaballs` | WebGPU Metaballs (Brandon Jones, the WebGPU Samples entry): GPU marching cubes shaded as lava, water or slime in a clustered-lit dungeon; WebCAVE's first WebGPU app, with style, resolution and stats in a panel | `model` (media folder URL; default the project's GitHub Pages), option `offset` (scene position in the CAVE frame, meters, default `[0, 0, -1.8]`) |
 | `crayoland` | Dave Pape's Crayoland (EVL, 1995): a crayon-drawn meadow with bees, butterflies, flies, and flowers and rocks to grab and throw with the wand; birds, frogs, a stream and the hive's hum on the audio node | `model` (folder URL with `World`, `Sounds`, `tex/`, `audio/`; default `/crayoland/`), options `world`, `sounds` (file names); with the simulator's debug button or `?debug=1`: pick spheres, wand point, touched object highlighted |
 
 The application is part of the cluster config, so every Node runs the same one. Set it on the Manager:
@@ -23,7 +24,7 @@ npm run manager -- --app gltf --model /models/DamagedHelmet.glb --size 0.8 --spi
 
 For development, URL parameters override it on the simulator or a Node: `?app=gltf&model=/models/DamagedHelmet.glb&size=0.8&spin=0.3&mx=0&my=1.5&mz=-1.05`. Files under `public/` are served at the root, so drop a `.glb` in `public/models/` and reference it as `/models/name.glb`. The bundled Damaged Helmet is a Khronos sample, CC BY 4.0 (see `public/models/README.md`).
 
-There are three kinds of application. **Scene apps** (shapes, gltf, vdb, points, crayoland) own a three.js scene that WebCAVE renders from each screen's off-axis camera, with stereo and navigation. **Raw apps** (aquarium) draw with their own WebGL code: WebCAVE binds the eye's render target and hands over the off-axis view and projection matrices, once per eye, and the app issues its own draw calls. **Flat apps** (map, density, map2d, dotdensity) are 2D: they render themselves into a container per screen and receive the screen's rectangle in the overall wall image, so adjacent screens join into one picture. Stereo does not apply to flat apps.
+There are four kinds of application. **Scene apps** (shapes, gltf, vdb, points, crayoland) own a three.js scene that WebCAVE renders from each screen's off-axis camera, with stereo and navigation. **Raw apps** (aquarium) draw with their own WebGL code: WebCAVE binds the eye's render target and hands over the off-axis view and projection matrices, once per eye, and the app issues its own draw calls. **WebGPU apps** (metaballs) get the same matrices and an offscreen canvas per eye to render into; WebCAVE copies the image into the eye target, so stereo packing stays in WebGL. **Flat apps** (map, density, map2d, dotdensity) are 2D: they render themselves into a container per screen and receive the screen's rectangle in the overall wall image, so adjacent screens join into one picture. Stereo does not apply to flat apps.
 
 ## Adding an application
 
@@ -76,7 +77,9 @@ The CAVE frame is meters, Y up, floor at y = 0, viewer near the origin looking t
 
 **9. Raw WebGL apps.** For an existing WebGL program, export `kind: "raw"` with `update(time, state)` and `render(ctx)`. WebCAVE calls `render` once per eye per screen with `ctx.gl`, `ctx.view`, `ctx.viewInverse` and `ctx.projection` (column-major, world frame, meters), the eye position, and the target's size; the framebuffer and viewport are already bound, so draw and return. GL resources belong to a context, and the simulator draws each screen with its own, so keep them in a `Map` keyed by `ctx.gl`. Stereo, off-axis projection, navigation and the barrier come for free. The aquarium is the example, including how a program in other units is fed matrices in meters.
 
-**10. A control panel.** An app whose original had a sidebar of controls implements `createPanel(container, ctx)`: build your controls into `container` with plain DOM or any framework, make every control call `ctx.send({ myKey: ... })`, and return `{ update(state), dispose() }` where `update` reflects `state.appState` back into the controls. The simulator shows the panel in a third column, and `panel.html?manager=ws://...` shows it alone for a tablet or a laptop next to the wall; the wall itself never sees it. Several panels can be open at once and always agree, because they all mirror the same state. The dot-density app is the example.
+**10. WebGPU apps.** Export `kind: "webgpu"` with `update` and `render(ctx)`. Instead of a GL context, `ctx.canvas` is an `OffscreenCanvas` of the eye's size: configure its `webgpu` context with your device once per canvas, render the view from `ctx.view` and `ctx.projection` (remember WebGPU's depth range is 0 to 1 where WebGL's is −1 to 1), submit, and return. WebCAVE takes the canvas image and copies it into the eye target; packing, presenting and the barrier are unchanged. One `GPUDevice` serves every canvas, so resources are shared across screens, unlike WebGL. The metaballs app is the example.
+
+**11. A control panel.** An app whose original had a sidebar of controls implements `createPanel(container, ctx)`: build your controls into `container` with plain DOM or any framework, make every control call `ctx.send({ myKey: ... })`, and return `{ update(state), dispose() }` where `update` reflects `state.appState` back into the controls. The simulator shows the panel in a third column, and `panel.html?manager=ws://...` shows it alone for a tablet or a laptop next to the wall; the wall itself never sees it. Several panels can be open at once and always agree, because they all mirror the same state. The dot-density app is the example.
 
 Rules that keep the cluster in step:
 
@@ -128,6 +131,21 @@ npm run manager -- --config cave-3m --app aquarium
 - **Assets** (11 MB of models and textures) live in `public/aquarium/` with the license; each screen loads them once.
 
 Not carried over: the orbiting camera (navigation replaces it), the FPS-based automatic quality switch, and the WebXR and multiview paths.
+
+## WebGPU apps and the metaballs
+
+WebGPU cannot draw into WebGL's eye targets, and the whole WebCAVE pipeline, off-axis cameras, stereo eye targets, packing and presenting, is WebGL through three.js. The **webgpu** contract bridges the two: WebCAVE gives a WebGPU app an `OffscreenCanvas` per eye per screen, sized like the eye target, together with the same view, projection, eye position and near / far a raw app gets. The app renders and submits; WebCAVE takes the canvas image with `transferToImageBitmap()`, which waits for the GPU work, and copies it into the eye target's texture. From there the frame is an ordinary WebGL frame. One copy per eye per frame is the cost.
+
+```
+http://localhost:5173/simulator.html?config=cave-3m&app=metaballs
+npm run manager -- --config cave-3m --app metaballs
+```
+
+`metaballs` is Brandon Jones's webgpu-metaballs, the project behind the WebGPU Samples' "Metaballs" entry: sixteen metaballs turned into a mesh every frame by marching cubes in a compute shader, shaded as lava, water or slime, inside a dungeon lit by clustered point lights with light sprites. Its renderer already had a WebXR path that renders two views from external poses; `src/apps/metaballs/renderer.ts` is that path fed by WebCAVE, one view per eye, with the GL projection remapped to WebGPU's depth range and the scene placed 1.8 m in front of the CAVE origin (the `offset` option), so the blobs rise just behind the front wall. The project's source is vendored unchanged apart from two lines (the texture loader class is injected and the media root is a field). Time is the cluster clock; the metaball positions were already pure functions of it.
+
+Of the original's settings pane only two options were kept, as asked: **metaball style** and **metaball resolution**, in `appState.metaballs`, plus the **stats** readout: frames per second, JavaScript frame time and GPU pass timings from WebGPU timestamp queries where the adapter has them. Rendering method, light toggles, environment and WebXR stay at their defaults.
+
+Media, the dungeon glTF scene with KTX2 textures and the lava, water and slime textures, is fetched from the project's GitHub Pages at run time and not redistributed here, since the dungeon model is under Sketchfab's standard license; the `model` option points at a local copy for an installation without internet. The KTX2 textures are decoded by the prebuilt web-texture-tool loader and its transcoder workers in `public/metaballs/wtt/`. Needs a browser with WebGPU; the app's status says so when there is none.
 
 ## Control panels and the dot-density map
 

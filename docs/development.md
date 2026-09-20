@@ -31,6 +31,7 @@ public/models/  sample glTF assets
 public/volumes/ OpenVDB files for the vdb and points apps (not in the repository)
 public/crayoland/ Crayoland's original World, Sounds, textures, ground masks, hand models, sounds as MP3
 public/aquarium/  WebGL Aquarium: tdl library, adapted core, shaders, models and textures (BSD)
+public/metaballs/ prebuilt web-texture-tool loader and KTX2 / Basis transcoder workers for the metaballs app (media is fetched remotely)
 scripts/        launch-nodes.sh (one kiosk Chrome per display), gen-schema.ts, screenshot.mjs, fake-tracker.ts (pretend DTrack / NatNet / VRPN)
 index.html, simulator.html, node.html, launcher.html, panel.html (an app's control panel alone, for a tablet)
 ```

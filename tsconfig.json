@@ -9,7 +9,7 @@
     "skipLibCheck": true,
     "isolatedModules": true,
     "resolveJsonModule": true,
-    "types": ["node", "vite/client"]
+    "types": ["node", "vite/client", "@webgpu/types"]
   },
   "include": ["src"]
 }

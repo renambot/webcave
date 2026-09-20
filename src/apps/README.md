@@ -18,19 +18,23 @@ src/apps/
   map2d/          clustered earthquakes, donut markers (flat app, built on map/wallmap.ts)
   dotdensity/     Toronto dot-density map on deck.gl with a control panel (flat app; panel.ts is the sidebar)
   aquarium/       WebGL Aquarium as a raw WebGL app (raw app; the adapted program is public/aquarium/aquarium-core.js)
+  metaballs/      WebGPU Metaballs (webgpu app; vendor/ is the original project, renderer.ts feeds it the CAVE's views)
   crayoland/      Dave Pape's Crayoland, ported    (scene app; world.ts parses the original files,
                                                     creatures.ts deterministic bees and butterflies,
                                                     sound.ts Web Audio soundscape)
   <yours>/        index.ts (+ any helpers, shaders, data)
 ```
 
-Three kinds of app share the folder convention:
+Four kinds of app share the folder convention:
 
 - **Scene apps** own a `THREE.Scene`; WebCAVE renders it per screen with
   off-axis cameras, stereo and navigation. For 3D content.
 - **Raw apps** draw with their own WebGL code: `render(ctx)` runs once per
   eye per screen with the context, the off-axis view / projection matrices
   and the bound eye target. For existing WebGL programs (see `aquarium/`).
+- **WebGPU apps** get the same matrices and an OffscreenCanvas per eye to
+  render into; WebCAVE copies the image into the eye target (see `metaballs/`).
+  Mind WebGPU's 0..1 depth range against the GL projection you are given.
 - **Flat apps** render themselves (2D) into a container per screen and get
   the screen's rectangle in the overall wall image. For maps, documents,
   dashboards. Stereo and navigation do not apply.

@@ -21,6 +21,12 @@
  *                            shaders, buffers and draw calls. For existing
  *                            WebGL programs. Example: aquarium.
  *
+ *   "webgpu" apps (WebGpuApp) draw with WebGPU into an offscreen canvas that
+ *                            WebCAVE provides per eye; WebCAVE copies the result
+ *                            into the eye target, so stereo packing and the rest
+ *                            stay in WebGL. Same matrices as raw apps. Example:
+ *                            metaballs.
+ *
  * Both kinds share one rule that keeps a cluster in step: what is drawn must
  * be a function of the FrameState the Manager broadcast for that frame, never
  * of local wall-clock time or local input. For scene apps that means
@@ -237,7 +243,45 @@ export interface RawApp {
   dispose?(): void;
 }
 
-export type AnyApp = CaveApp | FlatApp | RawApp;
+/**
+ * What a WebGPU app gets for one eye of one screen: the same matrices as a
+ * raw WebGL app, plus an OffscreenCanvas of the eye's size to render into.
+ * Configure its "webgpu" context with your device (once per canvas: keep a
+ * WeakSet), render, submit; WebCAVE then takes the canvas's image and copies
+ * it into the eye target. The projection's near and far are given too, for
+ * renderers that slice depth (clustered lighting).
+ */
+export interface WebGpuRenderContext {
+  canvas: OffscreenCanvas;
+  eye: "left" | "right" | "center";
+  eyePosition: Vec3;
+  view: ArrayLike<number>;
+  viewInverse: ArrayLike<number>;
+  projection: ArrayLike<number>;
+  near: number;
+  far: number;
+  width: number;
+  height: number;
+}
+
+/** An application that draws with WebGPU from WebCAVE's cameras. */
+export interface WebGpuApp {
+  readonly kind: "webgpu";
+  readonly name: string;
+  readonly ready: Promise<void>;
+  status: string;
+  update(time: number, state?: FrameState): void;
+  /** Draw one eye of one screen into ctx.canvas and submit; return when the commands are submitted. */
+  render(ctx: WebGpuRenderContext): void;
+  onInput?: InputHook;
+  readonly navigation?: NavigationHints;
+  setAudio?(enabled: boolean): void;
+  setDebug?(enabled: boolean): void;
+  createPanel?(container: HTMLElement, ctx: PanelContext): AppPanel;
+  dispose?(): void;
+}
+
+export type AnyApp = CaveApp | FlatApp | RawApp | WebGpuApp;
 
 export function isFlatApp(app: AnyApp): app is FlatApp {
   return app.kind === "flat";
@@ -247,9 +291,13 @@ export function isRawApp(app: AnyApp): app is RawApp {
   return app.kind === "raw";
 }
 
-/** Scene apps are the ones that are neither flat nor raw. */
+export function isWebGpuApp(app: AnyApp): app is WebGpuApp {
+  return app.kind === "webgpu";
+}
+
+/** Scene apps are the ones that own a three.js scene: neither flat, raw nor webgpu. */
 export function isSceneApp(app: AnyApp): app is CaveApp {
-  return app.kind !== "flat" && app.kind !== "raw";
+  return app.kind !== "flat" && app.kind !== "raw" && app.kind !== "webgpu";
 }
 
 /** What an app folder's index.ts default-exports. The registry collects these. */

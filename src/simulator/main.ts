@@ -32,7 +32,7 @@ import { type ClusterConfig, type StereoMode, type AnaglyphScheme, resolveStereo
 import { bundledConfigNames, bundledConfigs, loadConfig } from "../core/configs";
 import { ClusterManager, type ManagerTransport } from "../core/manager";
 import { decode, encode, type ClientMessage, type ServerMessage, type NodeStats, type FrameState } from "../core/protocol";
-import { appSpecFromParams, createApp as createCaveApp, isFlatApp, isRawApp, toggleSpinPatch, type AppPanel, type FlatView } from "../apps";
+import { appSpecFromParams, createApp as createCaveApp, isFlatApp, isRawApp, isWebGpuApp, toggleSpinPatch, type AppPanel, type FlatView } from "../apps";
 import { InputController } from "../input/controller";
 import { wallLayout } from "../core/wall";
 import { screenSize } from "../core/projection";
@@ -177,7 +177,8 @@ function createApp(cfg: ClusterConfig, link: ControlLink, hooks: AppHooks): App 
   const demo = createCaveApp(appSpecFromParams(params, cfg.app), { audio: audioParam, debug: debugParam });
   const flat = isFlatApp(demo) ? demo : null;
   const raw = isRawApp(demo) ? demo : null;
-  const sceneApp = isFlatApp(demo) || isRawApp(demo) ? null : demo;
+  const gpu = isWebGpuApp(demo) ? demo : null;
+  const sceneApp = isFlatApp(demo) || isRawApp(demo) || isWebGpuApp(demo) ? null : demo;
   const layout3 = wallLayout(cfg);
 
   // Last frame received (or produced). Everything displayed derives from it.
@@ -256,10 +257,11 @@ function createApp(cfg: ClusterConfig, link: ControlLink, hooks: AppHooks): App 
           }
           break;
         }
-        (sceneApp ?? raw)!.update(msg.state.time, msg.state);
+        (sceneApp ?? raw ?? gpu)!.update(msg.state.time, msg.state);
         for (const t of tiles) {
           const t0 = performance.now();
           if (raw) t.viewport.renderRaw(raw, msg.state);
+          else if (gpu) t.viewport.renderGpu(gpu, msg.state);
           else t.viewport.renderFrame(sceneApp!.scene, msg.state);
           hooks.ack(t.id, msg.state.frame, performance.now() - t0);
           if (cfg.sync === "loose") t.viewport.present(msg.state.frame);
@@ -598,8 +600,8 @@ function createApp(cfg: ClusterConfig, link: ControlLink, hooks: AppHooks): App 
 
     if (flat) {
       overview.render(lastState.head, lastState.navigation, null, new Map(flatViews.map((v) => [v.id, v.view.canvas])), lastState.wand);
-    } else if (raw) {
-      // A raw app has no scene to draw in space; its wall textures are the tiles' own canvases.
+    } else if (raw || gpu) {
+      // A raw or WebGPU app has no scene to draw in space; its wall textures are the tiles' own canvases.
       overview.render(lastState.head, lastState.navigation, null, new Map(tiles.map((t) => [t.id, t.viewport.renderer.domElement])), lastState.wand);
     } else {
       overview.render(lastState.head, lastState.navigation, sceneApp!.scene, undefined, lastState.wand);
