@@ -7,6 +7,7 @@ An installation is a JSON file in `configs/`. The Manager loads it by name (`--c
 | `cave-3m.json` | 3 m CAVE, four screens, one computer per screen |
 | `cave-3m-1pc.json` | The same CAVE from one computer with four displays |
 | `cave.json` | A 5.3 × 3 m room: front, left and right walls, floor and ceiling, one computer per screen |
+| `head-cave.json` | Head-sized CAVE: three 46-inch Planar Clarity Matrix G3 MX46X panels (front, left, right) in landscape, bottom edge 40 in off the floor, one computer |
 | `wall-3x1.json` | Three 16:9 tiles side by side |
 | `wall-2x2.json` | Four 16:9 tiles with 2 cm bezels, runs the map app by default |
 | `example-measured.json` | Template using measured corners and a per-screen stereo override |
@@ -18,6 +19,7 @@ The simulator's overview draws each configuration as the room it describes, with
 |---|---|
 | ![wall-3x1: three 16:9 tiles side by side](images/config-wall-3x1.jpg) `wall-3x1.json` | ![wall-2x2: four 16:9 tiles with bezels](images/config-wall-2x2.jpg) `wall-2x2.json` |
 | ![cave-3m: a 3 m cube with front, left, right and floor](images/config-cave-3m.jpg) `cave-3m.json` | ![cave: a 5.3 m wide room with floor and ceiling](images/config-cave.jpg) `cave.json` |
+| ![head-cave: three 46-inch panels around the head](images/config-head-cave.jpg) `head-cave.json` | |
 
 ## Screens
 
