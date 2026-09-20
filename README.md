@@ -59,3 +59,7 @@ TypeScript, Vite, three.js on WebGL2, WebSocket transport, zod for configuration
 ## License
 
 BSD 3-Clause, see [LICENSE](LICENSE). Third-party assets keep their own terms: the Damaged Helmet model is CC BY 4.0 (see `public/models/README.md`), map tiles come from OpenFreeMap with OpenStreetMap data (attribution required), and the sample volumes in `public/volumes/` are local files not included in the repository.
+
+## Trademarks
+
+CAVE (Cave Automatic Virtual Environment) and its successor, CAVE2, are registered trademarks owned by the Board of Trustees of the University of Illinois.
