@@ -24,18 +24,29 @@ export { isFlatApp, isRawApp, isSceneApp, isWebGpuApp, spinTime, toggleSpinPatch
 // here if an app ever pulls in a heavy library.
 const modules = import.meta.glob<{ default: AppDefinition }>("./*/index.ts", { eager: true });
 
+/**
+ * Folders left out of this build: VITE_DISABLE_APPS=metaballs,vdb in a local
+ * .env.local, the environment, or the image's build argument, for machines
+ * where an app's dependencies are missing or unwanted. vite.config.ts replaces
+ * their module by an empty one, so nothing they import is bundled either; the
+ * name is kept here only to explain the fallback in createApp().
+ */
+export const DISABLED_APPS: string[] = String(import.meta.env.VITE_DISABLE_APPS ?? "")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
+const DISABLED = new Set(DISABLED_APPS);
+
 /** All applications by name. */
 export const APPS: Record<string, AppDefinition> = {};
-/** Apps left out of this build (VITE_APPS_DISABLED at build time), for status messages. */
-export const DISABLED_APPS: string[] = (import.meta.env.VITE_APPS_DISABLED ?? "").split(",").map((s: string) => s.trim()).filter(Boolean);
 for (const [path, mod] of Object.entries(modules)) {
+  const folder = path.split("/")[1];
+  if (DISABLED.has(folder)) continue;
   const def = mod.default;
-  if (def?.disabled) continue;
   if (!def || typeof def.create !== "function") {
     console.warn(`[apps] ${path} has no default AppDefinition export; skipped`);
     continue;
   }
-  const folder = path.split("/")[1];
   if (def.name !== folder) console.warn(`[apps] ${path}: name "${def.name}" differs from folder "${folder}"`);
   APPS[def.name] = def;
 }
@@ -55,7 +66,7 @@ export function createApp(spec: AppSpec, ctx: AppContext = { audio: false, debug
   if (!fallback) throw new Error("no applications found under src/apps/");
   const app = fallback.create(spec, ctx);
   app.status = DISABLED_APPS.includes(spec.name)
-    ? `app "${spec.name}" is disabled in this build (VITE_APPS_DISABLED), showing ${fallback.name}`
+    ? `app "${spec.name}" is disabled in this build (VITE_DISABLE_APPS), showing ${fallback.name}`
     : `unknown app "${spec.name}" (have: ${APP_NAMES.join(", ")}), showing ${fallback.name}`;
   return app;
 }

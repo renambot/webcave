@@ -38,6 +38,17 @@ scripts/        launch-nodes.sh (one kiosk Chrome per display), gen-schema.ts, s
 index.html, simulator.html, node.html, launcher.html, panel.html (an app's control panel alone, for a tablet), xr.html (the headset viewer)
 ```
 
+## Disabling applications locally
+
+Some apps need dependencies that are not wanted on every machine: `metaballs` pulls in its WebGPU vendor code and the prebuilt texture loader under `public/metaballs/`, `vdb` and `points` need the `openvdb` package. List the folder names to leave out in `VITE_DISABLE_APPS`, normally in a local `.env.local` (gitignored):
+
+```sh
+# .env.local
+VITE_DISABLE_APPS=metaballs,vdb
+```
+
+`vite.config.ts` replaces those `src/apps/<name>/index.ts` modules by an empty one, so neither the app nor anything it imports is loaded or bundled, and the registry (`src/apps/index.ts`) leaves the names out of `APPS`. A config or `?app=` naming a disabled app falls back to `shapes` with the usual "unknown app" status. Unset the variable (or drop the file) to get them back; `npm run typecheck` still checks every app's sources.
+
 ## Frame protocol
 
 The Manager owns the frame counter; simulation time is `frame / fps`, so every node computes the same poses without a shared wall clock. Per frame it sends `frame {state}` with the head and wand poses, navigation and the shared app state, waits for `ack` from every node in barrier mode (with a timeout, after which late nodes are reported), then sends `present {frame}` so all screens flip together. Loose mode skips the wait. Clients send `hello`, `ack`, `setHead`, `setWand` (absolute from a tracker, or a head-relative offset), `setNavigation` / `navigate`, `setStereo` (live stereo settings, sent on in every frame as `state.stereo`), `setApp {app}` (switch the cluster's application; the current app travels in every frame as `state.app` and pages rebuild when it changes), `setAppState {patch}` and `input {actions}`. Messages are defined in `src/core/protocol.ts`; the logic is in `src/core/manager.ts`, which the WebSocket server and the in-memory simulator both wrap.
@@ -57,7 +68,7 @@ Chrome's own `--screenshot` flag runs only a few animation frames and is not usa
 
 ## Building
 
-`npm run build` produces `dist/` (with `BASE_PATH=/prefix/` for a deployment under a path, and `VITE_APPS_DISABLED=map,density` to leave apps out: a plugin in `vite.config.ts` answers the registry's import of a disabled app with a stub, so none of its code is bundled) and `npm run build:manager` bundles the Manager into `dist-manager/server.mjs` with esbuild (`scripts/build-manager.mjs`); the `Dockerfile` runs both and packages them as the `web` (nginx) and `manager` images described in [deployment.md](deployment.md#docker-behind-a-reverse-proxy).
+`npm run build` produces `dist/` (with `BASE_PATH=/prefix/` for a deployment under a path, and `VITE_DISABLE_APPS=map,density` to leave apps out: a plugin in `vite.config.ts` answers the registry's import of a disabled app with a stub, so none of its code is bundled) and `npm run build:manager` bundles the Manager into `dist-manager/server.mjs` with esbuild (`scripts/build-manager.mjs`); the `Dockerfile` runs both and packages them as the `web` (nginx) and `manager` images described in [deployment.md](deployment.md#docker-behind-a-reverse-proxy).
 
 ## Regenerating the config schema
 

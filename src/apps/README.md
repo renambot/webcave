@@ -27,6 +27,10 @@ src/apps/
   <yours>/        index.ts (+ any helpers, shaders, data)
 ```
 
+A folder can be switched off on one machine: `VITE_DISABLE_APPS=metaballs,vdb`
+in a local `.env.local` keeps those apps and their dependencies out of the
+build entirely (see `docs/development.md`).
+
 Four kinds of app share the folder convention:
 
 - **Scene apps** own a `THREE.Scene`; WebCAVE renders it per screen with

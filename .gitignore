@@ -1,4 +1,8 @@
 node_modules
+
+# Local environment settings (VITE_DISABLE_APPS, ...)
+.env.local
+*.local
 dist
 dist-manager
 .DS_Store
