@@ -19,6 +19,10 @@
 #   --positions "x,y ..."  one x,y per node; default lays them out left to right by --width
 #   --stereo MODE        append &stereo=MODE to every node URL
 #   --anaglyph SCHEME    append &anaglyph=SCHEME (dubois | bw) to every node URL
+#   --audio NAME|none    only this window plays the sound (node id, or the view of a
+#                        multi-screen node); the others are muted. Default: the config decides
+#   --input all|NAME|none  which windows take keyboard, mouse and gamepad input.
+#                        Default: the config decides
 #   --chrome PATH        Chrome / Chromium executable
 #   --profile-dir DIR    base dir for per-node profiles (default: ${TMPDIR:-/tmp}/webcave-nodes)
 #   --kill               stop every node launched by this script and exit
@@ -40,13 +44,16 @@ WIDTH=1920
 HEIGHT=1080
 POSITIONS=""
 STEREO=""
+ANAGLYPH=""
+AUDIO=""
+INPUT=""
 CHROME=""
 PROFILE_BASE="${TMPDIR:-/tmp}"
 PROFILE_BASE="${PROFILE_BASE%/}/webcave-nodes"
 KILL=0
 DRY=0
 
-usage() { sed -n '2,32p' "$0" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '2,36p' "$0" | sed 's/^# \{0,1\}//'; }
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -58,6 +65,8 @@ while [[ $# -gt 0 ]]; do
     --positions) POSITIONS="$2"; shift 2 ;;
     --stereo) STEREO="$2"; shift 2 ;;
     --anaglyph) ANAGLYPH="$2"; shift 2 ;;
+    --audio) AUDIO="$2"; shift 2 ;;
+    --input) INPUT="$2"; shift 2 ;;
     --chrome) CHROME="$2"; shift 2 ;;
     --profile-dir) PROFILE_BASE="$2"; shift 2 ;;
     --kill) KILL=1; shift ;;
@@ -124,6 +133,15 @@ for node in "${node_list[@]}"; do
   [[ -n "$view" ]] && url="${url}&view=${view}"
   [[ -n "$STEREO" ]] && url="${url}&stereo=${STEREO}"
   [[ -n "$ANAGLYPH" ]] && url="${url}&anaglyph=${ANAGLYPH}"
+  # Per-window roles, as the launcher page writes them: the named window gets 1,
+  # every other window 0, so the choice overrides the config either way.
+  name="${view:-$node}"
+  if [[ -n "$AUDIO" ]]; then
+    if [[ "$AUDIO" == "$name" ]]; then url="${url}&audio=1"; else url="${url}&audio=0"; fi
+  fi
+  if [[ -n "$INPUT" ]]; then
+    if [[ "$INPUT" == "all" || "$INPUT" == "$name" ]]; then url="${url}&input=1"; else url="${url}&input=0"; fi
+  fi
 
   profile="${PROFILE_BASE}/${node}${view:+-$view}"
 

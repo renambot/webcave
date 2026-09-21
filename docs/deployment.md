@@ -52,7 +52,7 @@ npm run manager -- --config cave-3m-1pc --app crayoland
 
 Then one browser window per display. Two ways:
 
-- **Launcher page**, in Chrome or Edge: <http://localhost:5173/launcher.html?node=pc>. It lists the displays, lets you map each screen to one, and opens all windows fullscreen in a click (the Window Management API prompts once for permission).
+- **Launcher page**, in Chrome or Edge: <http://localhost:5173/launcher.html?node=pc>. It lists the displays, lets you map each screen to one, and opens all windows fullscreen in a click (the Window Management API prompts once for permission; that first click only detects the displays, since the prompt outlives it). Allow *Pop-ups and redirects* for the origin too, or Chrome opens only the first window of a multi-screen node.
 - **Kiosk script**, no clicking at all, one independent Chrome per display placed by pixel position:
 
   ```sh

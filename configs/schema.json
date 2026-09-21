@@ -612,12 +612,28 @@
             "description": "Screen ids this node renders, one window each"
           },
           "input": {
-            "description": "Let this node's windows take keyboard, mouse and gamepad input and steer the cluster (default false)",
-            "type": "boolean"
+            "description": "Which of this node's windows take keyboard, mouse and gamepad input and steer the cluster: true every window, or the screen id(s) of those that do (default false)",
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ]
           },
           "audio": {
-            "description": "This node plays the application's sound: the machine connected to the speakers (default false)",
-            "type": "boolean"
+            "description": "Which window plays the application's sound: true the node's first screen, or the screen id of the window connected to the speakers (default false)",
+            "type": [
+              "boolean",
+              "string"
+            ]
           }
         },
         "required": [

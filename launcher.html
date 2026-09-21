@@ -72,10 +72,20 @@
       <div id="mapping"></div>
       <div class="row" style="margin-top: 12px">
         <button id="btn-launch" class="primary" disabled>launch node windows</button>
+        <button id="btn-next" disabled>open next window</button>
         <button id="btn-close" disabled>close all</button>
         <span id="note"></span>
       </div>
       <p class="muted">Windows open fullscreen on their display when the browser grants the window-management permission (Chrome, Edge). Otherwise each opens on its display and goes fullscreen on the first click inside it.</p>
+      <p class="muted">A node with several screens needs several pop-ups, and Chrome opens only one per click: set <em>Pop-ups and redirects</em> to <em>Allow</em> for this site (icon at the right of the address bar) to get them all in one launch, or click <em>open next window</em> once per remaining screen.</p>
+    </section>
+
+    <section>
+      <h2>Output and roles</h2>
+      <div class="map-row"><span class="map-label">stereo</span><select id="stereo" title="Output packing mode for every window of this node"></select></div>
+      <div class="map-row"><span class="map-label">audio</span><select id="audio" title="Which window plays the application's sound"></select></div>
+      <div class="map-row"><span class="map-label">input</span><select id="input" title="Which windows take keyboard, mouse and gamepad input"></select></div>
+      <p class="muted">Each control overrides the cluster config for the windows this page opens, as URL parameters on <code>node.html</code>. Sound belongs on one window, or the room hears it several times; input can run on every window of this computer, since only the window with focus receives events.</p>
     </section>
 
     <section>

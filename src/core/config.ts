@@ -86,15 +86,38 @@ export interface NodeConfig {
   id: string;
   /** Screen ids this node renders (one window each). */
   screens: string[];
-  /** Whether this node's windows may take keyboard, mouse and gamepad input and steer the cluster. Default false. */
-  input?: boolean;
   /**
-   * Whether this node plays the application's sound (the machine wired to the
-   * speakers). Default false: a cluster has many render machines and one
-   * sound system, so exactly one node (or the simulator with ?audio=1) should
-   * have it. Apps receive it as AppContext.audio.
+   * Which of this node's windows take keyboard, mouse and gamepad input and
+   * steer the cluster: true every window, a screen id or a list of them only
+   * those. Default false. Several windows may take it; only the one with the
+   * keyboard focus receives events, and the Manager merges input clients.
    */
-  audio?: boolean;
+  input?: boolean | string | string[];
+  /**
+   * Which window plays the application's sound (the machine wired to the
+   * speakers): true the window of the node's first screen, a screen id that
+   * window. Default false: a cluster has many render machines and one sound
+   * system, so exactly one window in the cluster (or the simulator with
+   * ?audio=1) should have it. Apps receive it as AppContext.audio.
+   */
+  audio?: boolean | string;
+}
+
+/** Does the window showing `screenId` on this node take input? */
+export function nodeTakesInput(node: NodeConfig | undefined, screenId: string): boolean {
+  const which = node?.input;
+  if (!which) return false;
+  if (which === true) return true;
+  return Array.isArray(which) ? which.includes(screenId) : which === screenId;
+}
+
+/** Does the window showing `screenId` on this node play the sound? */
+export function nodePlaysAudio(node: NodeConfig | undefined, screenId: string): boolean {
+  const which = node?.audio;
+  if (!which || !node) return false;
+  // true names no screen: the first one, so a multi-window node sounds once.
+  if (which === true) return screenId === (node.screens[0] ?? screenId);
+  return which === screenId;
 }
 
 /** Which application the cluster runs; see src/apps. */

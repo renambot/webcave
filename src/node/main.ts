@@ -22,10 +22,11 @@
  *   view=SCREEN  which of the node's screens this window renders (default: its first)
  *   screen=N     display index for fullscreen (Window Management API, needs a gesture)
  *   stereo=MODE  override the configured output mode (scene apps)
- *   input=1      take keyboard, mouse and gamepad input on this window (development;
- *                the config's `input: true` on the node is the proper switch)
- *   audio=1      this window plays the application's sound (config: `audio: true` on the node,
- *                which applies to the window of the node's first screen only)
+ *   input=1|0    take keyboard, mouse and gamepad input on this window, or refuse it;
+ *                without the parameter the config's `input: true` on the node decides
+ *   audio=1|0    this window plays the application's sound, or stays silent; without the
+ *                parameter the config's `audio: true` on the node decides, and applies to
+ *                the window of the node's first screen only
  *   debug=1      ask the application for its debug drawing
  *   app= model= size= spin= mx= my= mz= style= center= zoom= ...   override the application, for development
  *
@@ -34,7 +35,7 @@
  * opens them. Keys: click / f / Enter / Space = fullscreen, h = toggle HUD.
  */
 import type { AnaglyphScheme, ClusterConfig, ScreenConfig, StereoMode, StereoParams } from "../core/config";
-import { resolveStereo } from "../core/config";
+import { nodePlaysAudio, nodeTakesInput, resolveStereo } from "../core/config";
 import { decode, encode, type ClientMessage, type FrameState, type ServerMessage } from "../core/protocol";
 import { currentScreenIndex, describeScreen, getScreens, hasWindowManagement, requestFullscreenOn } from "../core/screens";
 import { wallLayout } from "../core/wall";
@@ -68,10 +69,17 @@ let lastHud = performance.now();
 let displayInfo = "";
 /** Identity reported to the manager: "node" or "node:view" for multi-screen nodes. */
 let clientId = nodeId;
-/** Input on this window: config `input: true` on the node, or ?input=1. */
-let inputEnabled = params.get("input") === "1";
-/** Sound output on this window: config `audio: true` on the node, or ?audio=1. */
-let audioEnabled = params.get("audio") === "1";
+/** A URL flag that can also say "no": ?x=1 true, ?x=0 false, absent lets the config decide. */
+function flagParam(name: string): boolean | null {
+  const v = params.get(name);
+  return v === null ? null : v !== "0" && v !== "false";
+}
+/** Input on this window: ?input, else config `input: true` on the node. */
+const inputParam = flagParam("input");
+let inputEnabled = inputParam === true;
+/** Sound output on this window: ?audio, else config `audio: true` on the node. */
+const audioParam = flagParam("audio");
+let audioEnabled = audioParam === true;
 let input: InputController | null = null;
 let sendToManager: ((m: ClientMessage) => void) | null = null;
 /** Last frame received, for the debug handle. */
@@ -219,10 +227,11 @@ function connect() {
         send({ type: "hello", nodeId: clientId, role: "node" });
         sendToManager = send;
         const me = cfg.nodes.find((n) => n.id === nodeId);
-        inputEnabled = inputEnabled || !!me?.input;
-        // A multi-screen node opens one window per screen; only the first
-        // screen's window takes the sound, so the room hears it once.
-        audioEnabled = audioEnabled || (!!me?.audio && screen.id === (me.screens[0] ?? screen.id));
+        // A multi-screen node opens one window per screen, and the config says
+        // which of them take input and which one has the speakers; the launcher
+        // overrides that per window with ?input= / ?audio=.
+        inputEnabled = inputParam ?? nodeTakesInput(me, screen.id);
+        audioEnabled = audioParam ?? nodePlaysAudio(me, screen.id);
         teardown();
         setup(cfg, screen);
         break;

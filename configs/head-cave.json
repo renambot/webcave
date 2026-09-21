@@ -1,10 +1,11 @@
 {
   "$schema": "./schema.json",
   "name": "head-cave",
-  "description": "A head-sized CAVE: three Planar Clarity Matrix G3 MX46X 46-inch LCD panels (1920 x 1080, 1.018 x 0.573 m active area, 1.7 mm tiled bezel) in landscape as front, left and right screens, bottom edges 40 in (1.016 m) off the floor, one computer with three displays that also takes input and plays the sound. Viewer's head at the center of the box, floor at y = 0.",
+  "description": "A head-sized CAVE: three Planar Clarity Matrix G3 MX46X 46-inch LCD panels (1920 x 1080, 1.018 x 0.573 m active area, 1.7 mm tiled bezel) in landscape as front, left and right screens, bottom edges 40 in (1.016 m) off the floor, one computer with three displays: the front window takes the input, the left one is wired to the speakers. Viewer's head at the center of the box, floor at y = 0. Passive stereo: each panel interleaves the eyes by row, left eye on row 0; a panel that shows them swapped sets firstEye to right in its own screen entry, and a window that does not start on an even row sets phaseY to 1.",
   "fps": 60,
   "sync": "barrier",
   "defaultHead": { "position": [0, 1.3025, 0] },
+  "stereo": { "mode": "row-interleaved", "firstEye": "left", "eyeSeparation": 0.045 },
   "app": { "name": "shapes" },
   "screens": [
     { "id": "front", "center": [0, 1.3025, -0.509],  "width": 1.018, "height": 0.573, "yaw": 0,   "widthPx": 1920, "heightPx": 1080 },
@@ -12,6 +13,6 @@
     { "id": "right", "center": [0.509, 1.3025, 0],   "width": 1.018, "height": 0.573, "yaw": -90, "widthPx": 1920, "heightPx": 1080 }
   ],
   "nodes": [
-    { "id": "pc", "screens": ["front", "left", "right"], "input": true, "audio": true }
+    { "id": "pc", "screens": ["front", "left", "right"], "input": "front", "audio": "left" }
   ]
 }

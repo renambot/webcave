@@ -78,8 +78,14 @@ export const screenSchema = z.union([screenByCorners, screenByPlacement]);
 export const nodeSchema = z.object({
   id: z.string().min(1).describe("Node id; a computer, or a display when one per node"),
   screens: z.array(z.string()).min(1).describe("Screen ids this node renders, one window each"),
-  input: z.boolean().optional().describe("Let this node's windows take keyboard, mouse and gamepad input and steer the cluster (default false)"),
-  audio: z.boolean().optional().describe("This node plays the application's sound: the machine connected to the speakers (default false)"),
+  input: z
+    .union([z.boolean(), z.string(), z.array(z.string())])
+    .optional()
+    .describe("Which of this node's windows take keyboard, mouse and gamepad input and steer the cluster: true every window, or the screen id(s) of those that do (default false)"),
+  audio: z
+    .union([z.boolean(), z.string()])
+    .optional()
+    .describe("Which window plays the application's sound: true the node's first screen, or the screen id of the window connected to the speakers (default false)"),
 });
 
 export const appSchema = z.object({
@@ -171,6 +177,13 @@ export function parseClusterConfig(data: unknown, source = "config"): ClusterCon
   for (const n of f.nodes) {
     for (const sid of n.screens) {
       if (!ids.has(sid)) throw new Error(`Invalid cluster config ${source}: node "${n.id}" references unknown screen "${sid}"`);
+    }
+    // input / audio may name screens; they must be screens this node renders.
+    const named = [...(typeof n.input === "string" ? [n.input] : Array.isArray(n.input) ? n.input : []), ...(typeof n.audio === "string" ? [n.audio] : [])];
+    for (const sid of named) {
+      if (!n.screens.includes(sid)) {
+        throw new Error(`Invalid cluster config ${source}: node "${n.id}" gives input or audio to "${sid}", which it does not render (has ${n.screens.join(", ")})`);
+      }
     }
   }
   return {

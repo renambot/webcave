@@ -39,11 +39,20 @@ Units are meters and degrees in a Y-up, right-handed frame with the physical flo
 
 ## Nodes
 
-A node is a computer running one browser window per screen it lists. `"input": true` lets that node's keyboard, mouse and gamepads steer the cluster (see [input.md](input.md)); `"audio": true` makes it the sound output for applications that have sound (the machine wired to the speakers; exactly one node should have it, and on a multi-screen node only the window of the first listed screen plays). Both are off by default.
+A node is a computer running one browser window per screen it lists. `"input"` lets that node's keyboard, mouse and gamepads steer the cluster (see [input.md](input.md)); `"audio"` makes it the sound output for applications that have sound (the machine wired to the speakers; exactly one window in the cluster should have it). Both are off by default, and both take a screen id instead of `true` when the node drives several displays and the role belongs to one of them:
+
+| value | input | audio |
+| --- | --- | --- |
+| `true` | every window of the node | the window of the first listed screen |
+| `"front"` | that window only | that window only |
+| `["front", "left"]` | those windows | — (sound goes to one window) |
 
 ```json
 { "id": "pc", "screens": ["front", "left", "right", "floor"], "input": true, "audio": true }
+{ "id": "pc", "screens": ["front", "left", "right"], "input": "front", "audio": "left" }
 ```
+
+A named screen must be one the node renders, or the config is refused. Input may run on several windows at once: only the window with the keyboard focus receives events, and the Manager merges the input clients. The launcher page overrides both per window for the windows it opens, without touching the config.
 
 ## Defaults and validation
 
