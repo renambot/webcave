@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>WebCAVE — headset</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <style>
+      :root { --amber: #ffb300; --muted: #79848d; --mono: "SF Mono", "Cascadia Code", "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace; }
+      html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
+      #view { display: block; width: 100vw; height: 100vh; }
+      #hud {
+        position: fixed; left: 12px; top: 10px; pointer-events: none; z-index: 5;
+        font: 11px var(--mono); letter-spacing: 0.05em; color: #dfe5ea;
+        background: rgba(0, 0, 0, 0.55); padding: 6px 8px; border-radius: 4px; white-space: pre;
+      }
+      #hud::before { content: "● "; color: var(--amber); }
+      #enter {
+        position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); z-index: 6;
+        font: 600 15px var(--mono); letter-spacing: 0.08em; color: #111; background: var(--amber);
+        border: 0; border-radius: 8px; padding: 14px 28px; cursor: pointer;
+      }
+      #enter:disabled { background: #333; color: var(--muted); cursor: default; }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <div id="hud">connecting...</div>
+    <button id="enter" disabled>checking WebXR...</button>
+    <script type="module" src="/src/xr/main.ts"></script>
+  </body>
+</html>

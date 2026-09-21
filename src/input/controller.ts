@@ -46,6 +46,8 @@ export interface InputControllerOptions {
   turnSpeed?: number; // rad/s at full deflection
   /** m/s the d-pad and the wand keys move the hand (default 1). */
   handSpeed?: number;
+  /** Another action source merged into every sample (the headset page's XR controllers). */
+  extraActions?: () => ActionState | null;
 }
 
 export class InputController {
@@ -115,7 +117,8 @@ export class InputController {
     this.pads = gp.pads;
     const held = this.taps.size ? new Set([...this.keys, ...this.taps]) : this.keys;
     this.taps.clear();
-    return mergeActions([keyboardActions(held), gp.actions]);
+    const extra = this.opts.extraActions?.();
+    return mergeActions(extra ? [keyboardActions(held), gp.actions, extra] : [keyboardActions(held), gp.actions]);
   }
 
   /** Per-frame: sample, bind, replicate, hand to the app. */

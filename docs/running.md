@@ -62,6 +62,35 @@ http://localhost:5173/simulator.html?manager=ws://localhost:8765
 
 The config and sync tier then come from the server and are shown disabled in the toolbar. The controller never acks frames, so it cannot hold the cluster barrier.
 
+### Headset viewer (WebXR)
+
+The scene can also be looked at from inside a VR headset while the simulator on a laptop drives the cluster. Start a Manager, open the simulator as its controller, and open the headset page on the headset's browser:
+
+```sh
+npm run manager -- --config cave-3m --app gltf
+```
+
+```
+http://<laptop>:5173/simulator.html?manager=ws://<laptop>:8765      # on the laptop
+http://<laptop>:5173/xr.html?manager=ws://<laptop>:8765             # on the headset, then "Enter VR"
+```
+
+The headset page joins as a controller (it mirrors the frames and never holds the barrier), runs the same application and renders its scene into an immersive WebXR session. The headset's eye views replace the CAVE screens: the XR floor origin is placed at the CAVE origin, so the wearer stands inside the virtual CAVE, and the navigation you fly from the simulator carries them through the world. Before a session starts, and on a laptop, the page shows a mono preview from the cluster's tracked head. Scene apps and raw WebGL apps render in the headset; flat and WebGPU apps do not.
+
+WebXR needs a secure context. The Meta Quest browser and other headsets only run it from `https://` or `localhost`, so either run the dev server with a self-signed certificate, `npm run dev:https` (accept the certificate once on the headset; the page then reaches the Manager through the dev server at `wss://<laptop>:5173/manager`, since a secure page cannot open a plain `ws://` socket), or, for a Quest on USB, forward the ports with `adb reverse tcp:5173 tcp:5173` and `adb reverse tcp:8765 tcp:8765` and open `http://localhost:5173/xr.html` on the headset.
+
+Options on the URL:
+
+| Parameter | Effect |
+|---|---|
+| `head=1` | Publish the headset pose as the CAVE head every frame, so the wall screens' off-axis projections follow the wearer (the simulated head switches off) |
+| `origin=x,y,z`, `yaw=deg` | Where the headset's floor origin sits in the CAVE frame, and its rotation about the vertical axis |
+| `input=0` | Do not send the XR controllers as input |
+| `polyfill=1` | Use the WebXR polyfill's Cardboard device: a phone in a cardboard viewer, or a stereo test on a laptop |
+| `app=`, `model=`, ... | Application overrides, as on a node |
+
+With input on, the right XR controller is the wand: its pose is published absolutely in the CAVE frame like a tracked wand, the trigger is the primary button (A), the grip is X (grab in Crayoland), A and B on the controller are the secondary and quaternary buttons, and the right thumbstick moves while the left one looks; X on the left controller toggles spin and Y resets. The mapping goes through the same action layer as gamepads, so applications need no headset-specific code.
+
 ## Cluster mode
 
 Start the Manager, then open one Node page per display.

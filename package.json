@@ -7,6 +7,7 @@
   "license": "BSD-3-Clause",
   "scripts": {
     "dev": "vite",
+    "dev:https": "HTTPS=1 vite",
     "build": "vite build",
     "preview": "vite preview",
     "manager": "tsx src/manager/server.ts",
@@ -31,9 +32,11 @@
     "@types/node": "^22.0.0",
     "@types/three": "^0.170.0",
     "@types/ws": "^8.5.12",
+    "@vitejs/plugin-basic-ssl": "^2.3.0",
     "@webgpu/types": "^0.1.74",
     "tsx": "^4.19.0",
     "typescript": "^5.6.0",
-    "vite": "^6.0.0"
+    "vite": "^6.0.0",
+    "webxr-polyfill": "^2.0.3"
   }
 }

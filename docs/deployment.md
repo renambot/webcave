@@ -117,6 +117,8 @@ http://manager-host:5173/simulator.html?manager=ws://manager-host:8765
 http://manager-host:5173/panel.html?manager=ws://manager-host:8765
 ```
 
+A VR headset can join the same way and look at the scene from inside the virtual CAVE while the simulator drives it: open `xr.html` on the headset, see [Headset viewer](running.md#headset-viewer-webxr) for the secure-context setup it needs.
+
 It shows the same frames as the wall, the overview with head and wand, and the barrier statistics per node in the footer. Its keyboard and gamepad drive navigation and the applications' buttons alongside the tracked wand. Late-frame counts that keep climbing point at a node that renders too slowly or a network problem; switch the config to `"sync": "loose"` if a soft sync is acceptable.
 
 **Startup order** that avoids waiting: page server and Manager first, then render machines, then the tracker, then the controller. Any order works, since every client reconnects every second, but nodes show "disconnected, retrying" until the Manager is up.

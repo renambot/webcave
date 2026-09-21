@@ -24,6 +24,7 @@ src/tracker/    tracking bridge: DTrack, NatNet and VRPN sources, calibration, c
 src/node/       render node page
 src/launcher/   node launcher: displays of this computer, one window per screen
 src/panel/      panel page: mounts an app's createPanel() as a controller, no views
+src/xr/         headset viewer: the app in an immersive WebXR session as a controller, headset as head and wand
 src/simulator/  in-page cluster with in-memory transport, or controller of a live Manager
 src/apps/       application contract and auto-discovering registry; one folder per app
 src/render/     per-screen viewport renderer, stereo packer, off-axis helper, 3D overview
@@ -33,7 +34,7 @@ public/crayoland/ Crayoland's original World, Sounds, textures, ground masks, ha
 public/aquarium/  WebGL Aquarium: tdl library, adapted core, shaders, models and textures (BSD)
 public/metaballs/ prebuilt web-texture-tool loader and KTX2 / Basis transcoder workers for the metaballs app (media is fetched remotely)
 scripts/        launch-nodes.sh (one kiosk Chrome per display), gen-schema.ts, screenshot.mjs, fake-tracker.ts (pretend DTrack / NatNet / VRPN)
-index.html, simulator.html, node.html, launcher.html, panel.html (an app's control panel alone, for a tablet)
+index.html, simulator.html, node.html, launcher.html, panel.html (an app's control panel alone, for a tablet), xr.html (the headset viewer)
 ```
 
 ## Frame protocol

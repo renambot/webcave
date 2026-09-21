@@ -17,8 +17,9 @@ A **Manager** owns the clock, the frame counter, the tracked head pose and the n
 - Application control panels: an app's sidebar runs on the simulator or a tablet page and drives the wall through shared state
 - Multi-screen nodes placed with the Window Management API or kiosk Chrome
 - Simulator with live stereo controls and a 3D overview of screens, head and frusta
+- Headset viewer: the same application in a WebXR headset, standing inside the virtual CAVE and driven from the simulator on a laptop; the headset can also be the tracked head and its controller the wand
 
-Not yet: Vicon DataStream, OSC and VMC trackers, a guided tracker calibration, WebGPU renderer, warp and blend, adapters for existing three.js or WebXR apps.
+Not yet: Vicon DataStream, OSC and VMC trackers, a guided tracker calibration, WebGPU renderer, warp and blend, adapters for existing three.js or WebXR apps. Ideas for further applications are in [TODO.md](TODO.md).
 
 ## Quick start
 
@@ -44,7 +45,7 @@ http://<host>:5173/node.html?node=front&manager=ws://<manager-host>:8765
 
 ## Documentation
 
-- [Running](docs/running.md): simulator, keys, cluster mode, kiosk launch, multi-screen nodes, stereo modes
+- [Running](docs/running.md): simulator, keys, cluster mode, headset viewer, kiosk launch, multi-screen nodes, stereo modes
 - [Deployment](docs/deployment.md): from a laptop to a one-PC CAVE to a full cluster, step by step
 - [Configuration files](docs/configuration.md): describing an installation in JSON
 - [Input devices](docs/input.md): keyboard, mouse, gamepads, input on nodes
