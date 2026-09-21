@@ -20,7 +20,7 @@
  * Nodes keep no input state of their own, which is what makes them
  * interchangeable and lets one rejoin mid-session.
  */
-import type { ClusterConfig, Quat, Vec3 } from "./config";
+import type { ClusterConfig, Quat, Vec3, StereoParams } from "./config";
 import type { ActionState } from "../input/actions";
 
 /** Tracked head: position of the eye center and orientation, CAVE frame, meters. */
@@ -79,7 +79,16 @@ export interface FrameState {
   appState: Record<string, unknown>;
   /** Wall-clock time on the manager when the frame was issued (ms), for latency measurements only. */
   issuedAt: number;
+  /**
+   * Live stereo settings from a controller (the simulator's toolbar), applied
+   * by every node over its config's stereo parameters. Absent or empty: the
+   * config alone. Set by "setStereo" messages.
+   */
+  stereo?: StereoOverride;
 }
+
+/** The stereo parameters a controller may change at run time, cluster-wide. */
+export type StereoOverride = Partial<Pick<StereoParams, "mode" | "eyeSeparation" | "swapEyes" | "anaglyph">>;
 
 /** Manager -> client. */
 export type ServerMessage =
@@ -114,6 +123,8 @@ export type ClientMessage =
   | { type: "setWand"; wand: Pose; relative?: boolean }
   /** Set navigation absolutely. */
   | { type: "setNavigation"; navigation: Navigation }
+  /** Merge live stereo settings (mode, eye separation, swap, anaglyph scheme) into every frame; nodes apply them over their config. */
+  | { type: "setStereo"; stereo: StereoOverride }
   /** Incremental navigation, applied in the CAVE's own frame (forward = -Z). */
   | { type: "navigate"; move: Vec3; yaw: number; pitch: number }
   /** Shallow-merge `patch` into the shared application state (see FrameState.appState). */

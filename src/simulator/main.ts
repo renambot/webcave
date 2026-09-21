@@ -390,6 +390,8 @@ function createApp(cfg: ClusterConfig, link: ControlLink, hooks: AppHooks): App 
       t.viewport.stereo.swapEyes = toggles.swap;
     }
     layout();
+    // The same settings go to the cluster, so the real screens follow the toolbar.
+    if (!flat) link.send({ type: "setStereo", stereo: { mode: modeSel.value as StereoMode, anaglyph: anaglyphSel.value as AnaglyphScheme, eyeSeparation: Number(ipdInput.value) / 1000, swapEyes: toggles.swap } });
   }
   modeSel.addEventListener("change", applyStereo);
   anaglyphSel.addEventListener("change", applyStereo);

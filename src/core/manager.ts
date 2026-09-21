@@ -24,7 +24,7 @@
  * Loose tier: broadcast frame N, nothing else; nodes present immediately.
  */
 import type { ClusterConfig } from "./config";
-import type { ClientMessage, FrameState, HeadPose, Navigation, NodeStats, Pose, ServerMessage } from "./protocol";
+import type { ClientMessage, FrameState, HeadPose, Navigation, NodeStats, Pose, ServerMessage, StereoOverride } from "./protocol";
 import { emptyActions, isIdle, mergeActions, type ActionState } from "../input/actions";
 import { wandFromHead } from "./pose";
 
@@ -52,6 +52,8 @@ export class ClusterManager {
   private pending: Set<string> | null = null;
   private pendingFrame = -1;
   private barrierTimer: ReturnType<typeof setTimeout> | null = null;
+  /** Live stereo settings from a controller, sent in every frame (see FrameState.stereo). */
+  private stereo: StereoOverride = {};
   private head: HeadPose;
   /** Simulated head sway; off by default so the head stays at defaultHead until a tracker or the simulator moves it. */
   private autoHead = false;
@@ -143,6 +145,9 @@ export class ClusterManager {
       case "setHeadAuto":
         this.autoHead = msg.enabled;
         break;
+      case "setStereo":
+        this.stereo = { ...this.stereo, ...msg.stereo };
+        break;
       case "setWand":
         if (msg.relative) {
           this.wandOffset = msg.wand;
@@ -214,6 +219,7 @@ export class ClusterManager {
       navigation: this.navigation,
       appState: this.appState,
       issuedAt: now,
+      stereo: this.stereo,
     };
 
     // Open the barrier before broadcasting: with an in-memory transport the

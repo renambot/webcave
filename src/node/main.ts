@@ -33,7 +33,7 @@
  * same node id and a different view; the launcher page or the kiosk script
  * opens them. Keys: click / f / Enter / Space = fullscreen, h = toggle HUD.
  */
-import type { ClusterConfig, ScreenConfig, StereoMode } from "../core/config";
+import type { ClusterConfig, ScreenConfig, StereoMode, StereoParams } from "../core/config";
 import { resolveStereo } from "../core/config";
 import { decode, encode, type ClientMessage, type FrameState, type ServerMessage } from "../core/protocol";
 import { currentScreenIndex, describeScreen, getScreens, hasWindowManagement, requestFullscreenOn } from "../core/screens";
@@ -120,6 +120,21 @@ function fit() {
 }
 window.addEventListener("resize", fit);
 
+/** The config's stereo for this screen, under any live override from a controller. */
+let baseStereo: StereoParams | null = null;
+let appliedStereo = "";
+function applyStereo(state: FrameState) {
+  if (!viewport || !baseStereo) return;
+  const key = JSON.stringify(state.stereo ?? {});
+  if (key === appliedStereo) return;
+  appliedStereo = key;
+  const next = { ...baseStereo, ...(state.stereo ?? {}) };
+  if (modeOverride) next.mode = modeOverride;
+  const modeChanged = next.mode !== viewport.stereo.mode;
+  Object.assign(viewport.stereo, next);
+  if (modeChanged) fit();
+}
+
 /** Tear down whatever the previous config built. */
 function teardown() {
   viewport?.dispose();
@@ -152,6 +167,8 @@ function setup(c: ClusterConfig, s: ScreenConfig) {
     canvas.style.display = "";
     const stereo = resolveStereo(c, s);
     if (modeOverride) stereo.mode = modeOverride;
+    baseStereo = { ...stereo };
+    appliedStereo = "";
     viewport = new ViewportRenderer(c, s, canvas, stereo);
   }
   fit();
@@ -209,6 +226,7 @@ function connect() {
         lastState = msg.state;
         // Input runs at the cluster frame rate, before rendering, so a key press affects the next frame.
         input?.step(Math.max(0, Math.min(0.1, msg.state.time - prevTime)));
+        applyStereo(msg.state);
         const t0 = performance.now();
         if (flatView) {
           flatView.render(msg.state);
