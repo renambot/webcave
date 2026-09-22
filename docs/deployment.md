@@ -219,6 +219,8 @@ docker run -d --name webcave-manager -p 8765:8765 -e WEBCAVE_CONFIG=cave-3m -e W
 docker run -d --name webcave-web -p 8080:80 -e BASE_PATH=/webcave/ -e MANAGER_UPSTREAM=host.docker.internal:8765 webcave-web
 ```
 
+Building outside Docker, on the server itself, is `npm ci && BASE_PATH=/webcave/ npm run build`. The repository's `.npmrc` sets `legacy-peer-deps`, which the install needs (openvdb's declared peer range for three.js is older than the project's); without it npm stops with an ERESOLVE error and nothing is installed.
+
 **Without the web container.** The nginx in the web image only serves the pages and forwards the Manager's socket, so a server that already runs nginx can do both itself: build the pages once, serve `dist/` with an `alias`, and proxy the socket to the Manager container's published port.
 
 ```sh

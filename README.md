@@ -30,6 +30,8 @@ npm install
 npm run dev
 ```
 
+(The repository's `.npmrc` turns on `legacy-peer-deps`: the openvdb package declares a peer dependency on an older three.js than the project uses, which npm 7+ would otherwise refuse. Everything works with the newer one.)
+
 Open <http://localhost:5173/simulator.html?config=cave-3m> for the simulator, or `?config=wall-3x1` for a display wall. Press `H` for the keys.
 
 For a real cluster, start the Manager and open one node page per display:
