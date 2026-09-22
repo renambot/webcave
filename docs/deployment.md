@@ -182,7 +182,7 @@ Then, on the render machines and the operator's laptop:
 
 ```
 https://host/webcave/node.html?node=front          # the Manager is found on the same origin
-https://host/webcave/simulator.html?manager=auto   # controller of the deployed Manager
+https://host/webcave/simulator.html                # controller of the deployed Manager (the default in a production build)
 https://host/webcave/xr.html                       # headset viewer; https gives WebXR its secure context
 ```
 

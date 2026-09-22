@@ -71,6 +71,8 @@ Point the simulator at a running Manager and it stops running its own. The pictu
 http://localhost:5173/simulator.html?manager=ws://localhost:8765
 ```
 
+`manager=auto` means the Manager at the page's own origin (`<base>manager`, the deployed layout) or the development default, and `manager=local` forces the standalone simulator. **In a production build the controller is the default**: `simulator.html` with no parameters controls the deployed Manager, since that is what an operator opens it for; `?config=NAME` or `?manager=local` gives the standalone demo. In development the standalone simulator stays the default.
+
 The config and sync tier then come from the server and are shown disabled in the toolbar. The controller never acks frames, so it cannot hold the cluster barrier.
 
 ### Headset viewer (WebXR)

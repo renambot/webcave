@@ -62,8 +62,14 @@
  * in at slightly different moments on different screens. That is inherent to
  * replicated 2D apps and acceptable for maps; the camera itself never drifts.
  */
-import { Map as MapLibreMap, type ErrorEvent, type PaddingOptions } from "maplibre-gl";
+import { Map as MapLibreMap, setWorkerUrl, type ErrorEvent, type PaddingOptions } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
+// MapLibre spawns its tile worker from a URL it derives from its own module's location
+// (new URL("./maplibre-gl-worker.mjs", import.meta.url)). In a production bundle that
+// location is Vite's hashed chunk and the worker file is not there: the style loads, no
+// tile is ever decoded and the map stays white. Hand it the worker as a Vite asset instead.
+import maplibreWorkerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
+setWorkerUrl(maplibreWorkerUrl);
 import type { ScreenConfig } from "../../core/config";
 import type { FrameState } from "../../core/protocol";
 import type { WallLayout } from "../../core/wall";

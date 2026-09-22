@@ -39,6 +39,8 @@ export default defineConfig(({ mode }) => {
   return {
   base,
   define: { "import.meta.env.VITE_APPS_DISABLED": JSON.stringify(disabled.join(",")) },
+  // Workers (MapLibre's tile worker) are bundled as ES modules, so they may share code-split chunks.
+  worker: { format: "es" },
   plugins: [disableApps(disabled), ...(https ? [basicSsl() as PluginOption] : [])],
   server: {
     port: 5173,
@@ -51,7 +53,8 @@ export default defineConfig(({ mode }) => {
   resolve: { alias: { "wgsl-preprocessor": resolve(__dirname, "node_modules/wgsl-preprocessor/wgsl-preprocessor.js") } },
   // MapLibre spawns its tile worker with new URL("maplibre-gl-worker.mjs", import.meta.url).
   // Vite's dependency pre-bundling rewrites the module and breaks that URL, so the
-  // worker never starts and tiles never load. Serve the package as-is instead.
+  // worker never starts and tiles never load. Serve the package as-is in development;
+  // production builds get the worker as an explicit asset (see src/apps/map/wallmap.ts).
   optimizeDeps: { exclude: ["maplibre-gl"] },
   build: {
     rollupOptions: {

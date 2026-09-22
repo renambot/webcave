@@ -42,8 +42,16 @@ import { wandFromHead } from "../core/pose";
 import { defaultManagerUrl } from "../core/base";
 
 const params = new URLSearchParams(location.search);
-// ?manager=auto: the Manager at this site's own origin (a deployment behind a reverse proxy) or the dev default.
-const managerUrl = params.get("manager") === "auto" ? defaultManagerUrl() : params.get("manager");
+// Which Manager to control. ?manager=ws://... names one; "auto" is the one at this site's own
+// origin (a deployment behind a reverse proxy) or the dev default; "local" forces the in-page
+// cluster. Without the parameter, a production build controls the deployed Manager, since
+// that is what an operator opens the page for, unless ?config= asks for a standalone demo;
+// development keeps the standalone simulator as its default.
+const managerParam = params.get("manager");
+const managerUrl =
+  managerParam === "auto" ? defaultManagerUrl()
+  : managerParam === "local" ? null
+  : managerParam ?? (!import.meta.env.DEV && !params.has("config") ? defaultManagerUrl() : null);
 const $ = <T extends HTMLElement>(sel: string) => document.querySelector<T>(sel)!;
 
 // Surface runtime errors in the footer: a simulator that silently freezes is
@@ -115,7 +123,7 @@ function bootLocal(cfg: ClusterConfig) {
  */
 function bootRemote(url: string) {
   const statsEl = $("#stats");
-  statsEl.textContent = `connecting to ${url} ...`;
+  statsEl.textContent = `connecting to ${url} ... (no Manager there? add ?config=cave-3m or ?manager=local for a standalone simulator)`;
   let app: App | null = null;
   let statsCache: NodeStats[] = [];
   let ws: WebSocket;
