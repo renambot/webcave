@@ -18,6 +18,7 @@
 #   --width N --height N window size in pixels        (default: 1920 x 1080)
 #   --positions "x,y ..."  one x,y per node; default lays them out left to right by --width
 #   --stereo MODE        append &stereo=MODE to every node URL
+#   --anaglyph SCHEME    append &anaglyph=SCHEME (dubois | bw) to every node URL
 #   --chrome PATH        Chrome / Chromium executable
 #   --profile-dir DIR    base dir for per-node profiles (default: ${TMPDIR:-/tmp}/webcave-nodes)
 #   --kill               stop every node launched by this script and exit
@@ -56,6 +57,7 @@ while [[ $# -gt 0 ]]; do
     --height) HEIGHT="$2"; shift 2 ;;
     --positions) POSITIONS="$2"; shift 2 ;;
     --stereo) STEREO="$2"; shift 2 ;;
+    --anaglyph) ANAGLYPH="$2"; shift 2 ;;
     --chrome) CHROME="$2"; shift 2 ;;
     --profile-dir) PROFILE_BASE="$2"; shift 2 ;;
     --kill) KILL=1; shift ;;
@@ -121,6 +123,7 @@ for node in "${node_list[@]}"; do
   url="${SERVER%/}/node.html?node=${node}&manager=${MANAGER}"
   [[ -n "$view" ]] && url="${url}&view=${view}"
   [[ -n "$STEREO" ]] && url="${url}&stereo=${STEREO}"
+  [[ -n "$ANAGLYPH" ]] && url="${url}&anaglyph=${ANAGLYPH}"
 
   profile="${PROFILE_BASE}/${node}${view:+-$view}"
 

@@ -17,7 +17,7 @@
  * carried, which is why any window can join or rejoin at any time and show
  * the same picture as the others.
  *
- * URL: node.html?node=front&manager=ws://host:8765
+ * URL: node.html?node=front&manager=ws://host:8765[&stereo=anaglyph&anaglyph=bw]
  *   node=ID      node id from the cluster config
  *   view=SCREEN  which of the node's screens this window renders (default: its first)
  *   screen=N     display index for fullscreen (Window Management API, needs a gesture)
@@ -33,7 +33,7 @@
  * same node id and a different view; the launcher page or the kiosk script
  * opens them. Keys: click / f / Enter / Space = fullscreen, h = toggle HUD.
  */
-import type { ClusterConfig, ScreenConfig, StereoMode, StereoParams } from "../core/config";
+import type { AnaglyphScheme, ClusterConfig, ScreenConfig, StereoMode, StereoParams } from "../core/config";
 import { resolveStereo } from "../core/config";
 import { decode, encode, type ClientMessage, type FrameState, type ServerMessage } from "../core/protocol";
 import { currentScreenIndex, describeScreen, getScreens, hasWindowManagement, requestFullscreenOn } from "../core/screens";
@@ -51,6 +51,7 @@ const viewId = params.get("view");
 const screenIndex = params.has("screen") ? Number(params.get("screen")) : null;
 const managerUrl = params.get("manager") ?? defaultManagerUrl();
 const modeOverride = params.get("stereo") as StereoMode | null;
+const anaglyphOverride = params.get("anaglyph") as AnaglyphScheme | null; // dubois | bw
 
 const canvas = document.querySelector<HTMLCanvasElement>("#view")!;
 const hud = document.querySelector<HTMLElement>("#hud")!;
@@ -131,6 +132,7 @@ function applyStereo(state: FrameState) {
   appliedStereo = key;
   const next = { ...baseStereo, ...(state.stereo ?? {}) };
   if (modeOverride) next.mode = modeOverride;
+  if (anaglyphOverride) next.anaglyph = anaglyphOverride;
   const modeChanged = next.mode !== viewport.stereo.mode;
   Object.assign(viewport.stereo, next);
   if (modeChanged) fit();
@@ -168,6 +170,7 @@ function setup(c: ClusterConfig, s: ScreenConfig) {
     canvas.style.display = "";
     const stereo = resolveStereo(c, s);
     if (modeOverride) stereo.mode = modeOverride;
+    if (anaglyphOverride) stereo.anaglyph = anaglyphOverride;
     baseStereo = { ...stereo };
     appliedStereo = "";
     viewport = new ViewportRenderer(c, s, canvas, stereo);
