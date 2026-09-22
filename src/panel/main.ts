@@ -13,6 +13,7 @@
  * URL: manager=ws://..., and the usual app overrides (app=, options) for
  * development; normally the app comes from the Manager's config.
  */
+import type { ClusterConfig } from "../core/config";
 import { decode, encode, type ClientMessage, type FrameState, type ServerMessage } from "../core/protocol";
 import { appSpecFromParams, createApp, type AnyApp, type AppPanel } from "../apps";
 import { defaultManagerUrl } from "../core/base";
@@ -39,26 +40,16 @@ function connect() {
   ws.addEventListener("message", (ev) => {
     const msg = decode<ServerMessage>(ev.data);
     if (msg.type === "welcome") {
-      if (!app) {
-        app = createApp(appSpecFromParams(params, msg.config.app), { audio: false, debug: false });
-        $("#app-name").textContent = `· ${app.name}`;
-        mainEl.replaceChildren();
-        if (app.createPanel) {
-          panel = app.createPanel(mainEl, {
-            send: (patch) => send({ type: "setAppState", patch }),
-            getState: () => lastState ?? { frame: 0, time: 0, head: msg.config.defaultHead, wand: msg.config.defaultHead, navigation: { position: [0, 0, 0], yaw: 0, pitch: 0 }, appState: {}, issuedAt: 0 },
-          });
-        } else {
-          const p = document.createElement("p");
-          p.className = "note";
-          p.textContent = `The "${app.name}" application has no control panel.`;
-          mainEl.append(p);
-        }
-      }
+      if (!app) build(msg.config);
       return;
     }
     if (msg.type === "frame") {
       lastState = msg.state;
+      // The cluster switched applications: mount the new app's panel.
+      if (msg.state.app && JSON.stringify(msg.state.app) !== builtApp && config) {
+        config = { ...config, app: msg.state.app };
+        build(config);
+      }
       panel?.update(msg.state);
     }
   });
@@ -67,5 +58,30 @@ function connect() {
     setTimeout(connect, 1000);
   });
   ws.addEventListener("error", () => ws.close());
+}
+
+let config: ClusterConfig | null = null;
+let builtApp = "";
+/** Create the app and mount its panel for `c.app` (again, after a live app switch). */
+function build(c: ClusterConfig) {
+  config = c;
+  builtApp = JSON.stringify(c.app);
+  panel?.dispose();
+  panel = null;
+  app?.dispose?.();
+  app = createApp(appSpecFromParams(params, c.app), { audio: false, debug: false });
+  $("#app-name").textContent = `· ${app.name}`;
+  mainEl.replaceChildren();
+  if (app.createPanel) {
+    panel = app.createPanel(mainEl, {
+      send: (patch) => send({ type: "setAppState", patch }),
+      getState: () => lastState ?? { frame: 0, time: 0, head: c.defaultHead, wand: c.defaultHead, navigation: { position: [0, 0, 0], yaw: 0, pitch: 0 }, appState: {}, issuedAt: 0 },
+    });
+  } else {
+    const p = document.createElement("p");
+    p.className = "note";
+    p.textContent = `The "${app.name}" application has no control panel.`;
+    mainEl.append(p);
+  }
 }
 connect();

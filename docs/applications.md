@@ -19,7 +19,7 @@ An application owns a three.js scene and advances it from the cluster's simulati
 
 A deployment can leave apps out of the build with `VITE_APPS_DISABLED=map,density,...` (folder names), see [deployment.md](deployment.md#docker-behind-a-reverse-proxy); the rest of this page assumes the full build.
 
-The application is part of the cluster config, so every Node runs the same one. Set it on the Manager:
+The application is part of the cluster config, so every Node runs the same one. Set it on the Manager to start with, and switch it live at any time from the controller simulator's application dropdown or `npm run set-app -- ws://host:8765 NAME` (see [running.md](running.md#switching-applications)):
 
 ```sh
 npm run manager -- --app gltf --model /models/DamagedHelmet.glb --size 0.8 --spin 0.3

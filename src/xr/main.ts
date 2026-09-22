@@ -89,7 +89,9 @@ function fit() {
 window.addEventListener("resize", fit);
 fit();
 
+let builtApp = "";
 function setup(c: ClusterConfig) {
+  builtApp = JSON.stringify(c.app);
   app?.dispose?.();
   const spec = appSpecFromParams(params, c.app);
   app = createApp(spec, { audio: false, debug: params.get("debug") === "1" });
@@ -125,6 +127,10 @@ function connect() {
         break;
       case "frame": {
         if (!app) return;
+        if (msg.state.app && JSON.stringify(msg.state.app) !== builtApp && cfg) {
+          cfg = { ...cfg, app: msg.state.app };
+          setup(cfg);
+        }
         const prevTime = lastState?.time ?? msg.state.time;
         lastState = msg.state;
         input?.step(Math.max(0, Math.min(0.1, msg.state.time - prevTime)));

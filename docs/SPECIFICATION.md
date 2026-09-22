@@ -296,6 +296,7 @@ What is implemented:
 | Live stereo settings: `setStereo` from a controller, `state.stereo` in every frame, nodes apply it over their config and re-fit on a packing change; the simulator toolbar drives the real screens | `src/core/protocol.ts`, `src/core/manager.ts`, `src/node/main.ts`, `src/simulator/main.ts` | done |
 | Deployment: Vite `base` from `BASE_PATH`, `publicUrl()` for the apps' default assets, relative page links, same-origin `<base>manager` WebSocket default; Dockerfile (nginx web image with templated config, bundled Manager image with env options), docker-compose, reverse-proxy notes | `src/core/base.ts`, `Dockerfile`, `deploy/nginx.conf.template`, `docker-compose.yml`, `scripts/build-manager.mjs` | done |
 | Build-time app denylist `VITE_APPS_DISABLED`: Vite plugin stubs the disabled apps' modules so their code is not bundled, registry skips them, status names a disabled app; Docker build argument | `vite.config.ts`, `src/apps/index.ts` | done |
+| Live application switching: `setApp` from a controller replaces the config app, clears app state and navigation; `state.app` in every frame; nodes, simulator, panel and headset pages rebuild on change; toolbar dropdown and `scripts/set-app.mjs` | `src/core/protocol.ts`, `src/core/manager.ts`, `src/node/main.ts`, `src/simulator/main.ts`, `src/panel/main.ts`, `src/xr/main.ts` | done |
 | Vicon DataStream, OSC/VMC, guided calibration, WebGPU renderer, warp/blend, more 2D adapters (deck.gl, Leaflet, DOM), adapters for existing three.js/WebXR apps | | not started |
 
 ## Suggested milestones

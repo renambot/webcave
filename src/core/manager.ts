@@ -148,6 +148,13 @@ export class ClusterManager {
       case "setStereo":
         this.stereo = { ...this.stereo, ...msg.stereo };
         break;
+      case "setApp":
+        // A new world: the old app's shared state and the navigation belong to the old one.
+        this.config.app = msg.app;
+        this.appState = {};
+        this.navigation = { position: [0, 0, 0], yaw: 0, pitch: 0 };
+        console.log(`[manager] app: ${msg.app.name}`);
+        break;
       case "setWand":
         if (msg.relative) {
           this.wandOffset = msg.wand;
@@ -220,6 +227,7 @@ export class ClusterManager {
       appState: this.appState,
       issuedAt: now,
       stereo: this.stereo,
+      app: this.config.app,
     };
 
     // Open the barrier before broadcasting: with an in-memory transport the

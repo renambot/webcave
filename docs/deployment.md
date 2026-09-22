@@ -121,6 +121,14 @@ A VR headset can join the same way and look at the scene from inside the virtual
 
 It shows the same frames as the wall, the overview with head and wand, and the barrier statistics per node in the footer. Its keyboard and gamepad drive navigation and the applications' buttons alongside the tracked wand. Late-frame counts that keep climbing point at a node that renders too slowly or a network problem; switch the config to `"sync": "loose"` if a soft sync is acceptable.
 
+**7. Switch applications** without restarting anything: pick another app in the controller simulator's application dropdown, or from a shell on any machine that can reach the Manager:
+
+```sh
+npm run set-app -- ws://manager-host:8765 aquarium        # in the compose setup, from the server: ws://localhost:8765 with the port published, or through the proxy wss://host/webcave/manager
+```
+
+Every node, panel and headset page rebuilds for the new app within a frame; the Manager's `WEBCAVE_APP` (or `--app`) is only the app it starts with.
+
 **Startup order** that avoids waiting: page server and Manager first, then render machines, then the tracker, then the controller. Any order works, since every client reconnects every second, but nodes show "disconnected, retrying" until the Manager is up.
 
 **Checklist**

@@ -52,6 +52,17 @@ The **Overview** shows the physical installation: screens, frusta, the head as a
 
 "View from head" moves the overview camera to the eye position, where the wall images should join seamlessly.
 
+### Switching applications
+
+The **application dropdown** in the toolbar, next to the config, lists every app in the build. Standalone, choosing one reloads the page with `?app=`. As a controller of a live Manager it sends `setApp`, and the whole cluster switches: the Manager replaces the config's app, clears the shared application state and resets the navigation, and every connected page rebuilds for the new app when it sees it in the next frame, nodes in place, the simulator by reloading, the panel page by mounting the new panel, the headset viewer in its session. Nothing restarts and no URL changes. The same switch from a shell:
+
+```sh
+npm run set-app -- ws://manager-host:8765 crayoland
+npm run set-app -- ws://manager-host:8765 gltf model=/models/DamagedHelmet.glb size=1
+```
+
+A page with its own `?app=` override keeps that app regardless (it is for testing one screen).
+
 ### Simulator as controller
 
 Point the simulator at a running Manager and it stops running its own. The picture at the top of this page shows this mode: the header reads "controller · ws://localhost:8765", the config selector shows the server's config greyed out, and the late-frame counter reports the real cluster's barrier. It receives the same frames as the Nodes, mirrors the wall in its tiles and overview, and its keyboard, gamepad and toolbar drive the cluster's head and navigation.

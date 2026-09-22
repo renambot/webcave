@@ -124,6 +124,8 @@ window.addEventListener("resize", fit);
 
 /** The config's stereo for this screen, under any live override from a controller. */
 let baseStereo: StereoParams | null = null;
+/** The config app the current setup() was built from, to notice a live switch. */
+let builtApp = "";
 let appliedStereo = "";
 function applyStereo(state: FrameState) {
   if (!viewport || !baseStereo) return;
@@ -150,6 +152,7 @@ function teardown() {
 
 /** Build the renderer or flat view for the current config and screen. */
 function setup(c: ClusterConfig, s: ScreenConfig) {
+  builtApp = JSON.stringify(c.app);
   const spec = appSpecFromParams(params, c.app);
   app = createApp(spec, { audio: audioEnabled, debug: params.get("debug") === "1" });
   if (isFlatApp(app)) {
@@ -230,6 +233,12 @@ function connect() {
         lastState = msg.state;
         // Input runs at the cluster frame rate, before rendering, so a key press affects the next frame.
         input?.step(Math.max(0, Math.min(0.1, msg.state.time - prevTime)));
+        // A controller switched the application: rebuild for the new one (URL overrides still apply).
+        if (msg.state.app && JSON.stringify(msg.state.app) !== builtApp && cfg && screen) {
+          cfg.app = msg.state.app;
+          teardown();
+          setup(cfg, screen);
+        }
         applyStereo(msg.state);
         const t0 = performance.now();
         if (flatView) {

@@ -20,7 +20,7 @@
  * Nodes keep no input state of their own, which is what makes them
  * interchangeable and lets one rejoin mid-session.
  */
-import type { ClusterConfig, Quat, Vec3, StereoParams } from "./config";
+import type { AppSpec, ClusterConfig, Quat, Vec3, StereoParams } from "./config";
 import type { ActionState } from "../input/actions";
 
 /** Tracked head: position of the eye center and orientation, CAVE frame, meters. */
@@ -85,6 +85,12 @@ export interface FrameState {
    * config alone. Set by "setStereo" messages.
    */
   stereo?: StereoOverride;
+  /**
+   * The application every node runs, as currently set on the Manager: the
+   * config's app until a controller sends "setApp". Nodes rebuild when it
+   * changes, so the cluster switches applications without a restart.
+   */
+  app?: AppSpec;
 }
 
 /** The stereo parameters a controller may change at run time, cluster-wide. */
@@ -125,6 +131,8 @@ export type ClientMessage =
   | { type: "setNavigation"; navigation: Navigation }
   /** Merge live stereo settings (mode, eye separation, swap, anaglyph scheme) into every frame; nodes apply them over their config. */
   | { type: "setStereo"; stereo: StereoOverride }
+  /** Switch the cluster's application: replaces the config's app, clears the shared app state and navigation; every node rebuilds. */
+  | { type: "setApp"; app: AppSpec }
   /** Incremental navigation, applied in the CAVE's own frame (forward = -Z). */
   | { type: "navigate"; move: Vec3; yaw: number; pitch: number }
   /** Shallow-merge `patch` into the shared application state (see FrameState.appState). */

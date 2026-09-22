@@ -32,7 +32,7 @@ import { type ClusterConfig, type StereoMode, type AnaglyphScheme, resolveStereo
 import { bundledConfigNames, bundledConfigs, loadConfig } from "../core/configs";
 import { ClusterManager, type ManagerTransport } from "../core/manager";
 import { decode, encode, type ClientMessage, type ServerMessage, type NodeStats, type FrameState } from "../core/protocol";
-import { appSpecFromParams, createApp as createCaveApp, isFlatApp, isRawApp, isWebGpuApp, toggleSpinPatch, type AppPanel, type FlatView } from "../apps";
+import { APP_NAMES, appSpecFromParams, createApp as createCaveApp, isFlatApp, isRawApp, isWebGpuApp, toggleSpinPatch, type AppPanel, type FlatView } from "../apps";
 import { InputController } from "../input/controller";
 import { wallLayout } from "../core/wall";
 import { screenSize } from "../core/projection";
@@ -177,6 +177,8 @@ function createApp(cfg: ClusterConfig, link: ControlLink, hooks: AppHooks): App 
   const audioParam = params.get("audio") === "1";
   const debugParam = params.get("debug") === "1";
   const demo = createCaveApp(appSpecFromParams(params, cfg.app), { audio: audioParam, debug: debugParam });
+  /** The server's app this page was built for; a different one in a frame means a controller switched it. */
+  const builtApp = JSON.stringify(cfg.app);
   const flat = isFlatApp(demo) ? demo : null;
   const raw = isRawApp(demo) ? demo : null;
   const gpu = isWebGpuApp(demo) ? demo : null;
@@ -251,6 +253,11 @@ function createApp(cfg: ClusterConfig, link: ControlLink, hooks: AppHooks): App 
     switch (msg.type) {
       case "frame": {
         lastState = msg.state;
+        if (remote && msg.state.app && JSON.stringify(msg.state.app) !== builtApp) {
+          // The cluster runs another app now: rebuild this page for it (the config comes back in "welcome").
+          location.reload();
+          return;
+        }
         if (flat) {
           for (const v of flatViews) {
             const t0 = performance.now();
@@ -349,6 +356,22 @@ function createApp(cfg: ClusterConfig, link: ControlLink, hooks: AppHooks): App 
   };
 
   // Config selector lists the bundled configs/*.json files.
+  // Application: as a controller, a change switches the whole cluster (setApp); locally, it reloads with ?app=.
+  const appSel = $<HTMLSelectElement>("#app");
+  appSel.innerHTML = "";
+  for (const name of APP_NAMES) appSel.append(new Option(name, name));
+  const currentApp = params.get("app") ?? cfg.app.name;
+  if (![...appSel.options].some((o) => o.value === currentApp)) appSel.append(new Option(currentApp, currentApp));
+  appSel.value = currentApp;
+  appSel.addEventListener("change", () => {
+    if (remote) {
+      link.send({ type: "setApp", app: { name: appSel.value } });
+    } else {
+      const p = new URLSearchParams(location.search);
+      p.set("app", appSel.value);
+      location.search = p.toString();
+    }
+  });
   configSel.innerHTML = "";
   for (const name of bundledConfigNames) {
     const c = bundledConfigs[name];
