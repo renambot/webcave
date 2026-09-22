@@ -26,8 +26,11 @@ const modules = import.meta.glob<{ default: AppDefinition }>("./*/index.ts", { e
 
 /** All applications by name. */
 export const APPS: Record<string, AppDefinition> = {};
+/** Apps left out of this build (VITE_APPS_DISABLED at build time), for status messages. */
+export const DISABLED_APPS: string[] = (import.meta.env.VITE_APPS_DISABLED ?? "").split(",").map((s: string) => s.trim()).filter(Boolean);
 for (const [path, mod] of Object.entries(modules)) {
   const def = mod.default;
+  if (def?.disabled) continue;
   if (!def || typeof def.create !== "function") {
     console.warn(`[apps] ${path} has no default AppDefinition export; skipped`);
     continue;
@@ -51,7 +54,9 @@ export function createApp(spec: AppSpec, ctx: AppContext = { audio: false, debug
   const fallback = APPS.shapes ?? Object.values(APPS)[0];
   if (!fallback) throw new Error("no applications found under src/apps/");
   const app = fallback.create(spec, ctx);
-  app.status = `unknown app "${spec.name}" (have: ${APP_NAMES.join(", ")}), showing ${fallback.name}`;
+  app.status = DISABLED_APPS.includes(spec.name)
+    ? `app "${spec.name}" is disabled in this build (VITE_APPS_DISABLED), showing ${fallback.name}`
+    : `unknown app "${spec.name}" (have: ${APP_NAMES.join(", ")}), showing ${fallback.name}`;
   return app;
 }
 

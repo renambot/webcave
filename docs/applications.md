@@ -17,6 +17,8 @@ An application owns a three.js scene and advances it from the cluster's simulati
 | `hackernews` | The Hacker News front page as a reading room: the top thirty stories from the public JSON API as cards on a curved wall around the viewer; point the wand at one and press A to open its comments on a panel in front; a mock-up of HTML content in the CAVE, rasterized through Chrome's HTML-in-canvas API when available and Canvas 2D otherwise | options `count` (stories, default 30), `tier` (`canvas2d` to force the fallback) |
 | `crayoland` | Dave Pape's Crayoland (EVL, 1995): a crayon-drawn meadow with bees, butterflies, flies, and flowers and rocks to grab and throw with the wand; birds, frogs, a stream and the hive's hum on the audio node | `model` (folder URL with `World`, `Sounds`, `tex/`, `audio/`; default `/crayoland/`), options `world`, `sounds` (file names); with the simulator's debug button or `?debug=1`: pick spheres, wand point, touched object highlighted |
 
+A deployment can leave apps out of the build with `VITE_APPS_DISABLED=map,density,...` (folder names), see [deployment.md](deployment.md#docker-behind-a-reverse-proxy); the rest of this page assumes the full build.
+
 The application is part of the cluster config, so every Node runs the same one. Set it on the Manager:
 
 ```sh

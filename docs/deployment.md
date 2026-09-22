@@ -145,10 +145,13 @@ docker compose up -d --build
 | Variable | Meaning | Default |
 |---|---|---|
 | `BASE_PATH` | Path prefix the site is served under, with both slashes: `/webcave/` | `/` |
+| `VITE_APPS_DISABLED` | Apps to leave out of the build, comma-separated folder names: `map,density,map2d,dotdensity` | none |
 | `WEBCAVE_HTTP_PORT` | Host port of the web container, what the front proxy forwards to | `8080` |
 | `WEBCAVE_CONFIG` | Installation config in `configs/` | `cave-3m` |
 | `WEBCAVE_APP` | Application to run | `shapes` |
 | `WEBCAVE_SYNC` | `barrier` or `loose` | the config's |
+
+**Leaving apps out.** `VITE_APPS_DISABLED` names apps that the build drops entirely: they are not registered, their code and libraries are not bundled (the four map apps alone are more than half of the download), and asking for one shows the fallback app with a status line that says it is disabled in this build. Like the base path it is decided at build time, so changing it means a rebuild of the web image. It also works for a plain `npm run build` or `npm run dev`, from the environment or a `.env` file.
 
 The base path is a **build-time** setting: Vite rewrites every bundled asset URL, the pages link to each other relatively, and the apps' default asset URLs (`/models/...`, `/crayoland/`, ...) go through `publicUrl()` in `src/core/base.ts`, so a rebuild with another `BASE_PATH` is all a move needs. `configs/` is mounted into the manager container, so an installation file can be edited and the container restarted without a rebuild; `public/volumes/` is mounted into the web container for the large sample volumes that are not in the image.
 
@@ -205,7 +208,7 @@ git pull
 docker compose up -d --build
 ```
 
-To change the installation or the app without rebuilding, edit `.env` or a file in `configs/` and restart the Manager: `docker compose up -d manager` after an `.env` change, `docker compose restart manager` after a config edit (`configs/` is a mount). A change of `BASE_PATH` is the one that needs a rebuild of the web image, since Vite bakes it into the pages.
+To change the installation or the app without rebuilding, edit `.env` or a file in `configs/` and restart the Manager: `docker compose up -d manager` after an `.env` change, `docker compose restart manager` after a config edit (`configs/` is a mount). A change of `BASE_PATH` or `VITE_APPS_DISABLED` needs a rebuild of the web image, since Vite bakes both into the pages.
 
 The images can also be built and run by hand, without compose:
 

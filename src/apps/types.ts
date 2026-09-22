@@ -304,6 +304,8 @@ export function isSceneApp(app: AnyApp): app is CaveApp {
 export interface AppDefinition {
   /** Must equal the folder name; used in config `app.name` and `?app=`. */
   name: string;
+  /** Set on the stub the build substitutes for an app named in VITE_APPS_DISABLED (see vite.config.ts). */
+  disabled?: boolean;
   /** One line for listings. */
   description: string;
   /** Build an instance. `spec` carries options from the config or URL (see AppSpec); `ctx` says where it runs. */

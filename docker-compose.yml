@@ -3,6 +3,7 @@
 #
 # Environment (a .env file next to this one works):
 #   BASE_PATH           path prefix the site is served under, with slashes: /webcave/ (default /)
+#   VITE_APPS_DISABLED  apps to leave out of the build, comma-separated: map,density,map2d,dotdensity
 #   WEBCAVE_HTTP_PORT   host port for the web service (default 8080)
 #   WEBCAVE_CONFIG      installation config name in configs/ (default cave-3m)
 #   WEBCAVE_APP         application to run (default shapes)
@@ -14,6 +15,7 @@ services:
       target: web
       args:
         BASE_PATH: ${BASE_PATH:-/}
+        VITE_APPS_DISABLED: ${VITE_APPS_DISABLED:-}
     environment:
       BASE_PATH: ${BASE_PATH:-/}
       MANAGER_UPSTREAM: manager:8765

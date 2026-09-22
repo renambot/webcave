@@ -14,7 +14,8 @@ COPY package.json package-lock.json ./
 RUN npm ci --legacy-peer-deps --ignore-scripts
 COPY . .
 ARG BASE_PATH=/
-ENV BASE_PATH=${BASE_PATH}
+ARG VITE_APPS_DISABLED=
+ENV BASE_PATH=${BASE_PATH} VITE_APPS_DISABLED=${VITE_APPS_DISABLED}
 RUN npm run build && npm run build:manager
 
 # ---- web: static pages behind nginx -----------------------------------------------------------
