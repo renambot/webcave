@@ -185,6 +185,53 @@ Things to expect behind a proxy:
 
 Without a proxy, the same compose file serves the site at `http://host:8080/` with `BASE_PATH=/`.
 
+### Build, update, inspect
+
+Everything is built on the server from a checkout; nothing is pulled from a registry.
+
+```sh
+git clone https://github.com/renambot/webcave.git && cd webcave
+cp .env.example .env                       # set BASE_PATH=/webcave/, the config and the app
+docker compose up -d --build               # build both images (a few minutes the first time) and start
+docker compose ps                          # webcave-web-1 and webcave-manager-1 should be "Up"
+docker compose logs -f manager             # "[manager] config "cave-3m" ... listening on ws://0.0.0.0:8765"
+curl -sI http://localhost:8080/webcave/ | head -1        # 200 from the web container
+```
+
+To update: pull, rebuild, restart. Compose only recreates the containers whose image changed, and the render machines reconnect on their own when the Manager comes back.
+
+```sh
+git pull
+docker compose up -d --build
+```
+
+To change the installation or the app without rebuilding, edit `.env` or a file in `configs/` and restart the Manager: `docker compose up -d manager` after an `.env` change, `docker compose restart manager` after a config edit (`configs/` is a mount). A change of `BASE_PATH` is the one that needs a rebuild of the web image, since Vite bakes it into the pages.
+
+The images can also be built and run by hand, without compose:
+
+```sh
+docker build --target web --build-arg BASE_PATH=/webcave/ -t webcave-web .
+docker build --target manager -t webcave-manager .
+docker run -d --name webcave-manager -p 8765:8765 -e WEBCAVE_CONFIG=cave-3m -e WEBCAVE_APP=shapes -v $PWD/configs:/app/configs:ro webcave-manager
+docker run -d --name webcave-web -p 8080:80 -e BASE_PATH=/webcave/ -e MANAGER_UPSTREAM=host.docker.internal:8765 webcave-web
+```
+
+**Without the web container.** The nginx in the web image only serves the pages and forwards the Manager's socket, so a server that already runs nginx can do both itself: build the pages once, serve `dist/` with an `alias`, and proxy the socket to the Manager container's published port.
+
+```sh
+BASE_PATH=/webcave/ npm run build            # dist/ for that prefix
+docker compose up -d manager                 # with "ports: 8765:8765" uncommented in docker-compose.yml
+```
+
+```nginx
+location /webcave/         { alias /srv/webcave/dist/; try_files $uri $uri/ =404; }
+location /webcave/manager  { proxy_pass http://127.0.0.1:8765/; proxy_http_version 1.1;
+                             proxy_set_header Upgrade $http_upgrade; proxy_set_header Connection "upgrade";
+                             proxy_read_timeout 1d; }
+```
+
 ## Updating a running installation
+
+In containers: `git pull && docker compose up -d --build`, see [above](#build-update-inspect). Otherwise:
 
 Edit the config, restart the Manager; nodes reconnect and rebuild with the new config, so a changed screen or app applies without touching the render machines. Code changes need a new build on the page server and a page reload on the nodes (kill and relaunch the kiosk windows, or reload from the controller machine with a remote-debugging tool).

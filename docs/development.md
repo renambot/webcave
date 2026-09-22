@@ -55,6 +55,10 @@ node scripts/screenshot.mjs URL out.png --drag "400,300,600,300,5"              
 
 Chrome's own `--screenshot` flag runs only a few animation frames and is not usable for pages that load asynchronously, such as the maps. The simulator and node pages expose `window.webcave` (config, app, tiles or viewport, and `lastState()` for the latest frame) for such checks.
 
+## Building
+
+`npm run build` produces `dist/` (with `BASE_PATH=/prefix/` for a deployment under a path) and `npm run build:manager` bundles the Manager into `dist-manager/server.mjs` with esbuild (`scripts/build-manager.mjs`); the `Dockerfile` runs both and packages them as the `web` (nginx) and `manager` images described in [deployment.md](deployment.md#docker-behind-a-reverse-proxy).
+
 ## Regenerating the config schema
 
 ```sh
