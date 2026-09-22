@@ -43,16 +43,16 @@
       <section>
         <h2>Simulator — no server needed</h2>
         <ul>
-          <li><a href="/simulator.html?config=cave-3m">CAVE, 4 screens, shapes</a></li>
-          <li><a href="/simulator.html?config=wall-3x1">Tiled wall, 3×1, shapes</a></li>
-          <li><a href="/simulator.html?config=head-cave">Head CAVE, three 46-inch panels, shapes</a></li>
-          <li><a href="/simulator.html?config=cave-3m&app=gltf">CAVE, glTF model (Damaged Helmet)</a></li>
-          <li><a href="/simulator.html?config=cave-3m&app=gltf&overview=world">CAVE, glTF model, scene in the overview</a></li>
-          <li><a href="/simulator.html?config=cave-3m&app=vdb&overview=world">CAVE, OpenVDB smoke volume (29 MB, decoded in the browser)</a></li>
-          <li><a href="/simulator.html?config=cave-3m&app=points&overview=world">CAVE, OpenVDB particle point cloud (157 MB, 9.5 M points)</a></li>
-          <li><a href="/simulator.html?config=wall-3x1&app=map">Wall 3×1, MapLibre map with 3D buildings (drag a tile to move all)</a></li>
-          <li><a href="/simulator.html?config=wall-2x2">Wall 2×2, map (config default)</a></li>
-          <li><a href="/simulator.html?config=wall-3x1&app=density">Wall 3×1, 2D population density choropleth</a></li>
+          <li><a href="simulator.html?config=cave-3m">CAVE, 4 screens, shapes</a></li>
+          <li><a href="simulator.html?config=wall-3x1">Tiled wall, 3×1, shapes</a></li>
+          <li><a href="simulator.html?config=head-cave">Head CAVE, three 46-inch panels, shapes</a></li>
+          <li><a href="simulator.html?config=cave-3m&app=gltf">CAVE, glTF model (Damaged Helmet)</a></li>
+          <li><a href="simulator.html?config=cave-3m&app=gltf&overview=world">CAVE, glTF model, scene in the overview</a></li>
+          <li><a href="simulator.html?config=cave-3m&app=vdb&overview=world">CAVE, OpenVDB smoke volume (29 MB, decoded in the browser)</a></li>
+          <li><a href="simulator.html?config=cave-3m&app=points&overview=world">CAVE, OpenVDB particle point cloud (157 MB, 9.5 M points)</a></li>
+          <li><a href="simulator.html?config=wall-3x1&app=map">Wall 3×1, MapLibre map with 3D buildings (drag a tile to move all)</a></li>
+          <li><a href="simulator.html?config=wall-2x2">Wall 2×2, map (config default)</a></li>
+          <li><a href="simulator.html?config=wall-3x1&app=density">Wall 3×1, 2D population density choropleth</a></li>
         </ul>
         <p class="muted">Applications: <code>app=shapes</code>, <code>app=gltf</code> with <code>model=URL</code>, <code>size</code>, <code>spin</code>, <code>mx my mz</code>, <code>app=vdb</code> with <code>vdb=URL</code>, <code>density</code>, <code>steps</code>, <code>app=points</code> with <code>points=URL</code>, <code>maxPoints</code>, or <code>app=map</code> / <code>app=density</code> with <code>style</code>, <code>center=lng,lat</code>, <code>zoom</code>, <code>pitch</code>, <code>bearing</code> (density: <code>data</code>, <code>opacity</code>). Press <code>H</code> in the simulator for all keys.</p>
       </section>
@@ -61,13 +61,13 @@
         <h2>Cluster mode</h2>
         <p>Start the manager with <code>npm run manager</code>, then open one node page per display:</p>
         <ul>
-          <li><a href="/node.html?node=front">node front</a></li>
-          <li><a href="/node.html?node=left">node left</a></li>
-          <li><a href="/node.html?node=right">node right</a></li>
-          <li><a href="/node.html?node=floor">node floor</a></li>
-          <li><a href="/simulator.html?manager=ws://localhost:8765">simulator as controller of the running manager</a></li>
-          <li><a href="/xr.html">headset viewer (WebXR): the scene in a VR headset, driven from the simulator</a> (open on the headset; <code>?head=1</code> makes it the tracked head)</li>
-          <li><a href="/launcher.html">node launcher: one computer, several displays</a> (start the manager with <code>--config cave-3m-1pc</code>)</li>
+          <li><a href="node.html?node=front">node front</a></li>
+          <li><a href="node.html?node=left">node left</a></li>
+          <li><a href="node.html?node=right">node right</a></li>
+          <li><a href="node.html?node=floor">node floor</a></li>
+          <li><a href="simulator.html?manager=auto">simulator as controller of the running manager</a></li>
+          <li><a href="xr.html">headset viewer (WebXR): the scene in a VR headset, driven from the simulator</a> (open on the headset; <code>?head=1</code> makes it the tracked head)</li>
+          <li><a href="launcher.html">node launcher: one computer, several displays</a> (start the manager with <code>--config cave-3m-1pc</code>)</li>
         </ul>
         <p class="muted">Node parameters: <code>node</code>, <code>manager=ws://host:8765</code>, <code>stereo=anaglyph</code> (override). Click a node to go fullscreen, press <code>h</code> to hide the HUD.</p>
       </section>

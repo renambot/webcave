@@ -39,9 +39,11 @@ import { screenSize } from "../core/projection";
 import { ViewportRenderer } from "../render/viewport";
 import { OverviewRenderer, type OverviewMode } from "../render/overview";
 import { wandFromHead } from "../core/pose";
+import { defaultManagerUrl } from "../core/base";
 
 const params = new URLSearchParams(location.search);
-const managerUrl = params.get("manager");
+// ?manager=auto: the Manager at this site's own origin (a deployment behind a reverse proxy) or the dev default.
+const managerUrl = params.get("manager") === "auto" ? defaultManagerUrl() : params.get("manager");
 const $ = <T extends HTMLElement>(sel: string) => document.querySelector<T>(sel)!;
 
 // Surface runtime errors in the footer: a simulator that silently freezes is

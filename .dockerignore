@@ -1,0 +1,8 @@
+node_modules
+dist
+dist-manager
+.git
+.wiki
+.DS_Store
+public/volumes/*.vdb
+*.code-workspace

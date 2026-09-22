@@ -11,6 +11,7 @@
  * more than five frames behind (laptop asleep), the timeline resyncs.
  *
  *   npm run manager -- [--config NAME|path.json] [--port 8765] [--sync loose|barrier]
+ *   (or WEBCAVE_CONFIG, WEBCAVE_PORT, WEBCAVE_SYNC, WEBCAVE_APP, WEBCAVE_MODEL, WEBCAVE_CONFIGS_DIR in the environment)
  *                      [--app shapes|gltf] [--model URL] [--size m] [--spin rad/s]
  *                      [--list-configs]
  *
@@ -26,10 +27,12 @@ import { decode, encode, type ClientMessage, type ServerMessage } from "../core/
 
 function arg(name: string, fallback: string): string {
   const i = process.argv.indexOf(`--${name}`);
-  return i >= 0 && process.argv[i + 1] ? process.argv[i + 1] : fallback;
+  if (i >= 0 && process.argv[i + 1]) return process.argv[i + 1];
+  // Containers pass options as environment: WEBCAVE_CONFIG, WEBCAVE_PORT, WEBCAVE_APP, WEBCAVE_SYNC, WEBCAVE_MODEL.
+  return process.env[`WEBCAVE_${name.toUpperCase()}`] || fallback;
 }
 
-const configsDir = resolve(dirname(fileURLToPath(import.meta.url)), "../../configs");
+const configsDir = process.env.WEBCAVE_CONFIGS_DIR ?? resolve(dirname(fileURLToPath(import.meta.url)), "../../configs");
 const listConfigs = () =>
   readdirSync(configsDir)
     .filter((f) => f.endsWith(".json") && f !== "schema.json")

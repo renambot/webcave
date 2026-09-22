@@ -6,7 +6,11 @@ import basicSsl from "@vitejs/plugin-basic-ssl";
 // gets the secure context WebXR needs (accept the certificate once on the headset).
 const https = process.env.HTTPS === "1";
 
+// BASE_PATH=/webcave/ npm run build: the site under a path prefix behind a reverse proxy (see docs/deployment.md).
+const base = (process.env.BASE_PATH ?? "/").replace(/\/?$/, "/");
+
 export default defineConfig({
+  base,
   plugins: https ? [basicSsl() as PluginOption] : [],
   server: {
     port: 5173,

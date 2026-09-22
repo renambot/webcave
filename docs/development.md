@@ -24,6 +24,7 @@ src/tracker/    tracking bridge: DTrack, NatNet and VRPN sources, calibration, c
 src/node/       render node page
 src/launcher/   node launcher: displays of this computer, one window per screen
 src/panel/      panel page: mounts an app's createPanel() as a controller, no views
+src/core/base.ts  base path (Vite base) helpers: publicUrl(), defaultManagerUrl()
 src/xr/         headset viewer: the app in an immersive WebXR session as a controller, headset as head and wand
 src/simulator/  in-page cluster with in-memory transport, or controller of a live Manager
 src/apps/       application contract and auto-discovering registry; one folder per app

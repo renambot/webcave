@@ -1,7 +1,11 @@
 node_modules
 dist
+dist-manager
 .DS_Store
 
 # Local sample volumes (large, not redistributed); see public/volumes/README.md
 public/volumes/*.vdb
 .wiki
+
+# local compose settings
+.env

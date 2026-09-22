@@ -1,0 +1,44 @@
+# WebCAVE behind a reverse proxy: `docker compose up -d --build`, then point the
+# front proxy at http://<this host>:${WEBCAVE_HTTP_PORT:-8080}/ (see docs/deployment.md).
+#
+# Environment (a .env file next to this one works):
+#   BASE_PATH           path prefix the site is served under, with slashes: /webcave/ (default /)
+#   WEBCAVE_HTTP_PORT   host port for the web service (default 8080)
+#   WEBCAVE_CONFIG      installation config name in configs/ (default cave-3m)
+#   WEBCAVE_APP         application to run (default shapes)
+#   WEBCAVE_SYNC        barrier | loose (default: the config's)
+services:
+  web:
+    build:
+      context: .
+      target: web
+      args:
+        BASE_PATH: ${BASE_PATH:-/}
+    environment:
+      BASE_PATH: ${BASE_PATH:-/}
+      MANAGER_UPSTREAM: manager:8765
+    ports:
+      - "${WEBCAVE_HTTP_PORT:-8080}:80"
+    volumes:
+      # Large sample volumes are not in the image; mount them if the vdb / points apps are used.
+      - ./public/volumes:/usr/share/nginx/html/volumes:ro
+    depends_on:
+      - manager
+    restart: unless-stopped
+
+  manager:
+    build:
+      context: .
+      target: manager
+    environment:
+      WEBCAVE_CONFIG: ${WEBCAVE_CONFIG:-cave-3m}
+      WEBCAVE_APP: ${WEBCAVE_APP:-shapes}
+      WEBCAVE_SYNC: ${WEBCAVE_SYNC:-}
+    volumes:
+      # Edit installation configs without rebuilding.
+      - ./configs:/app/configs:ro
+    # Only the web service needs to reach the Manager. Publish the port too when a
+    # tracking bridge (npm run tracker) or nodes on the LAN connect to it directly:
+    # ports:
+    #   - "8765:8765"
+    restart: unless-stopped

@@ -32,9 +32,10 @@ import type { AppDefinition, AppSpec, FlatApp } from "../types";
 import { OPENFREEMAP_BRIGHT, createWallMapApp, readOptions, type MapCamera, type WallMapDefinition } from "../map/wallmap";
 import { createDotDensityPanel } from "./panel";
 import { FIELDS, SCHEMES, stateOf, type DotDensityState, type Field } from "./schemes";
+import { publicUrl } from "../../core/base";
 
 const DATA = "https://schoolofcities.github.io/dot-density/pp-to-10m-income-edit-3.csv";
-const LOCAL = "/data/dotdensity/";
+const LOCAL = publicUrl("/data/dotdensity/");
 const HEIGHT_SCALE = 2000; // the CSV's normalized height -> meters, as in the original
 const EASE = 0.6; // seconds for the 3D lift
 

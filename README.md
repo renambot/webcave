@@ -46,7 +46,7 @@ http://<host>:5173/node.html?node=front&manager=ws://<manager-host>:8765
 ## Documentation
 
 - [Running](docs/running.md): simulator, keys, cluster mode, headset viewer, kiosk launch, multi-screen nodes, stereo modes
-- [Deployment](docs/deployment.md): from a laptop to a one-PC CAVE to a full cluster, step by step
+- [Deployment](docs/deployment.md): from a laptop to a one-PC CAVE to a full cluster, step by step; Docker images and a reverse proxy with a base path
 - [Configuration files](docs/configuration.md): describing an installation in JSON
 - [Input devices](docs/input.md): keyboard, mouse, gamepads, input on nodes
 - [Tracking](docs/tracking.md): the tracking bridge for DTrack, NatNet and VRPN, calibration, wand buttons

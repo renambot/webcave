@@ -76,7 +76,7 @@ One machine per display or per pair of displays, a manager host, and the room's 
 npm run schema
 ```
 
-**2. Serve the pages.** Development: `npm run dev` on the manager host serves on all interfaces (`host: true` in `vite.config.ts`). Production: build once and serve `dist/` from any static server, or with Vite's preview server:
+**2. Serve the pages.** Development: `npm run dev` on the manager host serves on all interfaces (`host: true` in `vite.config.ts`). Production: build once and serve `dist/` from any static server, or with Vite's preview server (or use the Docker images, see [below](#docker-behind-a-reverse-proxy)):
 
 ```sh
 npm run build
@@ -130,6 +130,60 @@ It shows the same frames as the wall, the overview with head and wand, and the b
 - Late frames stay near zero at the configured frame rate; if not, lower `fps` in the config or use the loose tier.
 - Exactly one window plays sound.
 - Stereo on a passive wall: cover one eye and check the images swap; fix with `swapEyes` or `firstEye` per screen.
+
+## Docker, behind a reverse proxy
+
+The lab's servers put every service behind one nginx under a path such as `https://host/webcave/`. WebCAVE deploys there as two containers built from the repository's `Dockerfile`: **web**, an nginx serving the built pages and public files under the base path and forwarding the Manager's WebSocket, and **manager**, the Node.js frame server bundled into one file. `docker-compose.yml` wires them together.
+
+```sh
+cp .env.example .env         # BASE_PATH, port, config, app
+docker compose up -d --build
+```
+
+`.env` (or the environment) sets:
+
+| Variable | Meaning | Default |
+|---|---|---|
+| `BASE_PATH` | Path prefix the site is served under, with both slashes: `/webcave/` | `/` |
+| `WEBCAVE_HTTP_PORT` | Host port of the web container, what the front proxy forwards to | `8080` |
+| `WEBCAVE_CONFIG` | Installation config in `configs/` | `cave-3m` |
+| `WEBCAVE_APP` | Application to run | `shapes` |
+| `WEBCAVE_SYNC` | `barrier` or `loose` | the config's |
+
+The base path is a **build-time** setting: Vite rewrites every bundled asset URL, the pages link to each other relatively, and the apps' default asset URLs (`/models/...`, `/crayoland/`, ...) go through `publicUrl()` in `src/core/base.ts`, so a rebuild with another `BASE_PATH` is all a move needs. `configs/` is mounted into the manager container, so an installation file can be edited and the container restarted without a rebuild; `public/volumes/` is mounted into the web container for the large sample volumes that are not in the image.
+
+**The front proxy.** Forward the prefix to the web container and let WebSocket upgrades through; the Manager's socket is at `<base>manager` on the same origin, which is what every page uses when no `manager=` parameter is given:
+
+```nginx
+map $http_upgrade $connection_upgrade { default upgrade; '' close; }
+
+location /webcave/ {
+    proxy_pass http://webcave-host:8080/webcave/;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection $connection_upgrade;
+    proxy_set_header Host $host;
+    proxy_read_timeout 1d;        # the Manager's socket stays open for the whole session
+}
+```
+
+Then, on the render machines and the operator's laptop:
+
+```
+https://host/webcave/node.html?node=front          # the Manager is found on the same origin
+https://host/webcave/simulator.html?manager=auto   # controller of the deployed Manager
+https://host/webcave/xr.html                       # headset viewer; https gives WebXR its secure context
+```
+
+Things to expect behind a proxy:
+
+- **One long-lived WebSocket per page.** Every node and controller keeps its socket to the Manager for the session, so the proxy's read timeout must be long (the snippet says one day) or nodes drop and reconnect every minute.
+- **A tracking bridge, or nodes on the CAVE's own LAN,** can bypass the proxy: publish the Manager's port in `docker-compose.yml` (`ports: 8765:8765`) and point them at `ws://webcave-host:8765`.
+- **HTTPS is a feature here**: WebXR, the Window Management API for multi-screen nodes and WebGPU all want a secure context. Kiosk Chrome on the render machines accepts the institutional certificate like any browser.
+- **Asset size.** The aquarium, Crayoland and the models are tens of megabytes; the web container serves them with sendfile and long caching for hashed bundles. If the front proxy buffers responses to disk, `proxy_max_temp_file_size 0` avoids that.
+- **Nothing is stateful.** Both containers can be recreated at will; navigation and app state live only for the session.
+
+Without a proxy, the same compose file serves the site at `http://host:8080/` with `BASE_PATH=/`.
 
 ## Updating a running installation
 

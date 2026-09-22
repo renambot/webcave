@@ -22,12 +22,13 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { spinTime, type AppDefinition, type AppSpec, type CaveApp } from "../types";
 import type { FrameState } from "../../core/protocol";
+import { publicUrl } from "../../core/base";
 
 export function createGltfApp(spec: AppSpec): CaveApp {
   // ---- Options ---------------------------------------------------------------
   // Defaults keep the model inside the CAVE just in front of the front wall
   // (z = -1.5), clear of the simulated head motion (about ±0.4 m in z).
-  const url = spec.url ?? "/models/DamagedHelmet.glb";
+  const url = publicUrl(spec.url ?? "/models/DamagedHelmet.glb");
   const size = spec.size ?? 0.8;
   const position = new THREE.Vector3(...(spec.position ?? [0, 1.5, -1.05]));
   const spin = spec.spin ?? 0.3;

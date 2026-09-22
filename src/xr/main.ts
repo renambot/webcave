@@ -35,9 +35,10 @@ import { appSpecFromParams, createApp, isRawApp, isSceneApp, type AnyApp } from 
 import { InputController } from "../input/controller";
 import { emptyActions, mergeActions, type ActionState } from "../input/actions";
 import { wandFromHead } from "../core/pose";
+import { defaultManagerUrl } from "../core/base";
 
 const params = new URLSearchParams(location.search);
-const managerUrl = params.get("manager") ?? (location.protocol === "https:" ? `wss://${location.host}/manager` : `ws://${location.hostname}:8765`);
+const managerUrl = params.get("manager") ?? defaultManagerUrl();
 const publishHead = params.get("head") === "1";
 const sendInput = params.get("input") !== "0";
 const usePolyfill = params.get("polyfill") === "1";

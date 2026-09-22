@@ -26,6 +26,7 @@ import type { AppContext, AppDefinition, AppSpec, RawApp, RawRenderContext } fro
 import type { FrameState } from "../../core/protocol";
 import { createAquariumPanel } from "./panel";
 import { DEFAULT_SETTINGS, settingsOf, type AquariumSettings } from "./settings";
+import { publicUrl } from "../../core/base";
 
 /** The tdl modules in dependency order, then the adapted aquarium. */
 const SCRIPTS = ["tdl/base.js", "tdl/log.js", "tdl/string.js", "tdl/math.js", "tdl/webgl.js", "tdl/buffers.js", "tdl/shader.js", "tdl/programs.js", "tdl/textures.js", "tdl/io.js", "tdl/misc.js", "tdl/fast.js", "tdl/primitives.js", "tdl/models.js", "tdl/particles.js", "aquarium-core.js"];
@@ -70,7 +71,7 @@ function loadScripts(root: string): Promise<void> {
 }
 
 export function createAquariumApp(spec: AppSpec, _ctx: AppContext): RawApp {
-  const root = (spec.url ?? "/aquarium/").replace(/\/?$/, "/");
+  const root = publicUrl((spec.url ?? "/aquarium/").replace(/\/?$/, "/"));
   const scale = typeof spec.options?.scale === "number" && spec.options.scale > 0 ? spec.options.scale : 0.1; // meters per aquarium unit
   let shaders: Record<string, string> | null = null;
   const instances = new Map<WebGLRenderingContext, CoreInstance>();

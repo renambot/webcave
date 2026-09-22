@@ -15,9 +15,10 @@
  */
 import { decode, encode, type ClientMessage, type FrameState, type ServerMessage } from "../core/protocol";
 import { appSpecFromParams, createApp, type AnyApp, type AppPanel } from "../apps";
+import { defaultManagerUrl } from "../core/base";
 
 const params = new URLSearchParams(location.search);
-const managerUrl = params.get("manager") ?? `ws://${location.hostname}:8765`;
+const managerUrl = params.get("manager") ?? defaultManagerUrl();
 const $ = <T extends HTMLElement>(sel: string) => document.querySelector<T>(sel)!;
 const statusEl = $("#status");
 const mainEl = $("#panel");

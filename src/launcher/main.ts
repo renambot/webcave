@@ -21,9 +21,10 @@
 import type { ClusterConfig } from "../core/config";
 import { decode, encode, type ClientMessage, type ServerMessage } from "../core/protocol";
 import { getScreens, hasWindowManagement, isMultiScreen, onScreensChange, type ScreenInfo } from "../core/screens";
+import { defaultManagerUrl, publicUrl } from "../core/base";
 
 const params = new URLSearchParams(location.search);
-const managerUrl = params.get("manager") ?? `ws://${location.hostname}:8765`;
+const managerUrl = params.get("manager") ?? defaultManagerUrl();
 const $ = <T extends HTMLElement>(sel: string) => document.querySelector<T>(sel)!;
 
 const linkStatus = $("#link-status");
@@ -156,7 +157,7 @@ function render() {
 }
 
 function nodeUrl(nodeId: string, view: string, display: number) {
-  const u = new URL("/node.html", location.origin);
+  const u = new URL(publicUrl("/node.html"), location.origin);
   u.searchParams.set("node", nodeId);
   u.searchParams.set("view", view);
   u.searchParams.set("screen", String(display));

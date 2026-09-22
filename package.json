@@ -9,6 +9,7 @@
     "dev": "vite",
     "dev:https": "HTTPS=1 vite",
     "build": "vite build",
+    "build:manager": "node scripts/build-manager.mjs",
     "preview": "vite preview",
     "manager": "tsx src/manager/server.ts",
     "nodes": "scripts/launch-nodes.sh",

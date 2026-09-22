@@ -43,12 +43,13 @@ import { InputController } from "../input/controller";
 import { screenSize } from "../core/projection";
 import { ViewportRenderer } from "../render/viewport";
 import { wandFromHead } from "../core/pose";
+import { defaultManagerUrl } from "../core/base";
 
 const params = new URLSearchParams(location.search);
 const nodeId = params.get("node") ?? "front";
 const viewId = params.get("view");
 const screenIndex = params.has("screen") ? Number(params.get("screen")) : null;
-const managerUrl = params.get("manager") ?? `ws://${location.hostname}:8765`;
+const managerUrl = params.get("manager") ?? defaultManagerUrl();
 const modeOverride = params.get("stereo") as StereoMode | null;
 
 const canvas = document.querySelector<HTMLCanvasElement>("#view")!;

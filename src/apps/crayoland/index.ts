@@ -46,6 +46,7 @@ import { inputOf, type ActionState } from "../../input/actions";
 import { parseSounds, parseWorld, pictureAxes, type BeesDef, type PictureDef, type SoundsFile } from "./world";
 import { BeeSim, ButterflySim, SIM_HZ, angleDelta } from "./creatures";
 import { Soundscape } from "./sound";
+import { publicUrl } from "../../core/base";
 
 /** Feet to meters: the World file is in feet, the CAVE frame in meters. */
 const FT = 0.3048;
@@ -83,7 +84,7 @@ function objectPosition(o: ObjState, time: number, out: THREE.Vector3): THREE.Ve
 }
 
 export function createCrayolandApp(spec: AppSpec, ctx: AppContext): CaveApp {
-  const base = (spec.url ?? "/crayoland/").replace(/\/?$/, "/");
+  const base = publicUrl((spec.url ?? "/crayoland/").replace(/\/?$/, "/"));
   const worldFile = String(spec.options?.world ?? "World");
   const soundsFile = String(spec.options?.sounds ?? "Sounds");
   /** Debug drawing: pick spheres of the grabbable objects, the wand point, the touched object highlighted. */

@@ -24,6 +24,7 @@ import { spinTime, type AppDefinition, type AppSpec, type CaveApp } from "../typ
 import type { FrameState } from "../../core/protocol";
 import { readPointDataGrid } from "./pointsReader";
 import { collectLeaves, type TreeLeaf } from "../vdb/tree";
+import { publicUrl } from "../../core/base";
 
 interface PointsOptions {
   url: string;
@@ -41,7 +42,7 @@ function readOptions(spec: AppSpec): PointsOptions {
   const o = (spec.options ?? {}) as Record<string, unknown>;
   const num = (v: unknown, d: number) => (typeof v === "number" && Number.isFinite(v) ? v : d);
   return {
-    url: typeof o.url === "string" ? o.url : spec.url ?? "/volumes/waterfall_points.vdb",
+    url: publicUrl(typeof o.url === "string" ? o.url : spec.url ?? "/volumes/waterfall_points.vdb"),
     grid: typeof o.grid === "string" ? o.grid : null,
     size: spec.size ?? num(o.size, 2.2),
     position: spec.position ? new THREE.Vector3(...spec.position) : new THREE.Vector3(0, 1.3, -1.0),

@@ -34,9 +34,10 @@ import { createMetaballsPanel, type StatsSource } from "./panel";
 import { PerformanceTracker } from "./vendor/performance-tracker.js";
 import { Gltf2Loader } from "./vendor/mini-gltf2.js";
 import { DEFAULT_SETTINGS, settingsOf, type MetaballSettings } from "./settings";
+import { publicUrl } from "../../core/base";
 
 const MEDIA = "https://toji.github.io/webgpu-metaballs/media/";
-const LOADER = "/metaballs/wtt/webgpu-texture-loader.js";
+const LOADER = publicUrl("/metaballs/wtt/webgpu-texture-loader.js");
 
 export function createMetaballsApp(spec: AppSpec, _ctx: AppContext): WebGpuApp {
   const media = (spec.url ?? MEDIA).replace(/\/?$/, "/");

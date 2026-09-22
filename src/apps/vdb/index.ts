@@ -35,6 +35,7 @@ import { spinTime, type AppDefinition, type AppSpec, type CaveApp } from "../typ
 import type { FrameState } from "../../core/protocol";
 import { readLeafBuffers } from "./leafValues";
 import { collectLeaves, type TreeLeaf } from "./tree";
+import { publicUrl } from "../../core/base";
 
 interface VdbOptions {
   url: string;
@@ -54,7 +55,7 @@ function readOptions(spec: AppSpec): VdbOptions {
   const num = (v: unknown, d: number) => (typeof v === "number" && Number.isFinite(v) ? v : d);
   const vec = (v: unknown, d: [number, number, number]) => (Array.isArray(v) && v.length === 3 ? new THREE.Vector3(...(v.map(Number) as [number, number, number])) : new THREE.Vector3(...d));
   return {
-    url: typeof o.url === "string" ? o.url : spec.url ?? "/volumes/smoke2.vdb",
+    url: publicUrl(typeof o.url === "string" ? o.url : spec.url ?? "/volumes/smoke2.vdb"),
     grid: typeof o.grid === "string" ? o.grid : null,
     // Defaults keep the fitted volume in front of the viewer, just inside the
     // front wall of the 3 m CAVE and clear of the simulated head motion.
