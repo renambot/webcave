@@ -26,6 +26,18 @@
       code { font: 12px var(--mono); background: #1b2128; border: 1px solid #2a333c; padding: 1px 5px; border-radius: 3px; }
       p { margin: 8px 0 0; color: var(--ink); }
       p.muted { color: var(--muted); font-size: 13px; }
+      .intro { color: var(--ink); margin: 0 0 18px; }
+      section.start { border-color: #4a3a12; }
+      h2.big { font: 600 18px var(--sans); letter-spacing: 0; text-transform: none; color: var(--ink); margin-bottom: 4px; }
+      a.cta { display: inline-block; margin: 14px 0 4px; font: 600 14px var(--mono); color: #0d1013; background: var(--amber); border-radius: 5px; padding: 10px 18px; }
+      a.cta:hover { text-decoration: none; filter: brightness(1.1); }
+      ol.steps { margin: 12px 0 0; padding-left: 22px; }
+      ol.steps li { margin: 10px 0; }
+      ol.steps b { color: var(--ink); }
+      .demos li span { color: var(--muted); }
+      details { margin-top: 4px; }
+      summary { cursor: pointer; color: var(--muted); font: 600 11px var(--mono); letter-spacing: 0.18em; text-transform: uppercase; }
+      details[open] summary { margin-bottom: 8px; }
     </style>
   </head>
   <body>
@@ -37,35 +49,50 @@
           <path d="M5 8.5 L13 12.5 L21 8.5 M13 12.5 L13 21.5" fill="none" stroke="#ffb300" stroke-width="1.1" opacity="0.7"/>
           <circle cx="13" cy="13.5" r="1.6" fill="#ffb300"/>
         </svg>
-        <h1>webcave <span>· browser-based cluster rendering for CAVEs and display walls</span></h1>
+        <h1>webcave <span>· immersive rooms in the browser</span></h1>
       </header>
 
-      <section>
-        <h2>Cluster mode</h2>
-        <p>Open the <a href="launcher.html"><strong>control page</strong></a>. From there you switch the display configuration and the application, open the simulator to watch and drive the cluster, and open the window of every display node, or copy its link for the computer that drives that screen.</p>
-        <ul>
-          <li><a href="launcher.html">control page</a></li>
-          <li><a href="simulator.html?manager=auto">simulator as controller of the running cluster</a></li>
-          <li><a href="xr.html">headset viewer (WebXR)</a>: open it on the headset; <code>?head=1</code> makes it the tracked head</li>
-        </ul>
-        <p class="muted">In a node window, click once to go fullscreen and press <code>h</code> to hide the HUD. Running from a source checkout instead of a deployed server: start the manager first with <code>npm run manager</code>.</p>
+      <p class="intro">WebCAVE shows one 3D world across all the screens of a room, such as a CAVE or a wall of displays, so that the people standing in it see the scene around them. Everything runs in the web browser: there is nothing to install.</p>
+
+      <section class="start">
+        <h2 class="big">Use the room</h2>
+        <p>Everything starts from the control page.</p>
+        <a class="cta" href="launcher.html">Open the control page</a>
+        <ol class="steps">
+          <li><b>Choose the room and what to show.</b> At the top of the control page, pick the <em>display configuration</em> (the layout of the room's screens) and the <em>application</em> (what appears on them), and press <em>switch</em>. The screens change within a second.</li>
+          <li><b>Turn the screens on.</b> The control page lists one window per screen. On the computer connected to that screen, open its link (<em>open</em>, or <em>copy link</em> to paste it on another computer) and click once inside the window to make it fullscreen. Its dot on the control page turns green when it is showing.</li>
+          <li><b>Look around and move.</b> Press <em>simulator</em> on the control page: it shows all the screens at once and a view of the room from above. Walk with the arrow keys, press <code>H</code> to see every key, or plug in a gamepad.</li>
+        </ol>
+        <p class="muted">If the control page says <em>no manager</em>, the cluster service is not running on the server: ask the person who installed WebCAVE.</p>
       </section>
 
       <section>
-        <h2>Simulator — no server needed</h2>
-        <ul>
-          <li><a href="simulator.html?config=cave-3m">CAVE, 4 screens, shapes</a></li>
-          <li><a href="simulator.html?config=wall-3x1">Tiled wall, 3×1, shapes</a></li>
-          <li><a href="simulator.html?config=head-cave">Head CAVE, three 46-inch panels, shapes</a></li>
-          <li><a href="simulator.html?config=cave-3m&app=gltf">CAVE, glTF model (Damaged Helmet)</a></li>
-          <li><a href="simulator.html?config=cave-3m&app=gltf&overview=world">CAVE, glTF model, scene in the overview</a></li>
-          <li><a href="simulator.html?config=cave-3m&app=vdb&overview=world">CAVE, OpenVDB smoke volume (29 MB, decoded in the browser)</a></li>
-          <li><a href="simulator.html?config=cave-3m&app=points&overview=world">CAVE, OpenVDB particle point cloud (157 MB, 9.5 M points)</a></li>
-          <li><a href="simulator.html?config=wall-3x1&app=map">Wall 3×1, MapLibre map with 3D buildings (drag a tile to move all)</a></li>
-          <li><a href="simulator.html?config=wall-2x2">Wall 2×2, map (config default)</a></li>
-          <li><a href="simulator.html?config=wall-3x1&app=density">Wall 3×1, 2D population density choropleth</a></li>
+        <h2>Try it without a room</h2>
+        <p>The simulator also runs on its own, in this browser, with a virtual room on screen. Click one and walk with the arrow keys:</p>
+        <ul class="demos">
+          <li><a href="simulator.html?config=cave-3m&app=crayoland&audio=1">Crayoland</a> <span>· the original 1995 CAVE demo: crayon flowers, bees and birdsong (turn the sound on)</span></li>
+          <li><a href="simulator.html?config=cave-3m&app=gltf&overview=world">A 3D model in a CAVE</a> <span>· a helmet floating in the middle of a four-wall room</span></li>
+          <li><a href="simulator.html?config=cave-3m&app=aquarium">Aquarium</a> <span>· fish swimming all around you</span></li>
+          <li><a href="simulator.html?config=wall-3x1&app=map">A map across a wall of screens</a> <span>· drag any screen and all of them move together</span></li>
+          <li><a href="simulator.html?config=cave-3m">Simple shapes</a> <span>· the quickest check that everything works</span></li>
         </ul>
-        <p class="muted">Applications: <code>app=shapes</code>, <code>app=gltf</code> with <code>model=URL</code>, <code>size</code>, <code>spin</code>, <code>mx my mz</code>, <code>app=vdb</code> with <code>vdb=URL</code>, <code>density</code>, <code>steps</code>, <code>app=points</code> with <code>points=URL</code>, <code>maxPoints</code>, or <code>app=map</code> / <code>app=density</code> with <code>style</code>, <code>center=lng,lat</code>, <code>zoom</code>, <code>pitch</code>, <code>bearing</code> (density: <code>data</code>, <code>opacity</code>). Press <code>H</code> in the simulator for all keys.</p>
+      </section>
+
+      <section>
+        <h2>Other pages</h2>
+        <ul class="demos">
+          <li><a href="xr.html">Headset viewer</a> <span>· open it on a VR headset to stand inside the virtual room while the cluster runs</span></li>
+          <li><a href="panel.html">Control panel</a> <span>· the current application's own settings, for a tablet</span></li>
+        </ul>
+      </section>
+
+      <section>
+        <details>
+          <summary>For developers and installers</summary>
+          <p class="muted">From a source checkout, start the cluster service with <code>npm run manager</code> before opening the control page; the <a href="https://github.com/renambot/webcave">documentation</a> covers installation, configuration files and Docker deployment.</p>
+          <p class="muted">More simulator examples: <a href="simulator.html?config=wall-3x1">wall 3×1</a>, <a href="simulator.html?config=head-cave">head CAVE (three 46-inch panels)</a>, <a href="simulator.html?config=wall-3x1&app=density">population density map</a>, <a href="simulator.html?config=cave-3m&app=vdb&overview=world">OpenVDB smoke volume</a> and <a href="simulator.html?config=cave-3m&app=points&overview=world">OpenVDB point cloud</a> (these two need the sample files in <code>public/volumes/</code>).</p>
+          <p class="muted">Simulator parameters: <code>config</code>, <code>app</code>, <code>overview=world</code>, <code>stereo</code>, <code>audio=1</code>, <code>debug=1</code>; app options such as <code>model=URL</code>, <code>size</code>, <code>spin</code> (gltf), <code>vdb=URL</code> (vdb), <code>points=URL</code> (points), <code>style</code>, <code>center=lng,lat</code>, <code>zoom</code>, <code>pitch</code>, <code>bearing</code> (maps). Node windows: <code>node</code>, <code>view</code>, <code>manager=ws://host:8765</code>, <code>stereo</code>, <code>anaglyph=bw</code>; <code>h</code> hides the HUD.</p>
+        </details>
       </section>
     </main>
   </body>
