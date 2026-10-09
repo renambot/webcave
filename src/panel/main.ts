@@ -40,7 +40,7 @@ function connect() {
   ws.addEventListener("message", (ev) => {
     const msg = decode<ServerMessage>(ev.data);
     if (msg.type === "welcome") {
-      if (!app) build(msg.config);
+      build(msg.config); // first connection, a reconnect, or a live config switch
       return;
     }
     if (msg.type === "frame") {

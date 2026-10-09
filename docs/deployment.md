@@ -52,7 +52,7 @@ npm run manager -- --config cave-3m-1pc --app crayoland
 
 Then one browser window per display. Two ways:
 
-- **Launcher page**, in Chrome or Edge: <http://localhost:5173/launcher.html?node=pc>. It lists the displays, lets you map each screen to one, and opens all windows fullscreen in a click (the Window Management API prompts once for permission; that first click only detects the displays, since the prompt outlives it). Allow *Pop-ups and redirects* for the origin too, or Chrome opens only the first window of a multi-screen node.
+- **Control page**, in Chrome or Edge: <http://localhost:5173/launcher.html?node=pc>. Its last sections list the displays, let you map each screen to one, and open all windows fullscreen in a click (the Window Management API prompts once for permission; that first click only detects the displays, since the prompt outlives it). Allow *Pop-ups and redirects* for the origin too, or Chrome opens only the first window of a multi-screen node.
 - **Kiosk script**, no clicking at all, one independent Chrome per display placed by pixel position:
 
   ```sh
@@ -100,7 +100,7 @@ scripts/launch-nodes.sh --nodes left --server http://manager-host:5173 --manager
 scripts/launch-nodes.sh --nodes pc:front,pc:floor --positions "0,0 1920,0" --server http://manager-host:5173 --manager ws://manager-host:8765
 ```
 
-On Windows, run `chrome.exe --kiosk --user-data-dir=%TEMP%\webcave-left --window-position=0,0 --window-size=1920,1080 --app="http://manager-host:5173/node.html?node=left&manager=ws://manager-host:8765"`. Put the command in a startup script or a service so the machine comes up rendering. The Window Management API (launcher page, `screen=` parameter) needs https or Chrome's `--unsafely-treat-insecure-origin-as-secure` flag on remote machines; the kiosk script needs neither.
+On Windows, run `chrome.exe --kiosk --user-data-dir=%TEMP%\webcave-left --window-position=0,0 --window-size=1920,1080 --app="http://manager-host:5173/node.html?node=left&manager=ws://manager-host:8765"`. Put the command in a startup script or a service so the machine comes up rendering. The Window Management API (control page fullscreen launch, `screen=` parameter) needs https or Chrome's `--unsafely-treat-insecure-origin-as-secure` flag on remote machines; the kiosk script needs neither.
 
 **5. Tracking.** On the machine that can hear the tracker (any machine on the tracking network), configure `configs/trackers/room.json` with the tracker's protocol, the calibration into the CAVE frame and which bodies are the head and the wand, then:
 
@@ -121,13 +121,13 @@ A VR headset can join the same way and look at the scene from inside the virtual
 
 It shows the same frames as the wall, the overview with head and wand, and the barrier statistics per node in the footer. Its keyboard and gamepad drive navigation and the applications' buttons alongside the tracked wand. Late-frame counts that keep climbing point at a node that renders too slowly or a network problem; switch the config to `"sync": "loose"` if a soft sync is acceptable.
 
-**7. Switch applications** without restarting anything: pick another app in the controller simulator's application dropdown, or from a shell on any machine that can reach the Manager:
+**7. Switch applications** without restarting anything: on the control page (`launcher.html`), in the controller simulator's application dropdown, or from a shell on any machine that can reach the Manager:
 
 ```sh
 npm run set-app -- ws://manager-host:8765 aquarium        # in the compose setup, from the server: ws://localhost:8765 with the port published, or through the proxy wss://host/webcave/manager
 ```
 
-Every node, panel and headset page rebuilds for the new app within a frame; the Manager's `WEBCAVE_APP` (or `--app`) is only the app it starts with.
+Every node, panel and headset page rebuilds for the new app within a frame; the Manager's `WEBCAVE_APP` (or `--app`) is only the app it starts with. The display configuration switches the same way, from the control page, the controller's config dropdown or `npm run set-config -- ws://manager-host:8765 cave-3m`: the Manager loads the file from its `configs/` folder and every page rebuilds; nodes absent from the new configuration wait, showing why, until one that includes them returns.
 
 **Startup order** that avoids waiting: page server and Manager first, then render machines, then the tracker, then the controller. Any order works, since every client reconnects every second, but nodes show "disconnected, retrying" until the Manager is up.
 
@@ -181,6 +181,7 @@ location /webcave/ {
 Then, on the render machines and the operator's laptop:
 
 ```
+https://host/webcave/launcher.html                 # control page: switch config and app, open the simulator and the node windows
 https://host/webcave/node.html?node=front          # the Manager is found on the same origin
 https://host/webcave/simulator.html                # controller of the deployed Manager (the default in a production build)
 https://host/webcave/xr.html                       # headset viewer; https gives WebXR its secure context
@@ -216,7 +217,7 @@ git pull
 docker compose up -d --build
 ```
 
-To change the installation or the app without rebuilding, edit `.env` or a file in `configs/` and restart the Manager: `docker compose up -d manager` after an `.env` change, `docker compose restart manager` after a config edit (`configs/` is a mount). A change of `BASE_PATH` or `VITE_DISABLE_APPS` needs a rebuild of the web image, since Vite bakes both into the pages.
+To change the installation or the app, switch them live from the control page or the controller simulator, or with `npm run set-config` / `npm run set-app`; `.env` only sets what the Manager starts with (`docker compose up -d manager` after an `.env` change). After editing a file in `configs/` (a mount, no rebuild), switch to it again or `docker compose restart manager` to reload it. A change of `BASE_PATH` or `VITE_DISABLE_APPS` needs a rebuild of the web image, since Vite bakes both into the pages.
 
 The images can also be built and run by hand, without compose:
 

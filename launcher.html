@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>WebCAVE — node launcher</title>
+    <title>WebCAVE — control</title>
     <meta name="theme-color" content="#0d1013" />
     <style>
       :root {
@@ -36,6 +36,16 @@
       #note { color: var(--amber); font-size: 13px; min-height: 1.2em; }
       p { color: var(--ink); }
       p.muted { margin-top: 8px; }
+      a.btn { font: 13px var(--mono); color: var(--ink); background: #1b2128; border: 1px solid #2a333c; border-radius: 4px; padding: 6px 11px; text-decoration: none; }
+      a.btn:hover { border-color: var(--amber); color: var(--amber); }
+      a.btn.primary { border-color: var(--amber); color: var(--amber); }
+      .field { display: grid; grid-template-columns: 170px 1fr; align-items: center; gap: 8px 14px; }
+      .field label { font: 11px var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+      #cluster-status { font: 12px var(--mono); color: var(--muted); margin-top: 12px; }
+      .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #3a434c; }
+      .dot.on { background: var(--green); }
+      #nodes td a { color: var(--amber); }
+      @media (max-width: 600px) { .field { grid-template-columns: 1fr; } }
       code { font: 12px var(--mono); background: #1b2128; border: 1px solid #2a333c; padding: 1px 5px; border-radius: 3px; }
     </style>
   </head>
@@ -47,36 +57,64 @@
         <path d="M5 8.5 L13 12.5 L21 8.5 M13 12.5 L13 21.5" fill="none" stroke="#ffb300" stroke-width="1.1" opacity="0.7"/>
         <circle cx="13" cy="13.5" r="1.6" fill="#ffb300"/>
       </svg>
-      <h1>webcave <span>· node launcher</span></h1>
+      <h1>webcave <span>· control</span></h1>
       <span id="link-status">● connecting</span>
     </header>
 
     <section>
-      <h2>This computer's node</h2>
+      <h2>Cluster</h2>
+      <div class="field">
+        <label for="config">Display configuration</label>
+        <div class="row">
+          <select id="config" title="Configuration files of the Manager's configs folder"></select>
+          <button id="btn-config" disabled>switch</button>
+        </div>
+        <label for="app">Application</label>
+        <div class="row">
+          <select id="app" title="Applications in this build"></select>
+          <button id="btn-app" disabled>switch</button>
+        </div>
+      </div>
+      <div id="cluster-status"></div>
+      <p class="muted">Both switch every page connected to the Manager, without a restart. Switching resets the application state and the navigation; a configuration brings its own application, and nodes that are not in it wait until one that includes them returns.</p>
+    </section>
+
+    <section>
+      <h2>Open</h2>
+      <div class="row">
+        <a id="open-sim" class="btn primary" target="_blank" rel="noopener">simulator</a>
+        <a id="open-panel" class="btn" target="_blank" rel="noopener">control panel</a>
+        <a id="open-xr" class="btn" target="_blank" rel="noopener">headset viewer</a>
+      </div>
+      <p class="muted">The simulator opens as a controller of this Manager: it mirrors the screens of the current configuration and drives head, navigation and stereo. The control panel is the current application's sidebar alone, for a tablet. Open the headset viewer on the headset.</p>
+    </section>
+
+    <section>
+      <h2>Display nodes</h2>
+      <div class="row" style="margin-bottom: 10px">
+        <button id="btn-open-all">open all here</button>
+        <span id="nodes-note" class="muted"></span>
+      </div>
+      <div id="nodes"></div>
+      <p class="muted">One window per screen. <em>open</em> opens it on this computer; on a cluster, open each node's link on the computer that drives that screen (<em>copy link</em>), or launch it fullscreen and unattended below. A green dot means the window is connected and rendering.</p>
+    </section>
+
+    <section>
+      <h2>Fullscreen on this computer's displays</h2>
       <div class="row">
         <select id="node" title="Node from the cluster config"></select>
-      </div>
-      <p class="muted">A node with several screens runs one browser window per display. Pick which display shows which screen, then launch.</p>
-    </section>
-
-    <section>
-      <h2>Displays</h2>
-      <div class="row" style="margin-bottom: 10px">
         <button id="btn-detect">detect displays</button>
       </div>
-      <div id="displays"></div>
-    </section>
-
-    <section>
-      <h2>Screen → display</h2>
-      <div id="mapping"></div>
+      <p class="muted">For a node with several displays: pick which display shows which of its screens, then launch.</p>
+      <div id="displays" style="margin-top: 10px"></div>
+      <div id="mapping" style="margin-top: 10px"></div>
       <div class="row" style="margin-top: 12px">
         <button id="btn-launch" class="primary" disabled>launch node windows</button>
         <button id="btn-next" disabled>open next window</button>
         <button id="btn-close" disabled>close all</button>
         <span id="note"></span>
       </div>
-      <p class="muted">Windows open fullscreen on their display when the browser grants the window-management permission (Chrome, Edge). Otherwise each opens on its display and goes fullscreen on the first click inside it.</p>
+      <p class="muted">Windows open fullscreen on their display when the browser grants the window-management permission (Chrome, Edge, on https or localhost). Otherwise each opens on its display and goes fullscreen on the first click inside it.</p>
       <p class="muted">A node with several screens needs several pop-ups, and Chrome opens only one per click: set <em>Pop-ups and redirects</em> to <em>Allow</em> for this site (icon at the right of the address bar) to get them all in one launch, or click <em>open next window</em> once per remaining screen.</p>
     </section>
 

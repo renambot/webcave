@@ -43,7 +43,7 @@ interface ClientRecord {
 }
 
 export class ClusterManager {
-  readonly config: ClusterConfig;
+  config: ClusterConfig;
   private transport: ManagerTransport;
   /** Connected clients by transport id (not by node id: two windows may share a node id). */
   private clients = new Map<string, ClientRecord>();
@@ -67,6 +67,8 @@ export class ClusterManager {
   /** Latest device input per client (simulator, input-enabled nodes); merged into appState.input. */
   private inputs = new Map<string, ActionState>();
   private statsCounter = 0;
+  /** Config names a controller may switch to, sent in "welcome"; set by a host with a configs folder. */
+  configNames: string[] | undefined;
 
   constructor(config: ClusterConfig, transport: ManagerTransport) {
     this.config = config;
@@ -99,7 +101,30 @@ export class ClusterManager {
 
   /** A transport-level connection appeared. Sends the config; the client answers with "hello". */
   onConnect(clientId: string) {
-    this.transport.send(clientId, { type: "welcome", config: this.config, clientId });
+    this.transport.send(clientId, { type: "welcome", config: this.config, clientId, configs: this.configNames });
+  }
+
+  /**
+   * Replace the display configuration at run time (another room, or the same
+   * room re-measured). Everything that belonged to the old one is reset: the
+   * shared app state, navigation, live stereo settings, the default head and
+   * hand. Every connected client gets a fresh "welcome" and rebuilds, exactly
+   * as after a reconnect; the frame counter keeps running.
+   */
+  setConfig(config: ClusterConfig) {
+    this.config = config;
+    this.appState = {};
+    this.navigation = { position: [0, 0, 0], yaw: 0, pitch: 0 };
+    this.stereo = {};
+    this.head = { ...config.defaultHead };
+    this.wandOffset = { ...config.defaultWand };
+    this.wandAbsolute = null;
+    if (this.barrierTimer) {
+      clearTimeout(this.barrierTimer);
+      this.barrierTimer = null;
+    }
+    this.pending = null;
+    for (const clientId of this.clients.keys()) this.transport.send(clientId, { type: "welcome", config, clientId, configs: this.configNames });
   }
 
   /** Connection gone. If it was holding the barrier, the barrier may now be complete. */
@@ -147,6 +172,9 @@ export class ClusterManager {
         break;
       case "setStereo":
         this.stereo = { ...this.stereo, ...msg.stereo };
+        break;
+      case "setConfig":
+        // Needs the config files: the host (src/manager/server.ts) handles it before it reaches here.
         break;
       case "setApp":
         // A new world: the old app's shared state and the navigation belong to the old one.

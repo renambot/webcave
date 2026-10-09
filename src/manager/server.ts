@@ -50,15 +50,17 @@ if (process.argv.includes("--list-configs")) {
   process.exit(0);
 }
 
-/** --config NAME (in configs/) or --config path/to/file.json */
-function loadConfigArg(nameOrPath: string) {
+/** NAME (in configs/) or path/to/file.json -> parsed config; throws with the available names. */
+function loadConfig(nameOrPath: string) {
   const path = nameOrPath.endsWith(".json") || nameOrPath.includes("/") ? resolve(nameOrPath) : resolve(configsDir, `${nameOrPath}.json`);
-  if (!existsSync(path)) {
-    console.error(`config not found: ${path}\navailable: ${listConfigs().join(", ")}`);
-    process.exit(1);
-  }
+  if (!existsSync(path)) throw new Error(`config not found: ${path}\navailable: ${listConfigs().join(", ")}`);
+  return parseClusterConfig(JSON.parse(readFileSync(path, "utf8")), path);
+}
+
+/** --config NAME (in configs/) or --config path/to/file.json; exits on error. */
+function loadConfigArg(nameOrPath: string) {
   try {
-    return parseClusterConfig(JSON.parse(readFileSync(path, "utf8")), path);
+    return loadConfig(nameOrPath);
   } catch (e) {
     console.error((e as Error).message);
     process.exit(1);
@@ -95,16 +97,31 @@ const transport: ManagerTransport = {
 };
 
 const manager = new ClusterManager(cfg, transport);
+manager.configNames = listConfigs();
 const wss = new WebSocketServer({ port });
 
 wss.on("connection", (ws, req) => {
   const id = `c${nextId++}`;
   clients.set(id, ws);
   console.log(`[manager] ${id} connected from ${req.socket.remoteAddress}`);
+  manager.configNames = listConfigs(); // a file added to the mounted folder shows up on the next page load
   manager.onConnect(id);
   ws.on("message", (data) => {
     try {
-      manager.onMessage(id, decode<ClientMessage>(data.toString()));
+      const msg = decode<ClientMessage>(data.toString());
+      if (msg.type === "setConfig") {
+        // Live config switch: load the file here (the core manager has no file access) and re-welcome everyone.
+        try {
+          const next = loadConfig(msg.name);
+          manager.configNames = listConfigs(); // the folder is a mount in a deployment: files may have come or gone
+          manager.setConfig(next);
+          console.log(`[manager] config "${next.name}" (switched by ${id}) sync=${next.sync} fps=${next.fps}; nodes: ${next.nodes.map((n) => n.id).join(", ")}; app: ${next.app.name}`);
+        } catch (e) {
+          console.warn(`[manager] setConfig "${msg.name}" from ${id} refused: ${(e as Error).message.split("\n")[0]}`);
+        }
+        return;
+      }
+      manager.onMessage(id, msg);
     } catch (e) {
       console.warn(`[manager] bad message from ${id}`, e);
     }
@@ -117,9 +134,10 @@ wss.on("connection", (ws, req) => {
 });
 
 // Frame pacing. setInterval drifts, so schedule against a fixed timeline.
-const frameMs = 1000 / cfg.fps;
+// The rate follows the live config (a setConfig may change fps).
 let nextTick = performance.now();
 function pace() {
+  const frameMs = 1000 / manager.config.fps;
   const now = performance.now();
   if (now >= nextTick) {
     manager.tick(Date.now());

@@ -54,6 +54,11 @@ const managerUrl =
   : managerParam ?? (!import.meta.env.DEV && !params.has("config") ? defaultManagerUrl() : null);
 const $ = <T extends HTMLElement>(sel: string) => document.querySelector<T>(sel)!;
 
+/** The config of the first welcome in controller mode, to tell a reconnect from a live config switch. */
+let welcomedConfig = "";
+/** Config names the Manager can switch to (its configs folder), from its welcome; null: use this build's list. */
+let serverConfigNames: string[] | null = null;
+
 // Surface runtime errors in the footer: a simulator that silently freezes is
 // useless on a wall. The frame loop below also survives exceptions.
 let lastError = "";
@@ -141,10 +146,18 @@ function bootRemote(url: string) {
     ws.addEventListener("message", (ev) => {
       const msg = decode<ServerMessage>(ev.data);
       if (msg.type === "welcome") {
+        // The app is left out: a live app switch rewrites config.app, and the page follows that through the frames.
+        const configJson = JSON.stringify({ ...msg.config, app: null });
         if (!app) {
+          welcomedConfig = configJson;
+          serverConfigNames = msg.configs ?? null;
           app = createApp(msg.config, link, { ack: () => {}, onSyncChange: () => {} });
           app.start();
+        } else if (configJson !== welcomedConfig) {
+          // The cluster's configuration changed (a live switch, or a Manager restarted with another one). Rebuild the page for it.
+          location.reload();
         }
+        // Same config again: a reconnect after a network drop or a Manager restart; keep going.
         return;
       }
       if (msg.type === "stats") statsCache = msg.nodes;
@@ -381,16 +394,19 @@ function createApp(cfg: ClusterConfig, link: ControlLink, hooks: AppHooks): App 
     }
   });
   configSel.innerHTML = "";
-  for (const name of bundledConfigNames) {
-    const c = bundledConfigs[name];
-    configSel.append(new Option(`${name} · ${c.screens.length} screens · ${c.nodes.length} node${c.nodes.length > 1 ? "s" : ""}`, name));
+  for (const name of remote && serverConfigNames ? serverConfigNames : bundledConfigNames) {
+    const c = bundledConfigs[name] as ClusterConfig | undefined;
+    configSel.append(new Option(c ? `${name} · ${c.screens.length} screens · ${c.nodes.length} node${c.nodes.length > 1 ? "s" : ""}` : name, name));
   }
   if (remote) {
-    // Config and sync tier belong to the server in controller mode.
-    configSel.disabled = true;
+    // As a controller the dropdown switches the cluster's configuration (setConfig): the Manager
+    // loads the file of that name from its own configs folder, whose list came in its welcome
+    // (this build's configs/ if it sent none). The sync tier still belongs to the server.
     syncSel.disabled = true;
-    configSel.append(new Option(`${cfg.name} (server)`, "__server"));
-    configSel.value = "__server";
+    if (![...configSel.options].some((o) => o.value === cfg.name)) configSel.append(new Option(`${cfg.name} (server)`, cfg.name));
+    configSel.value = cfg.name;
+    configSel.title = "Display configuration: switches the whole cluster (the Manager loads configs/NAME.json)";
+    configSel.addEventListener("change", () => link.send({ type: "setConfig", name: configSel.value }));
   } else {
     const current = params.get("config") ?? bundledConfigNames[0];
     if ([...configSel.options].some((o) => o.value === current)) configSel.value = current;
@@ -593,7 +609,8 @@ function createApp(cfg: ClusterConfig, link: ControlLink, hooks: AppHooks): App 
       if (keys.has(K.q)) (p[1] -= v), (changed = true);
       if (keys.has(K.e)) (p[1] += v), (changed = true);
     }
-    if (changed || keys.size === 0) sendHead();
+    // Only when the keys moved the head: sending while idle would override a tracker driving the head.
+    if (changed) sendHead();
   }
 
   // ---- Frame loop ----------------------------------------------------------

@@ -98,8 +98,13 @@ export type StereoOverride = Partial<Pick<StereoParams, "mode" | "eyeSeparation"
 
 /** Manager -> client. */
 export type ServerMessage =
-  /** First message after connecting: the whole cluster config and this client's id. */
-  | { type: "welcome"; config: ClusterConfig; clientId: string }
+  /**
+   * First message after connecting, and again to every client after a live
+   * config switch: the whole cluster config and this client's id. `configs`
+   * names the files the Manager can switch to ("setConfig"), when it has a
+   * configs folder; the in-page manager leaves it out.
+   */
+  | { type: "welcome"; config: ClusterConfig; clientId: string; configs?: string[] }
   /** Render this frame. */
   | { type: "frame"; state: FrameState }
   /** Barrier released: show the frame rendered for `frame`. */
@@ -133,6 +138,13 @@ export type ClientMessage =
   | { type: "setStereo"; stereo: StereoOverride }
   /** Switch the cluster's application: replaces the config's app, clears the shared app state and navigation; every node rebuilds. */
   | { type: "setApp"; app: AppSpec }
+  /**
+   * Switch the display configuration to another file of the Manager's configs
+   * folder, by name. Handled by the Manager's host (the server, which has the
+   * files): it loads the file and re-sends "welcome" to every client, and the
+   * clients rebuild as after a reconnect. The in-page manager ignores it.
+   */
+  | { type: "setConfig"; name: string }
   /** Incremental navigation, applied in the CAVE's own frame (forward = -Z). */
   | { type: "navigate"; move: Vec3; yaw: number; pitch: number }
   /** Shallow-merge `patch` into the shared application state (see FrameState.appState). */

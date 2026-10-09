@@ -134,6 +134,8 @@ window.addEventListener("resize", fit);
 let baseStereo: StereoParams | null = null;
 /** The config app the current setup() was built from, to notice a live switch. */
 let builtApp = "";
+/** Set while the current configuration has no screen for this node (the HUD keeps saying so). */
+let parked: string | null = null;
 let appliedStereo = "";
 function applyStereo(state: FrameState) {
   if (!viewport || !baseStereo) return;
@@ -221,9 +223,16 @@ function connect() {
         try {
           screen = pickScreen(cfg);
         } catch (e) {
-          hud.textContent = String((e as Error).message);
-          return;
+          // Not part of this configuration (a controller switched to another room): show why,
+          // drop what was built, and step out of the barrier until a config includes us again.
+          parked = `${(e as Error).message} · waiting for a configuration that includes this node`;
+          hud.textContent = parked;
+          teardown();
+          (window as unknown as { webcave: unknown }).webcave = { parked, lastState: () => lastState };
+          send({ type: "hello", nodeId: clientId, role: "controller" });
+          break;
         }
+        parked = null;
         send({ type: "hello", nodeId: clientId, role: "node" });
         sendToManager = send;
         const me = cfg.nodes.find((n) => n.id === nodeId);
@@ -271,6 +280,7 @@ function connect() {
         viewport?.present(msg.frame);
         break;
       case "stats": {
+        if (parked) break;
         const now = performance.now();
         if (now - lastHud > 500) {
           const me = msg.nodes.find((n) => n.nodeId === clientId);

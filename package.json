@@ -16,6 +16,7 @@
     "typecheck": "tsc --noEmit",
     "tracker": "tsx src/tracker/bridge.ts",
     "set-app": "node scripts/set-app.mjs",
+    "set-config": "node scripts/set-config.mjs",
     "schema": "tsx scripts/gen-schema.ts"
   },
   "dependencies": {

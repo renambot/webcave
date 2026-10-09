@@ -22,7 +22,7 @@ src/input/      input abstraction: action vocabulary, keyboard and gamepad devic
 src/manager/    WebSocket server wrapping ClusterManager
 src/tracker/    tracking bridge: DTrack, NatNet and VRPN sources, calibration, config schema, CLI
 src/node/       render node page
-src/launcher/   node launcher: displays of this computer, one window per screen
+src/launcher/   control page: switch config and app, open simulator and node windows, displays of this computer
 src/panel/      panel page: mounts an app's createPanel() as a controller, no views
 src/core/base.ts  base path (Vite base) helpers: publicUrl(), defaultManagerUrl()
 src/xr/         headset viewer: the app in an immersive WebXR session as a controller, headset as head and wand
@@ -35,7 +35,7 @@ public/crayoland/ Crayoland's original World, Sounds, textures, ground masks, ha
 public/aquarium/  WebGL Aquarium: tdl library, adapted core, shaders, models and textures (BSD)
 public/metaballs/ prebuilt web-texture-tool loader and KTX2 / Basis transcoder workers for the metaballs app (media is fetched remotely)
 scripts/        launch-nodes.sh (one kiosk Chrome per display), gen-schema.ts, screenshot.mjs, fake-tracker.ts (pretend DTrack / NatNet / VRPN)
-index.html, simulator.html, node.html, launcher.html, panel.html (an app's control panel alone, for a tablet), xr.html (the headset viewer)
+index.html, simulator.html, node.html, launcher.html (the control page), panel.html (an app's control panel alone, for a tablet), xr.html (the headset viewer)
 ```
 
 ## Disabling applications locally
@@ -51,7 +51,7 @@ VITE_DISABLE_APPS=metaballs,vdb
 
 ## Frame protocol
 
-The Manager owns the frame counter; simulation time is `frame / fps`, so every node computes the same poses without a shared wall clock. Per frame it sends `frame {state}` with the head and wand poses, navigation and the shared app state, waits for `ack` from every node in barrier mode (with a timeout, after which late nodes are reported), then sends `present {frame}` so all screens flip together. Loose mode skips the wait. Clients send `hello`, `ack`, `setHead`, `setWand` (absolute from a tracker, or a head-relative offset), `setNavigation` / `navigate`, `setStereo` (live stereo settings, sent on in every frame as `state.stereo`), `setApp {app}` (switch the cluster's application; the current app travels in every frame as `state.app` and pages rebuild when it changes), `setAppState {patch}` and `input {actions}`. Messages are defined in `src/core/protocol.ts`; the logic is in `src/core/manager.ts`, which the WebSocket server and the in-memory simulator both wrap.
+The Manager owns the frame counter; simulation time is `frame / fps`, so every node computes the same poses without a shared wall clock. Per frame it sends `frame {state}` with the head and wand poses, navigation and the shared app state, waits for `ack` from every node in barrier mode (with a timeout, after which late nodes are reported), then sends `present {frame}` so all screens flip together. Loose mode skips the wait. Clients send `hello`, `ack`, `setHead`, `setWand` (absolute from a tracker, or a head-relative offset), `setNavigation` / `navigate`, `setStereo` (live stereo settings, sent on in every frame as `state.stereo`), `setApp {app}` (switch the cluster's application; the current app travels in every frame as `state.app` and pages rebuild when it changes), `setConfig {name}` (the server loads another configs file and re-sends `welcome` to every client, which rebuild as after a reconnect), `setAppState {patch}` and `input {actions}`. Messages are defined in `src/core/protocol.ts`; the logic is in `src/core/manager.ts`, which the WebSocket server and the in-memory simulator both wrap.
 
 ## Testing pages headlessly
 
