@@ -42,17 +42,13 @@
 
       <section>
         <h2>Cluster mode</h2>
-        <p>Start the manager with <code>npm run manager</code>, then open one node page per display:</p>
+        <p>Open the <a href="launcher.html"><strong>control page</strong></a>. From there you switch the display configuration and the application, open the simulator to watch and drive the cluster, and open the window of every display node, or copy its link for the computer that drives that screen.</p>
         <ul>
-          <li><a href="launcher.html"><strong>control page</strong></a>: switch the display configuration and the application, open the simulator and every node window (start here on a deployed server)</li>
-          <li><a href="node.html?node=front">node front</a></li>
-          <li><a href="node.html?node=left">node left</a></li>
-          <li><a href="node.html?node=right">node right</a></li>
-          <li><a href="node.html?node=floor">node floor</a></li>
-          <li><a href="simulator.html?manager=auto">simulator as controller of the running manager</a> (in a deployed build, <a href="simulator.html">simulator.html</a> alone does this; <code>?manager=local</code> or <code>?config=</code> for a standalone one)</li>
-          <li><a href="xr.html">headset viewer (WebXR): the scene in a VR headset, driven from the simulator</a> (open on the headset; <code>?head=1</code> makes it the tracked head)</li>
+          <li><a href="launcher.html">control page</a></li>
+          <li><a href="simulator.html?manager=auto">simulator as controller of the running cluster</a></li>
+          <li><a href="xr.html">headset viewer (WebXR)</a>: open it on the headset; <code>?head=1</code> makes it the tracked head</li>
         </ul>
-        <p class="muted">Node parameters: <code>node</code>, <code>manager=ws://host:8765</code>, <code>stereo=anaglyph</code>, <code>anaglyph=bw</code> (overrides). Click a node to go fullscreen, press <code>h</code> to hide the HUD.</p>
+        <p class="muted">In a node window, click once to go fullscreen and press <code>h</code> to hide the HUD. Running from a source checkout instead of a deployed server: start the manager first with <code>npm run manager</code>.</p>
       </section>
 
       <section>
