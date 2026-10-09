@@ -6,3 +6,5 @@ dist-manager
 .DS_Store
 public/volumes/*.vdb
 *.code-workspace
+.progress-map
+progress-map*

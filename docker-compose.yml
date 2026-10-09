@@ -1,12 +1,14 @@
 # WebCAVE behind a reverse proxy: `docker compose up -d --build`, then point the
 # front proxy at http://<this host>:${WEBCAVE_HTTP_PORT:-8080}/ (see docs/deployment.md).
+# Run the cluster from the control page, <site>${BASE_PATH}launcher.html: it switches the
+# display configuration and the application live and opens the simulator and node windows.
 #
 # Environment (a .env file next to this one works):
 #   BASE_PATH           path prefix the site is served under, with slashes: /webcave/ (default /)
 #   VITE_DISABLE_APPS  apps to leave out of the build, comma-separated: map,density,map2d,dotdensity
 #   WEBCAVE_HTTP_PORT   host port for the web service (default 8080)
-#   WEBCAVE_CONFIG      installation config name in configs/ (default cave-3m)
-#   WEBCAVE_APP         application to run (default shapes)
+#   WEBCAVE_CONFIG      config in configs/ the Manager starts with (default cave-3m); switch live after
+#   WEBCAVE_APP         application it starts with (default shapes); switch live after
 #   WEBCAVE_SYNC        barrier | loose (default: the config's)
 services:
   web:
