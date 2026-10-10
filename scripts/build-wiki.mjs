@@ -12,7 +12,7 @@
  * A _Sidebar.md lists the pages. The workflow in .github/workflows/wiki.yml
  * runs this and pushes the result to the wiki repository.
  */
-import { readFileSync, writeFileSync, mkdirSync, readdirSync, copyFileSync, rmSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, readdirSync, cpSync, rmSync, existsSync } from "node:fs";
 import { resolve, dirname, basename } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -50,7 +50,10 @@ function rewrite(target, where) {
 }
 
 function convert(markdown, where) {
-  return markdown.replace(/(!?\[[^\]]*\]\()([^)\s]+)(\))/g, (_, pre, target, post) => `${pre}${rewrite(target, where)}${post}`).replace(/<(https?:\/\/[^>]+)>/g, "<$1>");
+  return markdown
+    .replace(/(!?\[[^\]]*\]\()([^)\s]+)(\))/g, (_, pre, target, post) => `${pre}${rewrite(target, where)}${post}`)
+    .replace(/(\s(?:src|srcset)=")([^"]+)(")/g, (_, pre, target, post) => `${pre}${rewrite(target, where)}${post}`) // HTML images (the README's logo)
+    .replace(/<(https?:\/\/[^>]+)>/g, "<$1>");
 }
 
 rmSync(out, { recursive: true, force: true });
@@ -60,13 +63,13 @@ const readme = readFileSync(resolve(root, "README.md"), "utf8");
 writeFileSync(resolve(out, "Home.md"), convert(readme, "root"));
 for (const f of docs) writeFileSync(resolve(out, `${pages.get(f)}.md`), convert(readFileSync(resolve(root, "docs", f), "utf8"), "docs"));
 if (existsSync(resolve(root, "docs/images"))) {
-  for (const img of readdirSync(resolve(root, "docs/images"))) copyFileSync(resolve(root, "docs/images", img), resolve(out, "images", img));
+  cpSync(resolve(root, "docs/images"), resolve(out, "images"), { recursive: true }); // with subfolders (brand/)
 }
 
 // Sidebar: Home first, then the pages in reading order, the specification last.
 const order = ["running", "deployment", "configuration", "input", "tracking", "applications", "development", "SPECIFICATION"];
 const listed = [...order.filter((n) => pages.has(`${n}.md`)).map((n) => `${n}.md`), ...docs.filter((f) => !order.includes(basename(f, ".md")))];
-const sidebar = ["**WebCAVE**", "", "- [Home](Home)", ...listed.map((f) => `- [${pages.get(f)}](${pages.get(f)})`), "", `[Repository](https://github.com/${repo})`].join("\n");
+const sidebar = ["[![WebCAVE](images/brand/webcave-logo-dark.png)](Home)", "", "- [Home](Home)", ...listed.map((f) => `- [${pages.get(f)}](${pages.get(f)})`), "", `[Repository](https://github.com/${repo})`].join("\n");
 writeFileSync(resolve(out, "_Sidebar.md"), sidebar + "\n");
 writeFileSync(resolve(out, "_Footer.md"), `Generated from the repository's docs/ folder by scripts/build-wiki.mjs. Edit the files in the repository, not here.\n`);
 

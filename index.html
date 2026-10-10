@@ -4,6 +4,9 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>WebCAVE</title>
+    <link rel="icon" href="/brand/favicon.ico" sizes="any" />
+    <link rel="icon" type="image/png" href="/brand/icon-192.png" />
+    <link rel="apple-touch-icon" href="/brand/apple-touch-icon.png" />
     <meta name="theme-color" content="#0d1013" />
     <style>
       :root {
@@ -26,6 +29,8 @@
       code { font: 12px var(--mono); background: #1b2128; border: 1px solid #2a333c; padding: 1px 5px; border-radius: 3px; }
       p { margin: 8px 0 0; color: var(--ink); }
       p.muted { color: var(--muted); font-size: 13px; }
+      header img.lockup { width: 360px; max-width: 100%; height: auto; border-radius: 6px; }
+      .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
       .intro { color: var(--ink); margin: 0 0 18px; }
       section.start { border-color: #4a3a12; }
       h2.big { font: 600 18px var(--sans); letter-spacing: 0; text-transform: none; color: var(--ink); margin-bottom: 4px; }
@@ -43,13 +48,8 @@
   <body>
     <main>
       <header>
-        <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true">
-          <rect width="26" height="26" rx="5" fill="#1b2128"/>
-          <path d="M5 8.5 L13 4.5 L21 8.5 L21 17.5 L13 21.5 L5 17.5 Z" fill="none" stroke="#ffb300" stroke-width="1.4"/>
-          <path d="M5 8.5 L13 12.5 L21 8.5 M13 12.5 L13 21.5" fill="none" stroke="#ffb300" stroke-width="1.1" opacity="0.7"/>
-          <circle cx="13" cy="13.5" r="1.6" fill="#ffb300"/>
-        </svg>
-        <h1>webcave <span>· immersive rooms in the browser</span></h1>
+        <img class="lockup" src="/brand/webcave-logo-dark.png" width="360" height="120" alt="WebCAVE: browser-based cluster rendering" />
+        <h1 class="visually-hidden">WebCAVE</h1>
       </header>
 
       <p class="intro">WebCAVE shows one 3D world across all the screens of a room, such as a CAVE or a wall of displays, so that the people standing in it see the scene around them. Everything runs in the web browser: there is nothing to install.</p>

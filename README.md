@@ -1,4 +1,9 @@
-# WebCAVE
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/images/brand/webcave-logo-dark.png">
+    <img alt="WebCAVE: browser-based cluster rendering" src="docs/images/brand/webcave-logo-light.png" width="520">
+  </picture>
+</p>
 
 Browser-based cluster rendering for CAVEs, tiled display walls and other multi-screen immersive environments.
 

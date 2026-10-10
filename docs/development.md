@@ -17,6 +17,8 @@
 ```
 configs/        cluster configuration files (JSON) and their generated schema; trackers/ holds the tracking bridge configs and schema
 docs/           this documentation and the specification
+docs/brand/     the logo, source PDF: horizontal lockups dark and light, app icon, stacked lockup, one-colour marks
+docs/images/brand/ logo images cut from it: README lockups (dark/light), stacked and one-colour versions, full-size icon, GitHub social preview
 src/core/       config types, config file schema and loader, projection math, wall pixel layout, protocol, ClusterManager (transport-agnostic), Window Management helpers, navigation (CAVE <-> world) and deterministic random helpers
 src/input/      input abstraction: action vocabulary, keyboard and gamepad devices with profiles, InputController
 src/manager/    WebSocket server wrapping ClusterManager
@@ -29,6 +31,7 @@ src/xr/         headset viewer: the app in an immersive WebXR session as a contr
 src/simulator/  in-page cluster with in-memory transport, or controller of a live Manager
 src/apps/       application contract and auto-discovering registry; one folder per app
 src/render/     per-screen viewport renderer, stereo packer, off-axis helper, 3D overview
+public/brand/   favicon, page icon and apple-touch icon, the index page lockup
 public/models/  sample glTF assets
 public/volumes/ OpenVDB files for the vdb and points apps (not in the repository)
 public/crayoland/ Crayoland's original World, Sounds, textures, ground masks, hand models, sounds as MP3
